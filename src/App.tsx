@@ -128,6 +128,7 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
         ...btn,
         background: active ? palette.accent : palette.panel,
         borderColor: active ? palette.accent : palette.border,
+        color: active ? "#fff" : palette.text,
       }}
     >
       {children}
