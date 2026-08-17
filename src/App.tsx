@@ -5,6 +5,8 @@ import { supabase } from "./lib/supabase";
 import { palette } from "./theme";
 import Login from "./components/Login";
 import Overview from "./components/Overview";
+import Distribution from "./components/Distribution";
+import Enrolled from "./components/Enrolled";
 import ConfigEditor from "./components/ConfigEditor";
 
 interface ManagerRow {
@@ -27,7 +29,7 @@ export default function App() {
   const [manager, setManager] = useState<ManagerRow | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamId, setTeamId] = useState<string>("");
-  const [tab, setTab] = useState<"overview" | "config">("overview");
+  const [tab, setTab] = useState<"overview" | "distribution" | "enrolled" | "config">("overview");
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -94,13 +96,17 @@ export default function App() {
             ))}
           </select>
         )}
-        <nav style={{ display: "flex", gap: 8 }}>
+        <nav style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <TabBtn active={tab === "overview"} onClick={() => setTab("overview")}>Overview</TabBtn>
+          <TabBtn active={tab === "distribution"} onClick={() => setTab("distribution")}>Distribution</TabBtn>
+          <TabBtn active={tab === "enrolled"} onClick={() => setTab("enrolled")}>Enrolled</TabBtn>
           <TabBtn active={tab === "config"} onClick={() => setTab("config")}>NPT Config</TabBtn>
         </nav>
       </div>
 
       {team && tab === "overview" && <Overview team={team} />}
+      {team && tab === "distribution" && <Distribution team={team} />}
+      {team && tab === "enrolled" && <Enrolled team={team} />}
       {team && tab === "config" && <ConfigEditor team={team} />}
     </div>
   );
