@@ -7,7 +7,7 @@ import Login from "./components/Login";
 import Overview from "./components/Overview";
 import Distribution from "./components/Distribution";
 import Enrolled from "./components/Enrolled";
-import ConfigEditor from "./components/ConfigEditor";
+import Planned from "./components/Planned";
 
 interface ManagerRow {
   user_id: string;
@@ -29,7 +29,7 @@ export default function App() {
   const [manager, setManager] = useState<ManagerRow | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamId, setTeamId] = useState<string>("");
-  const [tab, setTab] = useState<"overview" | "distribution" | "enrolled" | "config">("overview");
+  const [tab, setTab] = useState<"overview" | "distribution" | "enrolled" | "planned">("overview");
   const [refreshTick, setRefreshTick] = useState(0);
 
   // auto-refresco: cada 15s bumpea el tick y las vistas re-consultan (sin recargar la pagina)
@@ -107,14 +107,14 @@ export default function App() {
           <TabBtn active={tab === "overview"} onClick={() => setTab("overview")}>Overview</TabBtn>
           <TabBtn active={tab === "distribution"} onClick={() => setTab("distribution")}>Distribution</TabBtn>
           <TabBtn active={tab === "enrolled"} onClick={() => setTab("enrolled")}>Enrolled</TabBtn>
-          <TabBtn active={tab === "config"} onClick={() => setTab("config")}>NPT Config</TabBtn>
+          <TabBtn active={tab === "planned"} onClick={() => setTab("planned")}>Planned</TabBtn>
         </nav>
       </div>
 
       {team && tab === "overview" && <Overview team={team} refreshKey={refreshTick} />}
       {team && tab === "distribution" && <Distribution team={team} refreshKey={refreshTick} />}
       {team && tab === "enrolled" && <Enrolled team={team} refreshKey={refreshTick} />}
-      {team && tab === "config" && <ConfigEditor team={team} />}
+      {team && tab === "planned" && <Planned team={team} />}
     </div>
   );
 }

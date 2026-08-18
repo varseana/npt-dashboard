@@ -96,6 +96,22 @@ export function fmtPct(p: number): string {
   return (p * 100).toFixed(2) + "%";
 }
 
+// parsea input del manager a segundos. acepta "H:MM", "H:MM:SS", o horas decimales ("3.5").
+// devuelve null si esta vacio, NaN-safe: entrada invalida => null.
+export function parseDuration(input: string): number | null {
+  const s = (input || "").trim();
+  if (!s) return null;
+  if (s.includes(":")) {
+    const parts = s.split(":").map((p) => parseInt(p, 10));
+    if (parts.some((n) => isNaN(n))) return null;
+    const [h, m, sec] = [parts[0] || 0, parts[1] || 0, parts[2] || 0];
+    return h * 3600 + m * 60 + sec;
+  }
+  const hours = parseFloat(s);
+  if (isNaN(hours)) return null;
+  return Math.round(hours * 3600);
+}
+
 // formato Hh:mm:ss (pedido del manager). segundos negativos se muestran con signo.
 export function fmtHms(seconds: number): string {
   const neg = seconds < 0;
