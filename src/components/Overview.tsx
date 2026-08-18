@@ -2,105 +2,153 @@ import * as React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
-import { aggregateByUser, fmtHrs, fmtPct, type NptDailyRow } from "../lib/npt";
+import {
+  computeDay, fmtHms, resolvePlanned, statusFor,
+  weekInfo, weekLabel, recentWeeks, isoDate,
+  type NptDailyRow, type NptStatus, type PlannedRow,
+} from "../lib/npt";
+import { StatusChip } from "./status";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 
-function isoDaysAgo(n: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - n);
-  return d.toISOString().slice(0, 10);
+interface Row {
+  alias: string;
+  daysReported: number;
+  nptSeconds: number;      // actual NPT (= total NPT), suma de los 5 AUX
+  planned: number | null;
+  remaining: number | null;
+  status: NptStatus;
 }
 
+const STATUS_RANK: Record<NptStatus, number> = { bad: 0, warn: 1, ok: 2, none: 3 };
+
 export default function Overview({ team, refreshKey }: { team: Team; refreshKey?: number }) {
-  const [from, setFrom] = useState(isoDaysAgo(13));
-  const [to, setTo] = useState(isoDaysAgo(0));
+  const weeks = useMemo(() => recentWeeks(new Date(), 16), []);
+  const [weekKey, setWeekKey] = useState(() => weekInfo(new Date()).key);
   const [rows, setRows] = useState<NptDailyRow[]>([]);
-  const [excluded, setExcluded] = useState<string[]>([]);
+  const [planned, setPlanned] = useState<PlannedRow[]>([]);
+  const [filter, setFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
-  const first = useRef(true);   // solo la 1ra carga muestra "Loading..."; el auto-refresco es silencioso
+  const first = useRef(true);
+
+  const sel = useMemo(() => weekInfo(new Date(weekKey + "T12:00:00")), [weekKey]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       if (first.current) setLoading(true);
       setErr("");
-      const [{ data: cfg }, { data: d, error }] = await Promise.all([
-        supabase.from("npt_config").select("excluded_aux").eq("team_id", team.id).maybeSingle(),
+      const [{ data: d, error }, { data: p }] = await Promise.all([
         supabase
           .from("npt_daily")
           .select("alias,tenant,work_date,profile,aux_seconds")
           .eq("team_id", team.id)
-          .gte("work_date", from)
-          .lte("work_date", to),
+          .gte("work_date", isoDate(sel.start))
+          .lte("work_date", isoDate(sel.end)),
+        supabase.from("npt_planned").select("alias,week_key,planned_seconds").eq("team_id", team.id),
       ]);
       if (cancelled) return;
       if (error) setErr(error.message);
-      setExcluded((cfg?.excluded_aux as string[]) ?? []);
       setRows((d as NptDailyRow[]) ?? []);
+      setPlanned((p as PlannedRow[]) ?? []);
       first.current = false;
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [team.id, from, to, refreshKey]);
+  }, [team.id, weekKey, refreshKey, sel.start, sel.end]);
 
-  const target = team.npt_target_pct / 100;
-  const users = useMemo(() => aggregateByUser(rows, excluded, target), [rows, excluded, target]);
+  const users = useMemo(() => {
+    const byUser = new Map<string, Row>();
+    for (const r of rows) {
+      const day = computeDay(r.aux_seconds);
+      let u = byUser.get(r.alias);
+      if (!u) { u = { alias: r.alias, daysReported: 0, nptSeconds: 0, planned: null, remaining: null, status: "none" }; byUser.set(r.alias, u); }
+      u.daysReported += 1;
+      u.nptSeconds += day.nptSeconds;
+    }
+    const out = Array.from(byUser.values());
+    for (const u of out) {
+      u.planned = resolvePlanned(planned, u.alias, weekKey);
+      u.remaining = u.planned != null ? u.planned - u.nptSeconds : null;
+      u.status = statusFor(u.planned, u.nptSeconds);
+    }
+    out.sort((a, b) =>
+      STATUS_RANK[a.status] - STATUS_RANK[b.status] ||
+      b.nptSeconds - a.nptSeconds ||
+      a.alias.localeCompare(b.alias));
+    return out;
+  }, [rows, planned, weekKey]);
+
+  const shown = useMemo(() => {
+    const q = filter.trim().toLowerCase();
+    return q ? users.filter((u) => u.alias.toLowerCase().includes(q)) : users;
+  }, [users, filter]);
 
   const teamNpt = users.reduce((a, u) => a + u.nptSeconds, 0);
-  const teamTracked = users.reduce((a, u) => a + u.trackedSeconds, 0);
-  const teamPct = teamTracked ? teamNpt / teamTracked : 0;
-  const overCount = users.filter((u) => u.overTarget).length;
+  const overCount = users.filter((u) => u.status === "bad").length;
+  const warnCount = users.filter((u) => u.status === "warn").length;
 
   return (
     <div>
       <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", marginBottom: 16 }}>
-        <Field label="From"><input type="date" value={from} onChange={(e) => setFrom(e.target.value)} style={input} /></Field>
-        <Field label="To"><input type="date" value={to} onChange={(e) => setTo(e.target.value)} style={input} /></Field>
-        <div style={{ color: palette.textDim, fontSize: 13 }}>Target: {team.npt_target_pct}%</div>
+        <Field label="Week">
+          <select value={weekKey} onChange={(e) => setWeekKey(e.target.value)} style={select}>
+            {weeks.map((w) => (<option key={w.key} value={w.key}>{weekLabel(w)}</option>))}
+          </select>
+        </Field>
+        <Field label="Filter user">
+          <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="username" style={input} />
+        </Field>
       </div>
 
-      {err && <div style={{ color: palette.over, marginBottom: 12 }}>{err}</div>}
+      {err && <div style={{ color: palette.bad, marginBottom: 12 }}>{err}</div>}
       {loading ? (
         <div style={{ color: palette.textDim }}>Loading...</div>
       ) : users.length === 0 ? (
-        <div style={{ color: palette.textDim }}>No reported data in this range yet.</div>
+        <div style={{ color: palette.textDim }}>No reported data for {weekLabel(sel)}.</div>
       ) : (
         <>
           <div style={{ display: "flex", gap: 12, marginBottom: 18, flexWrap: "wrap" }}>
             <Stat label="Investigators reporting" value={String(users.length)} />
-            <Stat label="Team NPT (avg)" value={fmtPct(teamPct)} tone={teamPct > target ? "over" : "under"} />
-            <Stat label="Over target" value={`${overCount} / ${users.length}`} tone={overCount ? "over" : "under"} />
+            <Stat label="Team NPT (actual)" value={fmtHms(teamNpt)} />
+            <Stat label="Over planned" value={`${overCount} / ${users.length}`} tone={overCount ? "bad" : "ok"} />
+            <Stat label="Near limit (<=1h)" value={String(warnCount)} tone={warnCount ? "warn" : "ok"} />
           </div>
 
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
             <thead>
               <tr>
-                {["#", "Investigator", "Days", "Avg NPT %", "Total NPT", "Status"].map((h) => (
-                  <th key={h} style={th}>{h}</th>
+                {["#", "Investigator", "Days", "Planned", "Actual NPT", "Remaining", "Status"].map((h, i) => (
+                  <th key={h} style={{ ...th, textAlign: i <= 1 ? "left" : "right" }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {users.map((u, i) => (
+              {shown.map((u, i) => (
                 <tr key={u.alias} style={{ background: i % 2 ? palette.panel : palette.panelAlt }}>
-                  <td style={td}>{i + 1}</td>
-                  <td style={td}>{u.alias}{u.tenant ? <span style={{ color: palette.textDim }}> ({u.tenant})</span> : null}</td>
-                  <td style={td}>{u.daysReported}</td>
-                  <td style={{ ...td, fontWeight: 600 }}>{fmtPct(u.avgNptPct)}</td>
-                  <td style={td}>{fmtHrs(u.nptSeconds)}</td>
-                  <td style={{ ...td, color: u.overTarget ? palette.over : palette.under }}>
-                    {u.overTarget ? "Over target" : "On target"}
-                  </td>
+                  <td style={{ ...td, color: palette.textDim }}>{i + 1}</td>
+                  <td style={{ ...td, fontWeight: 600 }}>{u.alias}</td>
+                  <td style={{ ...td, textAlign: "right" }}>{u.daysReported}</td>
+                  <td style={{ ...td, textAlign: "right", color: palette.textDim }}>{u.planned != null ? fmtHms(u.planned) : "-"}</td>
+                  <td style={{ ...td, textAlign: "right", fontWeight: 600 }}>{fmtHms(u.nptSeconds)}</td>
+                  <td style={{ ...td, textAlign: "right", color: remainingColor(u.status) }}>{u.remaining != null ? fmtHms(u.remaining) : "-"}</td>
+                  <td style={{ ...td, textAlign: "right" }}><StatusChip status={u.status} /></td>
                 </tr>
               ))}
             </tbody>
           </table>
+          <div style={{ color: palette.textDim, fontSize: 11, marginTop: 8 }}>
+            NPT = Meeting + Training + Project + Personal + System. Remaining = Planned - Actual. Times in Hh:mm:ss.
+          </div>
         </>
       )}
     </div>
   );
+}
+
+function remainingColor(s: NptStatus): string {
+  return s === "bad" ? palette.bad : s === "warn" ? palette.warn : s === "ok" ? palette.ok : palette.textDim;
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -112,11 +160,12 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: string; tone?: "over" | "under" }) {
+function Stat({ label, value, tone }: { label: string; value: string; tone?: "ok" | "warn" | "bad" }) {
+  const color = tone === "bad" ? palette.bad : tone === "warn" ? palette.warn : tone === "ok" ? palette.ok : palette.text;
   return (
-    <div style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: "12px 16px", minWidth: 140 }}>
+    <div style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: "12px 16px", minWidth: 150 }}>
       <div style={{ fontSize: 12, color: palette.textDim }}>{label}</div>
-      <div style={{ fontSize: 22, fontWeight: 700, color: tone === "over" ? palette.over : tone === "under" ? palette.under : palette.accentSoft }}>{value}</div>
+      <div style={{ fontSize: 22, fontWeight: 700, color }}>{value}</div>
     </div>
   );
 }
@@ -124,3 +173,4 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "ov
 const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
 const td: React.CSSProperties = { padding: "8px 10px", borderBottom: `1px solid ${palette.border}` };
 const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 14 };
+const select: React.CSSProperties = { ...input, minWidth: 260 };

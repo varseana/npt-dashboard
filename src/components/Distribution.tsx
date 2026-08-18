@@ -2,112 +2,108 @@ import * as React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
-import { AUX_ORDER, ANCHOR, computeDay, type NptDailyRow } from "../lib/npt";
+import {
+  NPT_AUX, fmtHms, resolvePlanned, statusFor,
+  weekInfo, weekLabel, recentWeeks, isoDate,
+  type NptDailyRow, type NptStatus, type PlannedRow,
+} from "../lib/npt";
+import { StatusChip } from "./status";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 
-function isoDaysAgo(n: number): string {
-  const d = new Date();
-  d.setDate(d.getDate() - n);
-  return d.toISOString().slice(0, 10);
-}
-
 interface Row {
   alias: string;
-  tenant: string | null;
-  perAux: Record<string, number>;   // segundos por AUX (todos menos Offline)
-  nptSeconds: number;
-  trackedSeconds: number;
-  nptPct: number;
+  perAux: Record<string, number>;   // segundos por cada uno de los 5 AUX de NPT
+  nptSeconds: number;               // total NPT (= actual)
+  planned: number | null;
+  remaining: number | null;
+  status: NptStatus;
 }
 
-// espeja la hoja "NPT Distribution" del Excel: una fila por investigador,
-// una columna por bucket de AUX, mas total NPT / % / status.
+const STATUS_RANK: Record<NptStatus, number> = { bad: 0, warn: 1, ok: 2, none: 3 };
+
+// desglose por AUX de NPT (los 5 que cuentan), estilo Excel, con Planned/Actual/Remaining/status.
 export default function Distribution({ team, refreshKey }: { team: Team; refreshKey?: number }) {
-  const [from, setFrom] = useState(isoDaysAgo(13));
-  const [to, setTo] = useState(isoDaysAgo(0));
+  const weeks = useMemo(() => recentWeeks(new Date(), 16), []);
+  const [weekKey, setWeekKey] = useState(() => weekInfo(new Date()).key);
   const [rows, setRows] = useState<NptDailyRow[]>([]);
-  const [excluded, setExcluded] = useState<string[]>([]);
+  const [planned, setPlanned] = useState<PlannedRow[]>([]);
+  const [filter, setFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
-  const first = useRef(true);   // solo la 1ra carga muestra "Loading..."; el auto-refresco es silencioso
+  const first = useRef(true);
+
+  const sel = useMemo(() => weekInfo(new Date(weekKey + "T12:00:00")), [weekKey]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       if (first.current) setLoading(true);
       setErr("");
-      const [{ data: cfg }, { data: d, error }] = await Promise.all([
-        supabase.from("npt_config").select("excluded_aux").eq("team_id", team.id).maybeSingle(),
+      const [{ data: d, error }, { data: p }] = await Promise.all([
         supabase
           .from("npt_daily")
           .select("alias,tenant,work_date,profile,aux_seconds")
           .eq("team_id", team.id)
-          .gte("work_date", from)
-          .lte("work_date", to),
+          .gte("work_date", isoDate(sel.start))
+          .lte("work_date", isoDate(sel.end)),
+        supabase.from("npt_planned").select("alias,week_key,planned_seconds").eq("team_id", team.id),
       ]);
       if (cancelled) return;
       if (error) setErr(error.message);
-      setExcluded((cfg?.excluded_aux as string[]) ?? []);
       setRows((d as NptDailyRow[]) ?? []);
+      setPlanned((p as PlannedRow[]) ?? []);
       first.current = false;
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [team.id, from, to, refreshKey]);
-
-  const target = team.npt_target_pct / 100;
-  const exSet = useMemo(() => new Set(excluded), [excluded]);
-
-  // categorias de AUX presentes (Offline es ancla, no entra), ordenadas por AUX_ORDER
-  const categories = useMemo(() => {
-    const seen = new Set<string>();
-    for (const r of rows) for (const k of Object.keys(r.aux_seconds || {})) if (k !== ANCHOR) seen.add(k);
-    const arr = Array.from(seen);
-    arr.sort((a, b) => {
-      const ia = AUX_ORDER.indexOf(a), ib = AUX_ORDER.indexOf(b);
-      if (ia !== -1 && ib !== -1) return ia - ib;
-      if (ia !== -1) return -1;
-      if (ib !== -1) return 1;
-      return a.localeCompare(b);
-    });
-    return arr;
-  }, [rows]);
+  }, [team.id, weekKey, refreshKey, sel.start, sel.end]);
 
   const matrix: Row[] = useMemo(() => {
     const byUser = new Map<string, Row>();
     for (const r of rows) {
       let u = byUser.get(r.alias);
-      if (!u) { u = { alias: r.alias, tenant: r.tenant, perAux: {}, nptSeconds: 0, trackedSeconds: 0, nptPct: 0 }; byUser.set(r.alias, u); }
-      for (const [name, sec] of Object.entries(r.aux_seconds || {})) {
-        if (name === ANCHOR) continue;
-        u.perAux[name] = (u.perAux[name] || 0) + sec;
+      if (!u) {
+        const perAux: Record<string, number> = {};
+        for (const c of NPT_AUX) perAux[c] = 0;
+        u = { alias: r.alias, perAux, nptSeconds: 0, planned: null, remaining: null, status: "none" };
+        byUser.set(r.alias, u);
       }
-      const d = computeDay(r.aux_seconds, excluded);
-      u.nptSeconds += d.nptSeconds;
-      u.trackedSeconds += d.trackedSeconds;
+      for (const c of NPT_AUX) {
+        const s = (r.aux_seconds && r.aux_seconds[c]) || 0;
+        u.perAux[c] += s;
+        u.nptSeconds += s;
+      }
     }
     const out = Array.from(byUser.values());
-    for (const u of out) u.nptPct = u.trackedSeconds ? u.nptSeconds / u.trackedSeconds : 0;
-    out.sort((a, b) => b.nptPct - a.nptPct);
+    for (const u of out) {
+      u.planned = resolvePlanned(planned, u.alias, weekKey);
+      u.remaining = u.planned != null ? u.planned - u.nptSeconds : null;
+      u.status = statusFor(u.planned, u.nptSeconds);
+    }
+    out.sort((a, b) =>
+      STATUS_RANK[a.status] - STATUS_RANK[b.status] ||
+      b.nptSeconds - a.nptSeconds ||
+      a.alias.localeCompare(b.alias));
     return out;
-  }, [rows, excluded]);
+  }, [rows, planned, weekKey]);
 
-  function hrs(sec: number): string {
-    if (!sec) return "-";
-    return (sec / 3600).toFixed(2);
-  }
+  const shown = useMemo(() => {
+    const q = filter.trim().toLowerCase();
+    return q ? matrix.filter((u) => u.alias.toLowerCase().includes(q)) : matrix;
+  }, [matrix, filter]);
 
   function exportCsv() {
-    const head = ["Investigator", "Tenant", ...categories.map((c) => c + " (h)" + (exSet.has(c) ? " [excl]" : "")), "Total NPT (h)", "NPT %", "Status"];
+    const head = ["Investigator", ...NPT_AUX, "Planned", "Total NPT", "Remaining", "Status"];
     const lines = [head.map(csv).join(",")];
-    for (const u of matrix) {
+    for (const u of shown) {
       const cells = [
-        u.alias, u.tenant || "",
-        ...categories.map((c) => ((u.perAux[c] || 0) / 3600).toFixed(2)),
-        (u.nptSeconds / 3600).toFixed(2),
-        (u.nptPct * 100).toFixed(2) + "%",
-        u.nptPct > target ? "Over" : "On",
+        u.alias,
+        ...NPT_AUX.map((c) => fmtHms(u.perAux[c] || 0)),
+        u.planned != null ? fmtHms(u.planned) : "",
+        fmtHms(u.nptSeconds),
+        u.remaining != null ? fmtHms(u.remaining) : "",
+        u.status,
       ];
       lines.push(cells.map((x) => csv(String(x))).join(","));
     }
@@ -115,7 +111,7 @@ export default function Distribution({ team, refreshKey }: { team: Team; refresh
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `npt-distribution_${from}_${to}.csv`;
+    a.download = `npt-distribution_week${sel.week}_${sel.key}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   }
@@ -123,45 +119,46 @@ export default function Distribution({ team, refreshKey }: { team: Team; refresh
   return (
     <div>
       <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", marginBottom: 16 }}>
-        <Field label="From"><input type="date" value={from} onChange={(e) => setFrom(e.target.value)} style={input} /></Field>
-        <Field label="To"><input type="date" value={to} onChange={(e) => setTo(e.target.value)} style={input} /></Field>
-        <div style={{ color: palette.textDim, fontSize: 13 }}>Target: {team.npt_target_pct}%</div>
-        <button onClick={exportCsv} disabled={!matrix.length} style={csvBtn}>Export CSV</button>
+        <Field label="Week">
+          <select value={weekKey} onChange={(e) => setWeekKey(e.target.value)} style={select}>
+            {weeks.map((w) => (<option key={w.key} value={w.key}>{weekLabel(w)}</option>))}
+          </select>
+        </Field>
+        <Field label="Filter user">
+          <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="username" style={input} />
+        </Field>
+        <button onClick={exportCsv} disabled={!shown.length} style={csvBtn}>Export CSV</button>
       </div>
 
-      {err && <div style={{ color: palette.over, marginBottom: 12 }}>{err}</div>}
+      {err && <div style={{ color: palette.bad, marginBottom: 12 }}>{err}</div>}
       {loading ? (
         <div style={{ color: palette.textDim }}>Loading...</div>
       ) : matrix.length === 0 ? (
-        <div style={{ color: palette.textDim }}>No reported data in this range yet.</div>
+        <div style={{ color: palette.textDim }}>No reported data for {weekLabel(sel)}.</div>
       ) : (
         <div style={{ overflowX: "auto", border: `1px solid ${palette.border}`, borderRadius: 8 }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, whiteSpace: "nowrap" }}>
             <thead>
               <tr>
                 <th style={{ ...th, textAlign: "left" }}>Investigator</th>
-                {categories.map((c) => (
-                  <th key={c} style={{ ...th, ...(exSet.has(c) ? { color: palette.under, textDecoration: "line-through" } : {}) }} title={exSet.has(c) ? "excluded from NPT by config" : ""}>
-                    {c}
-                  </th>
-                ))}
+                {NPT_AUX.map((c) => (<th key={c} style={th}>{c}</th>))}
+                <th style={th}>Planned</th>
                 <th style={th}>Total NPT</th>
-                <th style={th}>NPT %</th>
+                <th style={th}>Remaining</th>
                 <th style={th}>Status</th>
               </tr>
             </thead>
             <tbody>
-              {matrix.map((u, i) => (
+              {shown.map((u, i) => (
                 <tr key={u.alias} style={{ background: i % 2 ? palette.panelAlt : palette.panel }}>
-                  <td style={{ ...td, textAlign: "left", fontWeight: 600 }}>
-                    {u.alias}{u.tenant ? <span style={{ color: palette.textDim, fontWeight: 400 }}> ({u.tenant})</span> : null}
-                  </td>
-                  {categories.map((c) => (
-                    <td key={c} style={{ ...td, color: exSet.has(c) ? palette.under : palette.text }}>{hrs(u.perAux[c] || 0)}</td>
+                  <td style={{ ...td, textAlign: "left", fontWeight: 600 }}>{u.alias}</td>
+                  {NPT_AUX.map((c) => (
+                    <td key={c} style={{ ...td, color: u.perAux[c] ? palette.text : palette.textDim }}>{u.perAux[c] ? fmtHms(u.perAux[c]) : "-"}</td>
                   ))}
-                  <td style={{ ...td, fontWeight: 600 }}>{hrs(u.nptSeconds)}</td>
-                  <td style={{ ...td, fontWeight: 700 }}>{(u.nptPct * 100).toFixed(2)}%</td>
-                  <td style={td}>{u.nptPct > target ? <Chip filled>Over</Chip> : <Chip>On</Chip>}</td>
+                  <td style={{ ...td, color: palette.textDim }}>{u.planned != null ? fmtHms(u.planned) : "-"}</td>
+                  <td style={{ ...td, fontWeight: 700 }}>{fmtHms(u.nptSeconds)}</td>
+                  <td style={{ ...td, color: remainingColor(u.status) }}>{u.remaining != null ? fmtHms(u.remaining) : "-"}</td>
+                  <td style={td}><StatusChip status={u.status} /></td>
                 </tr>
               ))}
             </tbody>
@@ -169,10 +166,14 @@ export default function Distribution({ team, refreshKey }: { team: Team; refresh
         </div>
       )}
       <div style={{ color: palette.textDim, fontSize: 11, marginTop: 8 }}>
-        Values in hours. Columns struck through are excluded from NPT in Config. Offline (shift anchor) is not shown.
+        The 5 columns are the AUX that count as NPT (why over target). Total NPT = Actual = their sum. Remaining = Planned - Actual. Hh:mm:ss.
       </div>
     </div>
   );
+}
+
+function remainingColor(s: NptStatus): string {
+  return s === "bad" ? palette.bad : s === "warn" ? palette.warn : s === "ok" ? palette.ok : palette.textDim;
 }
 
 function csv(s: string) { return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
@@ -186,20 +187,8 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function Chip({ children, filled }: { children: React.ReactNode; filled?: boolean }) {
-  return (
-    <span style={{
-      fontSize: 12,
-      padding: "2px 8px",
-      borderRadius: 999,
-      border: `1px solid ${palette.text}`,
-      background: filled ? palette.text : "transparent",
-      color: filled ? "#fff" : palette.text,
-    }}>{children}</span>
-  );
-}
-
 const th: React.CSSProperties = { textAlign: "right", padding: "9px 12px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}`, position: "sticky", top: 0, background: palette.bg };
 const td: React.CSSProperties = { textAlign: "right", padding: "8px 12px", borderBottom: `1px solid ${palette.border}` };
 const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 14 };
+const select: React.CSSProperties = { ...input, minWidth: 260 };
 const csvBtn: React.CSSProperties = { marginLeft: "auto", background: palette.text, color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 13, cursor: "pointer", fontWeight: 600 };
