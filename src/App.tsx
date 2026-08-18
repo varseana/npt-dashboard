@@ -30,6 +30,13 @@ export default function App() {
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamId, setTeamId] = useState<string>("");
   const [tab, setTab] = useState<"overview" | "distribution" | "enrolled" | "config">("overview");
+  const [refreshTick, setRefreshTick] = useState(0);
+
+  // auto-refresco: cada 15s bumpea el tick y las vistas re-consultan (sin recargar la pagina)
+  useEffect(() => {
+    const id = setInterval(() => setRefreshTick((t) => t + 1), 15000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -104,9 +111,9 @@ export default function App() {
         </nav>
       </div>
 
-      {team && tab === "overview" && <Overview team={team} />}
-      {team && tab === "distribution" && <Distribution team={team} />}
-      {team && tab === "enrolled" && <Enrolled team={team} />}
+      {team && tab === "overview" && <Overview team={team} refreshKey={refreshTick} />}
+      {team && tab === "distribution" && <Distribution team={team} refreshKey={refreshTick} />}
+      {team && tab === "enrolled" && <Enrolled team={team} refreshKey={refreshTick} />}
       {team && tab === "config" && <ConfigEditor team={team} />}
     </div>
   );

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { aggregateByUser, fmtHrs, fmtPct, type NptDailyRow } from "../lib/npt";
@@ -12,18 +12,19 @@ function isoDaysAgo(n: number): string {
   return d.toISOString().slice(0, 10);
 }
 
-export default function Overview({ team }: { team: Team }) {
+export default function Overview({ team, refreshKey }: { team: Team; refreshKey?: number }) {
   const [from, setFrom] = useState(isoDaysAgo(13));
   const [to, setTo] = useState(isoDaysAgo(0));
   const [rows, setRows] = useState<NptDailyRow[]>([]);
   const [excluded, setExcluded] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const first = useRef(true);   // solo la 1ra carga muestra "Loading..."; el auto-refresco es silencioso
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      setLoading(true);
+      if (first.current) setLoading(true);
       setErr("");
       const [{ data: cfg }, { data: d, error }] = await Promise.all([
         supabase.from("npt_config").select("excluded_aux").eq("team_id", team.id).maybeSingle(),
@@ -38,10 +39,11 @@ export default function Overview({ team }: { team: Team }) {
       if (error) setErr(error.message);
       setExcluded((cfg?.excluded_aux as string[]) ?? []);
       setRows((d as NptDailyRow[]) ?? []);
+      first.current = false;
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [team.id, from, to]);
+  }, [team.id, from, to, refreshKey]);
 
   const target = team.npt_target_pct / 100;
   const users = useMemo(() => aggregateByUser(rows, excluded, target), [rows, excluded, target]);

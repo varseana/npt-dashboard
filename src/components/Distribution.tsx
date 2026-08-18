@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { AUX_ORDER, ANCHOR, computeDay, type NptDailyRow } from "../lib/npt";
@@ -23,18 +23,19 @@ interface Row {
 
 // espeja la hoja "NPT Distribution" del Excel: una fila por investigador,
 // una columna por bucket de AUX, mas total NPT / % / status.
-export default function Distribution({ team }: { team: Team }) {
+export default function Distribution({ team, refreshKey }: { team: Team; refreshKey?: number }) {
   const [from, setFrom] = useState(isoDaysAgo(13));
   const [to, setTo] = useState(isoDaysAgo(0));
   const [rows, setRows] = useState<NptDailyRow[]>([]);
   const [excluded, setExcluded] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const first = useRef(true);   // solo la 1ra carga muestra "Loading..."; el auto-refresco es silencioso
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      setLoading(true);
+      if (first.current) setLoading(true);
       setErr("");
       const [{ data: cfg }, { data: d, error }] = await Promise.all([
         supabase.from("npt_config").select("excluded_aux").eq("team_id", team.id).maybeSingle(),
@@ -49,10 +50,11 @@ export default function Distribution({ team }: { team: Team }) {
       if (error) setErr(error.message);
       setExcluded((cfg?.excluded_aux as string[]) ?? []);
       setRows((d as NptDailyRow[]) ?? []);
+      first.current = false;
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [team.id, from, to]);
+  }, [team.id, from, to, refreshKey]);
 
   const target = team.npt_target_pct / 100;
   const exSet = useMemo(() => new Set(excluded), [excluded]);

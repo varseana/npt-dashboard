@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 
@@ -17,15 +17,16 @@ interface Person {
 // lista de todos los que estan reportando (enrolled): derivada de quien subio data.
 // el backend no marca "enrolled" por persona (el enrollment es del lado del cliente),
 // asi que la fuente de verdad de "quien reporta" son los alias distintos en npt_daily.
-export default function Enrolled({ team }: { team: Team }) {
+export default function Enrolled({ team, refreshKey }: { team: Team; refreshKey?: number }) {
   const [raw, setRaw] = useState<Raw[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const first = useRef(true);   // solo la 1ra carga muestra "Loading..."; el auto-refresco es silencioso
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      setLoading(true);
+      if (first.current) setLoading(true);
       setErr("");
       const { data, error } = await supabase
         .from("npt_daily")
@@ -34,10 +35,11 @@ export default function Enrolled({ team }: { team: Team }) {
       if (cancelled) return;
       if (error) setErr(error.message);
       setRaw((data as Raw[]) ?? []);
+      first.current = false;
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [team.id]);
+  }, [team.id, refreshKey]);
 
   const people = useMemo(() => {
     const m = new Map<string, Person>();
