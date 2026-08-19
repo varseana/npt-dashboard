@@ -85,7 +85,7 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
       {msg && <div style={{ marginBottom: 12, color: msg.startsWith("Error") ? palette.bad : palette.warn, fontSize: 18 }}>{msg}</div>}
 
       <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "14px 16px", marginBottom: 20 }}>
-        <div style={{ fontWeight: 700, marginBottom: 10 }}>New team</div>
+        <div className="npt-title" style={{ fontWeight: 700, marginBottom: 10 }}>New team</div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Team name"
             style={{ ...input, width: 200 }} />

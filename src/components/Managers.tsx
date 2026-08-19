@@ -223,7 +223,7 @@ function Section({ title, hint, highlight, children }:
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
         {highlight && <span style={{ color: palette.warn, display: "inline-flex" }}><IconAlert size={15} /></span>}
         {/* header estilo Off-White: mayusculas industriales + tracking; las comillas van en el title */}
-        <span style={{ fontWeight: 700, fontSize: 21, textTransform: "uppercase", letterSpacing: "0.06em" }}>{title}</span>
+        <span className="npt-title" style={{ fontWeight: 700, fontSize: 21, textTransform: "uppercase", letterSpacing: "0.06em" }}>{title}</span>
       </div>
       {hint && <div style={{ color: palette.textDim, fontSize: 18, marginBottom: 8 }}>{hint}</div>}
       <div style={{ border: `1px solid ${highlight ? palette.warn + "55" : palette.border}`, borderRadius: 8,

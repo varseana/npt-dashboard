@@ -9,6 +9,18 @@
     <style>
       html, body { margin: 0; background: #f7f7f5; }
 
+      /* pixel font (Silvester Pixel Demo) para titulos y subtitulos; el cuerpo sigue en Outfit.
+         fallback a Outfit por glifo (si al font demo le falta un simbolo como / " ( ) cae a Outfit). */
+      @font-face {
+        font-family: 'Silvester Pixel';
+        src: url('/silvester-pixel.otf') format('opentype');
+        font-display: swap;
+      }
+      h1, h2, h3,
+      .npt-title {
+        font-family: 'Silvester Pixel', 'Outfit Variable', 'Segoe UI', system-ui, sans-serif;
+      }
+
       /* botones destructivos: hover con transicion suave */
       .npt-btn-remove {
         background: #ffffff; color: #b42318; border: 1px solid #b4231855;

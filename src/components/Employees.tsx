@@ -99,7 +99,7 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
   return (
     <div>
       <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "14px 16px", marginBottom: 16 }}>
-        <div style={{ fontWeight: 700, marginBottom: 4 }}>Add employees to {team.name}</div>
+        <div className="npt-title" style={{ fontWeight: 700, marginBottom: 4 }}>Add employees to {team.name}</div>
         <div style={{ color: palette.textDim, fontSize: 18, marginBottom: 10 }}>
           Add expected usernames. They show as Pending until the person connects via STAR Tracker and uploads. This does not affect anyone's numbers.
         </div>
