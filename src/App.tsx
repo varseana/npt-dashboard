@@ -33,7 +33,11 @@ export default function App() {
   const [manager, setManager] = useState<ManagerRow | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamId, setTeamId] = useState<string>("");
-  const [tab, setTab] = useState<"overview" | "distribution" | "employees" | "planned" | "folders" | "org" | "requests">("overview");
+  // nav de 2 niveles (progressive disclosure): 3 secciones arriba, sub-nav adentro
+  const [section, setSection] = useState<"dashboard" | "team" | "access">("dashboard");
+  const [dashView, setDashView] = useState<"summary" | "breakdown">("summary");
+  const [teamTab, setTeamTab] = useState<"employees" | "planned" | "folders">("employees");
+  const [accessTab, setAccessTab] = useState<"requests" | "org">("requests");
   const [refreshTick, setRefreshTick] = useState(0);
 
   // auto-refresco: cada 15s bumpea el tick y las vistas re-consultan (sin recargar la pagina)
@@ -90,7 +94,7 @@ export default function App() {
   const team = teams.find((t) => t.id === teamId) ?? null;
 
   return (
-    <div style={{ maxWidth: 960, margin: "0 auto", padding: "24px 16px" }}>
+    <div style={{ maxWidth: "min(1500px, 95vw)", margin: "0 auto", padding: "24px 28px" }}>
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 22, color: palette.text }}>STAR NPT Dashboard</h1>
@@ -102,7 +106,7 @@ export default function App() {
         </div>
       </header>
 
-      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10, flexWrap: "wrap" }}>
         {teams.length > 1 && (
           <select value={teamId} onChange={(e) => setTeamId(e.target.value)} style={select}>
             {teams.map((t) => (
@@ -111,23 +115,35 @@ export default function App() {
           </select>
         )}
         <nav style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          <TabBtn active={tab === "overview"} onClick={() => setTab("overview")}>Overview</TabBtn>
-          <TabBtn active={tab === "distribution"} onClick={() => setTab("distribution")}>Distribution</TabBtn>
-          <TabBtn active={tab === "employees"} onClick={() => setTab("employees")}>Employees</TabBtn>
-          <TabBtn active={tab === "planned"} onClick={() => setTab("planned")}>Planned</TabBtn>
-          <TabBtn active={tab === "folders"} onClick={() => setTab("folders")}>Folders</TabBtn>
-          <TabBtn active={tab === "requests"} onClick={() => setTab("requests")}>Requests</TabBtn>
-          {manager.role === "admin" && <TabBtn active={tab === "org"} onClick={() => setTab("org")}>Org</TabBtn>}
+          <TabBtn active={section === "dashboard"} onClick={() => setSection("dashboard")}>Dashboard</TabBtn>
+          <TabBtn active={section === "team"} onClick={() => setSection("team")}>Team</TabBtn>
+          <TabBtn active={section === "access"} onClick={() => setSection("access")}>Access</TabBtn>
         </nav>
       </div>
 
-      {team && tab === "overview" && <Overview team={team} refreshKey={refreshTick} />}
-      {team && tab === "distribution" && <Distribution team={team} refreshKey={refreshTick} />}
-      {team && tab === "employees" && <Employees team={team} refreshKey={refreshTick} />}
-      {team && tab === "planned" && <Planned team={team} />}
-      {team && tab === "folders" && <Folders team={team} />}
-      {tab === "requests" && <Requests role={manager.role} myUserId={manager.user_id} />}
-      {tab === "org" && manager.role === "admin" && <Org />}
+      <div style={{ display: "flex", gap: 4, marginBottom: 18, borderBottom: `1px solid ${palette.border}` }}>
+        {section === "dashboard" && (<>
+          <SubBtn active={dashView === "summary"} onClick={() => setDashView("summary")}>Summary</SubBtn>
+          <SubBtn active={dashView === "breakdown"} onClick={() => setDashView("breakdown")}>Breakdown</SubBtn>
+        </>)}
+        {section === "team" && (<>
+          <SubBtn active={teamTab === "employees"} onClick={() => setTeamTab("employees")}>Employees</SubBtn>
+          <SubBtn active={teamTab === "planned"} onClick={() => setTeamTab("planned")}>Planned</SubBtn>
+          <SubBtn active={teamTab === "folders"} onClick={() => setTeamTab("folders")}>Folders</SubBtn>
+        </>)}
+        {section === "access" && (<>
+          <SubBtn active={accessTab === "requests"} onClick={() => setAccessTab("requests")}>Requests</SubBtn>
+          {manager.role === "admin" && <SubBtn active={accessTab === "org"} onClick={() => setAccessTab("org")}>Org</SubBtn>}
+        </>)}
+      </div>
+
+      {section === "dashboard" && team && dashView === "summary" && <Overview team={team} refreshKey={refreshTick} />}
+      {section === "dashboard" && team && dashView === "breakdown" && <Distribution team={team} refreshKey={refreshTick} />}
+      {section === "team" && team && teamTab === "employees" && <Employees team={team} refreshKey={refreshTick} />}
+      {section === "team" && team && teamTab === "planned" && <Planned team={team} />}
+      {section === "team" && team && teamTab === "folders" && <Folders team={team} />}
+      {section === "access" && accessTab === "requests" && <Requests role={manager.role} myUserId={manager.user_id} />}
+      {section === "access" && accessTab === "org" && manager.role === "admin" && <Org />}
     </div>
   );
 }
@@ -149,6 +165,28 @@ function TabBtn({ active, onClick, children }: { active: boolean; onClick: () =>
         background: active ? palette.accent : palette.panel,
         borderColor: active ? palette.accent : palette.border,
         color: active ? "#fff" : palette.text,
+      }}
+    >
+      {children}
+    </button>
+  );
+}
+
+// sub-nav de segundo nivel: estilo segmentado (texto + subrayado), distinto al nivel 1
+function SubBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      onClick={onClick}
+      style={{
+        background: "transparent",
+        border: "none",
+        borderBottom: `2px solid ${active ? palette.accent : "transparent"}`,
+        color: active ? palette.text : palette.textDim,
+        fontWeight: active ? 700 : 500,
+        padding: "8px 12px",
+        marginBottom: -1,
+        cursor: "pointer",
+        fontSize: 13,
       }}
     >
       {children}
