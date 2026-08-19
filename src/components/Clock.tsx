@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { palette } from "../theme";
 
-// reloj LCD estilo casio, dark, arriba a la derecha. selector de timezone.
-// transicion suave por digito con CSS puro (sin libs): cada digito se re-monta con
-// key=valor y hace un fade corto; el colon parpadea por keyframe independiente.
+// reloj flat con fuente de reloj (7 segmentos DSEG7, fallback monospace).
+// color adaptativo (usa el color de texto del tema: negro sobre blanco, se invertiria
+// solo en dark mode). sin panel ni bordes; el colon parpadea y cada digito hace un
+// fade suave al cambiar (CSS puro, sin libs). el selector de tz es texto plano, sin boton.
 
 const ZONES: { label: string; tz: string }[] = [
   { label: "Local", tz: "local" },
@@ -31,17 +33,14 @@ function timeParts(date: Date, tz: string): { h: string; m: string; s: string } 
   return { h: get("hour"), m: get("minute"), s: get("second") };
 }
 
-// un par de digitos "NN": cada char sobre un "8" fantasma (look LCD) y con fade al cambiar
+// par de digitos "NN"; cada char se re-monta al cambiar (key) y hace un fade corto
 function DigitPair({ value, label }: { value: string; label: string }) {
   return (
-    <span className="nptclk-pair">
+    <>
       {value.split("").map((ch, i) => (
-        <span key={`${label}${i}-${ch}`} className="nptclk-cell">
-          <span className="nptclk-ghost">8</span>
-          <span className="nptclk-digit">{ch}</span>
-        </span>
+        <span key={`${label}${i}-${ch}`} className="nptclk-digit">{ch}</span>
       ))}
-    </span>
+    </>
   );
 }
 
@@ -67,14 +66,14 @@ export default function Clock() {
   return (
     <div className="nptclk-wrap">
       <style>{CSS}</style>
-      <div className="nptclk-lcd" title={`Timezone: ${zoneLabel}`}>
+      <div className="nptclk-lcd" style={{ color: palette.text }} title={`Timezone: ${zoneLabel}`}>
         <DigitPair value={h} label="h" />
         <span className="nptclk-colon">:</span>
         <DigitPair value={m} label="m" />
         <span className="nptclk-colon">:</span>
         <DigitPair value={s} label="s" />
       </div>
-      <select className="nptclk-tz" value={tz} onChange={(e) => changeTz(e.target.value)} title="Change timezone">
+      <select className="nptclk-tz" style={{ color: palette.textDim }} value={tz} onChange={(e) => changeTz(e.target.value)} title="Change timezone">
         {ZONES.map((z) => (<option key={z.tz} value={z.tz}>{z.label}</option>))}
       </select>
     </div>
@@ -82,34 +81,27 @@ export default function Clock() {
 }
 
 const CSS = `
-.nptclk-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; }
+@import url("https://cdn.jsdelivr.net/npm/dseg@0.46.0/css/dseg.css");
+.nptclk-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
 .nptclk-lcd {
-  display: inline-flex; align-items: center;
-  background: #0d1411; border: 1px solid #1f2b25; border-radius: 8px;
-  padding: 6px 12px; box-shadow: inset 0 1px 6px rgba(0,0,0,.6);
-  font-family: "SFMono-Regular", "Consolas", "Menlo", monospace;
-  font-size: 26px; font-weight: 700; letter-spacing: 1px; line-height: 1;
+  display: inline-flex; align-items: baseline; line-height: 1;
+  font-family: "DSEG7 Classic", "Consolas", "Menlo", monospace;
+  font-size: 24px; font-weight: 400; letter-spacing: 2px;
 }
-.nptclk-pair { display: inline-flex; }
-.nptclk-cell { position: relative; display: inline-block; width: 0.62em; text-align: center; }
-.nptclk-ghost { color: #17f0a01a; }
 .nptclk-digit {
-  position: absolute; left: 0; right: 0; top: 0;
-  color: #24f0a8; text-shadow: 0 0 6px rgba(36,240,168,.55);
+  display: inline-block; text-align: center;
   animation: nptclk-fade .22s ease-out;
 }
-.nptclk-colon {
-  color: #24f0a8; text-shadow: 0 0 6px rgba(36,240,168,.55);
-  padding: 0 2px; animation: nptclk-blink 1s steps(1) infinite;
-}
-@keyframes nptclk-blink { 0%,50% { opacity: 1; } 50.01%,100% { opacity: .12; } }
-@keyframes nptclk-fade { from { opacity: .15; transform: translateY(-2px); } to { opacity: 1; transform: translateY(0); } }
+.nptclk-colon { padding: 0 2px; animation: nptclk-blink 1s steps(1) infinite; }
+@keyframes nptclk-blink { 0%,50% { opacity: 1; } 50.01%,100% { opacity: .15; } }
+@keyframes nptclk-fade { from { opacity: .2; } to { opacity: 1; } }
 .nptclk-tz {
-  background: #0d1411; color: #9fb8ae; border: 1px solid #1f2b25;
-  border-radius: 6px; padding: 2px 6px; font-size: 11px; cursor: pointer;
+  border: none; background: transparent; padding: 0; margin: 0;
+  font-size: 11px; cursor: pointer; text-align: right;
+  appearance: none; -webkit-appearance: none;
 }
+.nptclk-tz:focus { outline: none; }
 @media (prefers-reduced-motion: reduce) {
-  .nptclk-digit { animation: none; }
-  .nptclk-colon { animation: none; }
+  .nptclk-digit, .nptclk-colon { animation: none; }
 }
 `;
