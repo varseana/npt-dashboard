@@ -8,6 +8,7 @@ import {
   type NptDailyRow, type NptStatus, type PlannedRow,
 } from "../lib/npt";
 import { StatusChip } from "./status";
+import { BlockSkeleton } from "./skeleton";
 
 interface ManagerRow { user_id: string; email: string; role: string; team_id: string | null; }
 interface MemberLink { manager_owner: string; alias: string; team_id: string | null; }
@@ -81,7 +82,7 @@ export default function Org() {
     else await load();
   }
 
-  if (loading) return <div style={{ color: palette.textDim }}>Loading...</div>;
+  if (loading) return <BlockSkeleton />;
 
   const realManagers = managers.filter((m) => m.role === "manager");
 

@@ -10,6 +10,7 @@ import {
 import { StatusChip } from "./status";
 import { downloadEml } from "../lib/reminder";
 import { IconMail, IconAlert } from "./icons";
+import { TableSkeleton } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 interface Folder { id: string; name: string; aliases: string[]; }
@@ -140,7 +141,7 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
 
       {err && <div style={{ color: palette.bad, marginBottom: 12 }}>{err}</div>}
       {loading ? (
-        <div style={{ color: palette.textDim }}>Loading...</div>
+        <TableSkeleton rows={6} cols={7} />
       ) : users.length === 0 ? (
         <div style={{ color: palette.textDim }}>No reported data for {weekLabel(sel)}.</div>
       ) : (

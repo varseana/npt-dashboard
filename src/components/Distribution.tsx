@@ -8,6 +8,7 @@ import {
   type NptDailyRow, type NptStatus, type PlannedRow,
 } from "../lib/npt";
 import { StatusChip } from "./status";
+import { TableSkeleton } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 
@@ -132,7 +133,7 @@ export default function Distribution({ team, refreshKey }: { team: Team; refresh
 
       {err && <div style={{ color: palette.bad, marginBottom: 12 }}>{err}</div>}
       {loading ? (
-        <div style={{ color: palette.textDim }}>Loading...</div>
+        <TableSkeleton rows={6} cols={8} />
       ) : matrix.length === 0 ? (
         <div style={{ color: palette.textDim }}>No reported data for {weekLabel(sel)}.</div>
       ) : (

@@ -7,6 +7,7 @@ import {
   weekInfo, weekLabel, recentWeeks,
   type PlannedRow,
 } from "../lib/npt";
+import { BlockSkeleton } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 type Scope = "standing" | "week";
@@ -83,7 +84,7 @@ export default function Planned({ team }: { team: Team }) {
     setSaving(false);
   }
 
-  if (loading) return <div style={{ color: palette.textDim }}>Loading...</div>;
+  if (loading) return <BlockSkeleton />;
 
   const scopeLabel = scope === "standing" ? "standing (all weeks)" : weekLabel(weekInfo(new Date(weekKey + "T12:00:00")));
 

@@ -2,6 +2,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
+import { BlockSkeleton } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 interface Folder { id: string; name: string; aliases: string[]; }
@@ -55,7 +56,7 @@ export default function Folders({ team }: { team: Team }) {
     if (error) { setMsg("Error: " + error.message); await load(); }
   }
 
-  if (loading) return <div style={{ color: palette.textDim }}>Loading...</div>;
+  if (loading) return <BlockSkeleton />;
 
   return (
     <div style={{ maxWidth: 720 }}>

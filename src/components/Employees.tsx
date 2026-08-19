@@ -2,6 +2,7 @@ import * as React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
+import { TableSkeleton } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 
@@ -131,7 +132,7 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
 
       {err && <div style={{ color: palette.bad, marginBottom: 12 }}>{err}</div>}
       {loading ? (
-        <div style={{ color: palette.textDim }}>Loading...</div>
+        <TableSkeleton rows={6} cols={5} />
       ) : people.length === 0 ? (
         <div style={{ color: palette.textDim }}>No employees yet. Add them above.</div>
       ) : (
