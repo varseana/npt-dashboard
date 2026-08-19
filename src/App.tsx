@@ -10,6 +10,7 @@ import Employees from "./components/Employees";
 import Planned from "./components/Planned";
 import Folders from "./components/Folders";
 import Clock from "./components/Clock";
+import Org from "./components/Org";
 
 interface ManagerRow {
   user_id: string;
@@ -31,7 +32,7 @@ export default function App() {
   const [manager, setManager] = useState<ManagerRow | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamId, setTeamId] = useState<string>("");
-  const [tab, setTab] = useState<"overview" | "distribution" | "employees" | "planned" | "folders">("overview");
+  const [tab, setTab] = useState<"overview" | "distribution" | "employees" | "planned" | "folders" | "org">("overview");
   const [refreshTick, setRefreshTick] = useState(0);
 
   // auto-refresco: cada 15s bumpea el tick y las vistas re-consultan (sin recargar la pagina)
@@ -114,6 +115,7 @@ export default function App() {
           <TabBtn active={tab === "employees"} onClick={() => setTab("employees")}>Employees</TabBtn>
           <TabBtn active={tab === "planned"} onClick={() => setTab("planned")}>Planned</TabBtn>
           <TabBtn active={tab === "folders"} onClick={() => setTab("folders")}>Folders</TabBtn>
+          {manager.role === "admin" && <TabBtn active={tab === "org"} onClick={() => setTab("org")}>Org</TabBtn>}
         </nav>
       </div>
 
@@ -122,6 +124,7 @@ export default function App() {
       {team && tab === "employees" && <Employees team={team} refreshKey={refreshTick} />}
       {team && tab === "planned" && <Planned team={team} />}
       {team && tab === "folders" && <Folders team={team} />}
+      {tab === "org" && manager.role === "admin" && <Org />}
     </div>
   );
 }
