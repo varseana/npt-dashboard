@@ -153,7 +153,7 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
         <div style={{ color: palette.textDim }}>No reported data for {weekLabel(sel)}.</div>
       ) : (
         <>
-          <TeamBudgetCard budget={teamBudget} used={teamNpt} remaining={teamRemaining} status={teamStatus} />
+          <TeamBudgetCard budget={teamBudget} used={teamNpt} remaining={teamRemaining} status={teamStatus} users={users} />
           <div style={{ display: "flex", gap: 12, marginBottom: 18, flexWrap: "wrap" }}>
             <Stat label="Investigators reporting" value={String(users.length)} />
             <Stat label="Team NPT (actual)" value={fmtHms(teamNpt)} />
@@ -225,11 +225,9 @@ function remainingColor(s: NptStatus): string {
   return s === "bad" ? palette.bad : s === "warn" ? palette.warn : s === "ok" ? palette.ok : palette.textDim;
 }
 
-// rollup del TEAM: presupuesto total de la semana vs lo consumido por todos, con barra.
-function TeamBudgetCard({ budget, used, remaining, status }:
-  { budget: number | null; used: number; remaining: number | null; status: NptStatus }) {
-  const fillColor = status === "bad" ? palette.bad : status === "warn" ? palette.warn : palette.ok;
-  const pct = budget ? Math.min(100, (used / budget) * 100) : 0;
+// rollup del TEAM: presupuesto total de la semana vs lo consumido por todos.
+function TeamBudgetCard({ budget, used, remaining, status, users }:
+  { budget: number | null; used: number; remaining: number | null; status: NptStatus; users: { alias: string; nptSeconds: number }[] }) {
   return (
     <div style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: "16px 20px", marginBottom: 18 }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
@@ -248,11 +246,66 @@ function TeamBudgetCard({ budget, used, remaining, status }:
             <BudgetStat label="Remaining" value={fmtHms(remaining ?? 0)} color={remainingColor(status)} />
             <BudgetStat label="Used %" value={((used / budget) * 100).toFixed(1) + "%"} />
           </div>
-          <div style={{ height: 12, borderRadius: 6, background: palette.panelAlt, overflow: "hidden" }}>
-            <div style={{ width: pct + "%", height: "100%", background: fillColor, transition: "width .3s" }} />
-          </div>
+          <TeamBudgetBar budget={budget} status={status} users={users} />
         </>
       )}
+    </div>
+  );
+}
+
+// barra segmentada por usuario: NEGRA por defecto (minimalista, solo se ve el aporte de cada uno
+// con su nombre), y REVELA el color de status (verde/amarillo/rojo) al hacer hover. Aportes < 3%
+// del budget se agrupan en "Other". Cada segmento: tooltip con alias, % y tiempo.
+function TeamBudgetBar({ budget, status, users }:
+  { budget: number; status: NptStatus; users: { alias: string; nptSeconds: number }[] }) {
+  const [hover, setHover] = useState(false);
+  const [locked, setLocked] = useState(false);
+  const lockTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { if (lockTimer.current) clearTimeout(lockTimer.current); }, []);
+  // revelado = hover o locked. click: si esta locked destraba; si no, la deja locked 30s.
+  const revealed = hover || locked;
+  function toggleLock() {
+    if (lockTimer.current) { clearTimeout(lockTimer.current); lockTimer.current = null; }
+    if (locked) { setLocked(false); return; }
+    setLocked(true);
+    lockTimer.current = setTimeout(() => { setLocked(false); lockTimer.current = null; }, 30000);
+  }
+  const color = status === "bad" ? palette.bad : status === "warn" ? palette.warn : palette.ok;
+  const THRESH = 3; // % del budget: debajo de esto va a "Other"
+
+  const contribs = users
+    .map((u) => ({ label: u.alias, seconds: u.nptSeconds, pct: (u.nptSeconds / budget) * 100 }))
+    .filter((s) => s.pct > 0)
+    .sort((a, b) => b.pct - a.pct);
+  const big = contribs.filter((s) => s.pct >= THRESH);
+  const small = contribs.filter((s) => s.pct < THRESH);
+  const segs = [...big];
+  if (small.length) {
+    segs.push({
+      label: `Other (${small.length})`,
+      seconds: small.reduce((a, s) => a + s.seconds, 0),
+      pct: small.reduce((a, s) => a + s.pct, 0),
+    });
+  }
+
+  return (
+    <div onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} onClick={toggleLock}
+      title={locked ? "Locked - click to unlock" : "Hover to reveal, click to lock 30s"}
+      style={{ display: "flex", height: 26, borderRadius: 6, overflow: "hidden", background: palette.panelAlt, gap: 1, cursor: "pointer",
+        outline: locked ? `2px solid ${color}` : "none", outlineOffset: 2 }}>
+      {segs.map((s, i) => (
+        <div key={i} title={`${s.label} :: ${s.pct.toFixed(1)}% (${fmtHms(s.seconds)})`}
+          style={{
+            width: s.pct + "%", minWidth: 0, background: revealed ? color : palette.text,
+            transition: "background .2s", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
+          }}>
+          {revealed && (
+            <span style={{ fontSize: 13, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", padding: "0 6px" }}>
+              {s.label}
+            </span>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
