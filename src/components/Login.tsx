@@ -48,8 +48,8 @@ export default function Login() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <form onSubmit={submit} style={{ width: 340, background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 14, padding: 24 }}>
-        <h1 style={{ margin: "0 0 4px", fontSize: 35, color: palette.text }}>STAR NPT Dashboard</h1>
-        <p style={{ margin: "0 0 20px", fontSize: 23, color: palette.textDim }}>
+        <h1 style={{ margin: "0 0 4px", fontSize: 28, color: palette.text }}>STAR NPT Dashboard</h1>
+        <p style={{ margin: "0 0 20px", fontSize: 18, color: palette.textDim }}>
           {mode === "in" ? "Manager access. Sign in to continue." : "Request access with your work email. An admin approves it."}
         </p>
         <label style={label}>Email</label>
@@ -60,9 +60,9 @@ export default function Login() {
         <button style={submit_} disabled={busy} type="submit">
           {busy ? "Please wait..." : mode === "in" ? "Sign in" : "Create account"}
         </button>
-        {msg && <div style={{ marginTop: 12, color: palette.bad, fontSize: 23 }}>{msg}</div>}
-        {ok && <div style={{ marginTop: 12, color: palette.ok, fontSize: 23 }}>{ok}</div>}
-        <div style={{ marginTop: 16, textAlign: "center", fontSize: 23, color: palette.textDim }}>
+        {msg && <div style={{ marginTop: 12, color: palette.bad, fontSize: 18 }}>{msg}</div>}
+        {ok && <div style={{ marginTop: 12, color: palette.ok, fontSize: 18 }}>{ok}</div>}
+        <div style={{ marginTop: 16, textAlign: "center", fontSize: 18, color: palette.textDim }}>
           {mode === "in" ? "Need access? " : "Already have an account? "}
           <button type="button" onClick={() => { setMode(mode === "in" ? "up" : "in"); setMsg(""); setOk(""); }}
             style={linkBtn}>
@@ -74,16 +74,16 @@ export default function Login() {
   );
 }
 
-const label: React.CSSProperties = { display: "block", fontSize: 21, color: palette.textDim, margin: "10px 0 4px" };
+const label: React.CSSProperties = { display: "block", fontSize: 17, color: palette.textDim, margin: "10px 0 4px" };
 const input: React.CSSProperties = {
   width: "100%", boxSizing: "border-box", background: palette.bg, color: palette.text,
-  border: `1px solid ${palette.border}`, borderRadius: 8, padding: "9px 10px", fontSize: 24,
+  border: `1px solid ${palette.border}`, borderRadius: 8, padding: "9px 10px", fontSize: 19,
 };
 const submit_: React.CSSProperties = {
   width: "100%", marginTop: 18, background: palette.accent, color: "#fff", border: "none",
-  borderRadius: 8, padding: "10px", fontSize: 24, cursor: "pointer", fontWeight: 600,
+  borderRadius: 8, padding: "10px", fontSize: 19, cursor: "pointer", fontWeight: 600,
 };
 const linkBtn: React.CSSProperties = {
   background: "none", border: "none", color: palette.accent, cursor: "pointer",
-  fontSize: 23, fontWeight: 600, padding: 0,
+  fontSize: 18, fontWeight: 600, padding: 0,
 };

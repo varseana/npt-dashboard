@@ -138,7 +138,7 @@ export default function Distribution({ team, refreshKey }: { team: Team; refresh
         <div style={{ color: palette.textDim }}>No reported data for {weekLabel(sel)}.</div>
       ) : (
         <div style={{ overflowX: "auto", border: `1px solid ${palette.border}`, borderRadius: 8 }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 23, whiteSpace: "nowrap" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 18, whiteSpace: "nowrap" }}>
             <thead>
               <tr>
                 <th style={{ ...th, textAlign: "left" }}>Investigator</th>
@@ -166,7 +166,7 @@ export default function Distribution({ team, refreshKey }: { team: Team; refresh
           </table>
         </div>
       )}
-      <div style={{ color: palette.textDim, fontSize: 20, marginTop: 8 }}>
+      <div style={{ color: palette.textDim, fontSize: 16, marginTop: 8 }}>
         The 5 columns are the AUX that count as NPT (why over target). Total NPT = Actual = their sum. Remaining = Planned - Actual. Hh:mm:ss.
       </div>
     </div>
@@ -182,7 +182,7 @@ function csv(s: string) { return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div style={{ fontSize: 20, color: palette.textDim, marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 16, color: palette.textDim, marginBottom: 4 }}>{label}</div>
       {children}
     </div>
   );
@@ -190,6 +190,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 const th: React.CSSProperties = { textAlign: "right", padding: "9px 12px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}`, position: "sticky", top: 0, background: palette.bg };
 const td: React.CSSProperties = { textAlign: "right", padding: "8px 12px", borderBottom: `1px solid ${palette.border}` };
-const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 24 };
+const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 19 };
 const select: React.CSSProperties = { ...input, minWidth: 260 };
-const csvBtn: React.CSSProperties = { marginLeft: "auto", background: palette.text, color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 23, cursor: "pointer", fontWeight: 600 };
+const csvBtn: React.CSSProperties = { marginLeft: "auto", background: palette.text, color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600 };

@@ -100,7 +100,7 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
     <div>
       <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "14px 16px", marginBottom: 16 }}>
         <div style={{ fontWeight: 700, marginBottom: 4 }}>Add employees to {team.name}</div>
-        <div style={{ color: palette.textDim, fontSize: 23, marginBottom: 10 }}>
+        <div style={{ color: palette.textDim, fontSize: 18, marginBottom: 10 }}>
           Add expected usernames. They show as Pending until the person connects via STAR Tracker and uploads. This does not affect anyone's numbers.
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
@@ -118,16 +118,16 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
               <button onClick={() => add(parseAliases(bulk))} disabled={saving || !bulk.trim()} style={btn}>
                 Add {parseAliases(bulk).length || ""} in bulk
               </button>
-              <span style={{ color: palette.textDim, fontSize: 21 }}>{parseAliases(bulk).length} usernames detected</span>
+              <span style={{ color: palette.textDim, fontSize: 17 }}>{parseAliases(bulk).length} usernames detected</span>
             </div>
           </div>
         )}
-        {msg && <div style={{ marginTop: 10, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 23 }}>{msg}</div>}
+        {msg && <div style={{ marginTop: 10, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 18 }}>{msg}</div>}
       </div>
 
       <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "baseline" }}>
-        <div style={{ fontSize: 39, fontWeight: 700 }}>{people.length}</div>
-        <div style={{ color: palette.textDim, fontSize: 23 }}>{connected} connected, {pending} pending</div>
+        <div style={{ fontSize: 31, fontWeight: 700 }}>{people.length}</div>
+        <div style={{ color: palette.textDim, fontSize: 18 }}>{connected} connected, {pending} pending</div>
       </div>
 
       {err && <div style={{ color: palette.bad, marginBottom: 12 }}>{err}</div>}
@@ -137,7 +137,7 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
         <div style={{ color: palette.textDim }}>No employees yet. Add them above.</div>
       ) : (
         <div style={{ border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 24 }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19 }}>
             <thead>
               <tr>
                 {["#", "Investigator", "Status", "Days reported", "Last report", ""].map((h, i) => (
@@ -175,11 +175,11 @@ function ConnChip({ status }: { status: ConnStatus }) {
     unlisted: { label: "Unlisted", fg: palette.textDim, bg: palette.panelAlt },
   };
   const s = map[status];
-  return <span style={{ display: "inline-block", fontSize: 21, fontWeight: 600, padding: "2px 10px", borderRadius: 6, color: s.fg, background: s.bg, border: `1px solid ${s.fg}33` }}>{s.label}</span>;
+  return <span style={{ display: "inline-block", fontSize: 17, fontWeight: 600, padding: "2px 10px", borderRadius: 6, color: s.fg, background: s.bg, border: `1px solid ${s.fg}33` }}>{s.label}</span>;
 }
 
 const th: React.CSSProperties = { textAlign: "left", padding: "9px 12px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
 const td: React.CSSProperties = { textAlign: "left", padding: "9px 12px", borderBottom: `1px solid ${palette.border}` };
-const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 10px", fontSize: 24 };
-const btn: React.CSSProperties = { background: palette.accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 23, cursor: "pointer", fontWeight: 600 };
-const btnGhost: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 12px", fontSize: 23, cursor: "pointer" };
+const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 10px", fontSize: 19 };
+const btn: React.CSSProperties = { background: palette.accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600 };
+const btnGhost: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 12px", fontSize: 18, cursor: "pointer" };

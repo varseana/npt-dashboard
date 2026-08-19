@@ -98,7 +98,7 @@ export default function Managers({ teams, myUserId, refreshKey }:
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [query, sortBy]);
 
-  if (loading) return <div style={{ maxWidth: 1000 }}><TableSkeleton rows={4} /></div>;
+  if (loading) return <div><TableSkeleton rows={4} /></div>;
 
   const aStandby = arrange(standby);
   const aActive = arrange(active);
@@ -112,13 +112,13 @@ export default function Managers({ teams, myUserId, refreshKey }:
   });
 
   return (
-    <div style={{ maxWidth: 1000 }}>
-      {msg && <div style={{ marginBottom: 12, color: palette.bad, fontSize: 23 }}>{msg}</div>}
+    <div>
+      {msg && <div style={{ marginBottom: 12, color: palette.bad, fontSize: 18 }}>{msg}</div>}
 
       <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 18, flexWrap: "wrap" }}>
         <input value={query} onChange={(e) => setQuery(e.target.value)}
           placeholder="Search by email or username" style={searchInput} />
-        <label style={{ fontSize: 20, color: palette.textDim, display: "flex", alignItems: "center", gap: 6 }}>
+        <label style={{ fontSize: 16, color: palette.textDim, display: "flex", alignItems: "center", gap: 6 }}>
           Sort
           <select value={sortBy} onChange={(e) => setSortBy(e.target.value as "alpha" | "role")} style={sortSelect}>
             <option value="alpha">Alphabetical</option>
@@ -187,7 +187,7 @@ function PersonRow({ r, teams, isMe, matched, onRole, onTeam, onAlias, onDelete 
             {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
         )
-        : <span style={{ fontSize: 21, color: palette.textDim }}>{r.role === "admin" ? "All teams" : "-"}</span>}
+        : <span style={{ fontSize: 17, color: palette.textDim }}>{r.role === "admin" ? "All teams" : "-"}</span>}
 
       {showAlias
         ? (
@@ -202,7 +202,7 @@ function PersonRow({ r, teams, isMe, matched, onRole, onTeam, onAlias, onDelete 
 
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <button onClick={onDelete} disabled={isMe} className="npt-btn-remove"
-          title={isMe ? "You can't delete yourself" : "Delete account"} style={{ padding: "7px 12px", fontSize: 23 }}>
+          title={isMe ? "You can't delete yourself" : "Delete account"} style={{ padding: "7px 12px", fontSize: 18 }}>
           Delete
         </button>
       </div>
@@ -212,8 +212,8 @@ function PersonRow({ r, teams, isMe, matched, onRole, onTeam, onAlias, onDelete 
 
 function MatchChip({ matched }: { matched: boolean }) {
   return matched
-    ? <span style={{ fontSize: 20, fontWeight: 600, padding: "2px 8px", borderRadius: 6, color: palette.ok, background: palette.okBg, whiteSpace: "nowrap" }}>has data</span>
-    : <span style={{ fontSize: 20, fontWeight: 600, padding: "2px 8px", borderRadius: 6, color: palette.textDim, background: palette.panelAlt, whiteSpace: "nowrap" }}>no data</span>;
+    ? <span style={{ fontSize: 16, fontWeight: 600, padding: "2px 8px", borderRadius: 6, color: palette.ok, background: palette.okBg, whiteSpace: "nowrap" }}>has data</span>
+    : <span style={{ fontSize: 16, fontWeight: 600, padding: "2px 8px", borderRadius: 6, color: palette.textDim, background: palette.panelAlt, whiteSpace: "nowrap" }}>no data</span>;
 }
 
 function Section({ title, hint, highlight, children }:
@@ -222,9 +222,9 @@ function Section({ title, hint, highlight, children }:
     <div style={{ marginBottom: 20 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
         {highlight && <span style={{ color: palette.warn, display: "inline-flex" }}><IconAlert size={15} /></span>}
-        <span style={{ fontWeight: 700, fontSize: 26 }}>{title}</span>
+        <span style={{ fontWeight: 700, fontSize: 21 }}>{title}</span>
       </div>
-      {hint && <div style={{ color: palette.textDim, fontSize: 23, marginBottom: 8 }}>{hint}</div>}
+      {hint && <div style={{ color: palette.textDim, fontSize: 18, marginBottom: 8 }}>{hint}</div>}
       <div style={{ border: `1px solid ${highlight ? palette.warn + "55" : palette.border}`, borderRadius: 8,
         overflow: "hidden", background: highlight ? palette.warnBg : palette.panel }}>
         {children}
@@ -234,7 +234,7 @@ function Section({ title, hint, highlight, children }:
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
-  return <div style={{ padding: "12px 14px", color: palette.textDim, fontSize: 23 }}>{children}</div>;
+  return <div style={{ padding: "12px 14px", color: palette.textDim, fontSize: 18 }}>{children}</div>;
 }
 
 function Confirm({ title, body, confirmLabel, danger, onCancel, onConfirm }: {
@@ -246,8 +246,8 @@ function Confirm({ title, body, confirmLabel, danger, onCancel, onConfirm }: {
       style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 24 }}>
       <div onClick={(e) => e.stopPropagation()}
         style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: 24, width: 400, maxWidth: "90vw" }}>
-        <h2 style={{ margin: "0 0 8px", fontSize: 32, color: palette.text }}>{title}</h2>
-        <p style={{ margin: "0 0 20px", color: palette.textDim, fontSize: 24 }}>{body}</p>
+        <h2 style={{ margin: "0 0 8px", fontSize: 26, color: palette.text }}>{title}</h2>
+        <p style={{ margin: "0 0 20px", color: palette.textDim, fontSize: 19 }}>{body}</p>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
           <button onClick={onCancel} style={btnGhost}>Cancel</button>
           <button onClick={onConfirm} style={{ ...btn, background: danger ? palette.bad : palette.accent }}>{confirmLabel}</button>
@@ -259,22 +259,22 @@ function Confirm({ title, body, confirmLabel, danger, onCancel, onConfirm }: {
 
 const cell: React.CSSProperties = {
   background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
-  borderRadius: 8, padding: "7px 8px", fontSize: 23, width: "100%", boxSizing: "border-box",
+  borderRadius: 8, padding: "7px 8px", fontSize: 18, width: "100%", boxSizing: "border-box",
 };
 const btn: React.CSSProperties = {
   background: palette.accent, color: "#fff", border: "none", borderRadius: 8,
-  padding: "7px 14px", fontSize: 23, cursor: "pointer", fontWeight: 600,
+  padding: "7px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600,
 };
 const btnGhost: React.CSSProperties = {
   background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
-  borderRadius: 8, padding: "7px 12px", fontSize: 23, cursor: "pointer",
+  borderRadius: 8, padding: "7px 12px", fontSize: 18, cursor: "pointer",
 };
 const searchInput: React.CSSProperties = {
   flex: "1 1 240px", minWidth: 200, background: palette.panel, color: palette.text,
-  border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 12px", fontSize: 20,
+  border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 12px", fontSize: 16,
   boxSizing: "border-box",
 };
 const sortSelect: React.CSSProperties = {
   background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
-  borderRadius: 8, padding: "8px 10px", fontSize: 20, cursor: "pointer",
+  borderRadius: 8, padding: "8px 10px", fontSize: 16, cursor: "pointer",
 };

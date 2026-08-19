@@ -89,8 +89,8 @@ export default function Planned({ team }: { team: Team }) {
   const scopeLabel = scope === "standing" ? "standing (all weeks)" : weekLabel(weekInfo(new Date(weekKey + "T12:00:00")));
 
   return (
-    <div style={{ maxWidth: 640 }}>
-      <p style={{ color: palette.textDim, fontSize: 24, lineHeight: 1.6 }}>
+    <div>
+      <p style={{ color: palette.textDim, fontSize: 19, lineHeight: 1.6 }}>
         Planned NPT per week. Format <strong>H:MM</strong> (or H:MM:SS, or decimal hours). Empty =
         inherits from the level above. Priority: person+week &gt; person+standing &gt; team+week &gt; team+standing.
       </p>
@@ -112,11 +112,11 @@ export default function Planned({ team }: { team: Team }) {
       </div>
 
       <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "12px 14px", marginBottom: 16 }}>
-        <div style={{ fontSize: 21, color: palette.textDim, marginBottom: 6 }}>Team default ({team.name}) :: {scopeLabel}</div>
+        <div style={{ fontSize: 17, color: palette.textDim, marginBottom: 6 }}>Team default ({team.name}) :: {scopeLabel}</div>
         <input value={teamInput} onChange={(e) => setTeamInput(e.target.value)} placeholder="H:MM (e.g. 3:45)" style={{ ...input, width: 160 }} />
       </div>
 
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 24 }}>
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19 }}>
         <thead>
           <tr>
             <th style={{ ...th, textAlign: "left" }}>Investigator</th>
@@ -142,10 +142,10 @@ export default function Planned({ team }: { team: Team }) {
         </tbody>
       </table>
 
-      <button onClick={save} disabled={saving} style={{ marginTop: 16, background: palette.accent, color: "#fff", border: "none", borderRadius: 8, padding: "10px 18px", fontSize: 24, cursor: "pointer", fontWeight: 600 }}>
+      <button onClick={save} disabled={saving} style={{ marginTop: 16, background: palette.accent, color: "#fff", border: "none", borderRadius: 8, padding: "10px 18px", fontSize: 19, cursor: "pointer", fontWeight: 600 }}>
         {saving ? "Saving..." : "Save planned"}
       </button>
-      {msg && <div style={{ marginTop: 12, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 23 }}>{msg}</div>}
+      {msg && <div style={{ marginTop: 12, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 18 }}>{msg}</div>}
     </div>
   );
 }
@@ -153,7 +153,7 @@ export default function Planned({ team }: { team: Team }) {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div style={{ fontSize: 20, color: palette.textDim, marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 16, color: palette.textDim, marginBottom: 4 }}>{label}</div>
       {children}
     </div>
   );
@@ -161,5 +161,5 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 const th: React.CSSProperties = { textAlign: "right", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
 const td: React.CSSProperties = { padding: "8px 10px", borderBottom: `1px solid ${palette.border}` };
-const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 24 };
+const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 19 };
 const select: React.CSSProperties = { ...input };
