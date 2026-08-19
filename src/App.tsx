@@ -6,7 +6,7 @@ import { palette } from "./theme";
 import Login from "./components/Login";
 import Overview from "./components/Overview";
 import Distribution from "./components/Distribution";
-import Enrolled from "./components/Enrolled";
+import Employees from "./components/Employees";
 import Planned from "./components/Planned";
 
 interface ManagerRow {
@@ -29,7 +29,7 @@ export default function App() {
   const [manager, setManager] = useState<ManagerRow | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamId, setTeamId] = useState<string>("");
-  const [tab, setTab] = useState<"overview" | "distribution" | "enrolled" | "planned">("overview");
+  const [tab, setTab] = useState<"overview" | "distribution" | "employees" | "planned">("overview");
   const [refreshTick, setRefreshTick] = useState(0);
 
   // auto-refresco: cada 15s bumpea el tick y las vistas re-consultan (sin recargar la pagina)
@@ -106,14 +106,14 @@ export default function App() {
         <nav style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <TabBtn active={tab === "overview"} onClick={() => setTab("overview")}>Overview</TabBtn>
           <TabBtn active={tab === "distribution"} onClick={() => setTab("distribution")}>Distribution</TabBtn>
-          <TabBtn active={tab === "enrolled"} onClick={() => setTab("enrolled")}>Enrolled</TabBtn>
+          <TabBtn active={tab === "employees"} onClick={() => setTab("employees")}>Employees</TabBtn>
           <TabBtn active={tab === "planned"} onClick={() => setTab("planned")}>Planned</TabBtn>
         </nav>
       </div>
 
       {team && tab === "overview" && <Overview team={team} refreshKey={refreshTick} />}
       {team && tab === "distribution" && <Distribution team={team} refreshKey={refreshTick} />}
-      {team && tab === "enrolled" && <Enrolled team={team} refreshKey={refreshTick} />}
+      {team && tab === "employees" && <Employees team={team} refreshKey={refreshTick} />}
       {team && tab === "planned" && <Planned team={team} />}
     </div>
   );
