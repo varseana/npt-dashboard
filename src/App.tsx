@@ -12,6 +12,7 @@ import Folders from "./components/Folders";
 import Clock from "./components/Clock";
 import Org from "./components/Org";
 import Requests from "./components/Requests";
+import { IconLogout } from "./components/icons";
 
 interface ManagerRow {
   user_id: string;
@@ -38,6 +39,7 @@ export default function App() {
   const [dashView, setDashView] = useState<"summary" | "breakdown">("summary");
   const [teamTab, setTeamTab] = useState<"employees" | "planned" | "folders">("employees");
   const [accessTab, setAccessTab] = useState<"requests" | "org">("requests");
+  const [askLogout, setAskLogout] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
 
   // auto-refresco: cada 15s bumpea el tick y las vistas re-consultan (sin recargar la pagina)
@@ -98,12 +100,15 @@ export default function App() {
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 22, color: palette.text }}>STAR NPT Dashboard</h1>
-          <div style={{ color: palette.textDim, fontSize: 13 }}>{manager.email} ({manager.role})</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+            <span style={{ color: palette.textDim, fontSize: 13 }}>{manager.email} ({manager.role})</span>
+            <button onClick={() => setAskLogout(true)} title="Log out" aria-label="Log out"
+              style={{ background: "transparent", border: "none", color: palette.textDim, cursor: "pointer", padding: 2, display: "inline-flex" }}>
+              <IconLogout size={15} />
+            </button>
+          </div>
         </div>
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
-          <Clock />
-          <button style={btn} onClick={() => supabase.auth.signOut()}>Sign out</button>
-        </div>
+        <Clock />
       </header>
 
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10, flexWrap: "wrap" }}>
@@ -144,6 +149,34 @@ export default function App() {
       {section === "team" && team && teamTab === "folders" && <Folders team={team} />}
       {section === "access" && accessTab === "requests" && <Requests role={manager.role} myUserId={manager.user_id} />}
       {section === "access" && accessTab === "org" && manager.role === "admin" && <Org />}
+
+      {askLogout && (
+        <ConfirmModal
+          title="Log out?"
+          body="Are you sure you want to log out?"
+          confirmLabel="Log out"
+          onCancel={() => setAskLogout(false)}
+          onConfirm={() => supabase.auth.signOut()}
+        />
+      )}
+    </div>
+  );
+}
+
+function ConfirmModal({ title, body, confirmLabel, onCancel, onConfirm }:
+  { title: string; body: string; confirmLabel: string; onCancel: () => void; onConfirm: () => void }) {
+  return (
+    <div onClick={onCancel}
+      style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 24 }}>
+      <div onClick={(e) => e.stopPropagation()}
+        style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: 24, width: 380, maxWidth: "90vw", boxShadow: "0 12px 40px rgba(0,0,0,.18)" }}>
+        <h2 style={{ margin: "0 0 8px", fontSize: 18, color: palette.text }}>{title}</h2>
+        <p style={{ margin: "0 0 20px", color: palette.textDim, fontSize: 14 }}>{body}</p>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+          <button onClick={onCancel} style={btn}>Cancel</button>
+          <button onClick={onConfirm} style={{ ...btn, background: palette.bad, color: "#fff", border: "none" }}>{confirmLabel}</button>
+        </div>
+      </div>
     </div>
   );
 }

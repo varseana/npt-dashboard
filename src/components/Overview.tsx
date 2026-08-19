@@ -9,6 +9,7 @@ import {
 } from "../lib/npt";
 import { StatusChip } from "./status";
 import { downloadEml } from "../lib/reminder";
+import { IconMail, IconAlert } from "./icons";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 interface Folder { id: string; name: string; aliases: string[]; }
@@ -132,8 +133,8 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
           </label>
         )}
         <button onClick={() => flagged.forEach(remind)} disabled={!flagged.length}
-          title="Generate one .eml per person in yellow or red" style={{ ...emlBtn, marginLeft: "auto" }}>
-          Email flagged ({flagged.length})
+          title="Generate one .eml per person in yellow or red" style={{ ...emlBtn, marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 6 }}>
+          <IconAlert size={14} /> Email flagged ({flagged.length})
         </button>
       </div>
 
@@ -196,7 +197,10 @@ function UserTable({ rows, remind }: { rows: Row[]; remind: (u: Row) => void }) 
             <td style={{ ...td, textAlign: "right", color: remainingColor(u.status) }}>{u.remaining != null ? fmtHms(u.remaining) : "-"}</td>
             <td style={{ ...td, textAlign: "right" }}><StatusChip status={u.status} /></td>
             <td style={{ ...td, textAlign: "right" }}>
-              <button onClick={() => remind(u)} disabled={u.status === "none"} title="Download reminder .eml" style={emlBtn}>Remind</button>
+              <button onClick={() => remind(u)} disabled={u.status === "none"} title="Send reminder .eml" aria-label="Send reminder email"
+                style={{ ...emlBtn, padding: "5px 7px", display: "inline-flex", alignItems: "center" }}>
+                <IconMail size={15} />
+              </button>
             </td>
           </tr>
         ))}
