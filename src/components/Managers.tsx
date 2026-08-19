@@ -127,14 +127,14 @@ export default function Managers({ teams, myUserId, refreshKey }:
         </label>
       </div>
 
-      <Section title={`Standby - no access (${aStandby.length})`}
+      <Section title={`"Standby" // no access (${aStandby.length})`}
         hint="These people signed up and are waiting for you to assign a role." highlight={aStandby.length > 0}>
         {aStandby.length === 0
           ? <Empty>{searching ? "No matches in standby." : "Nobody is in standby."}</Empty>
           : aStandby.map((r) => <PersonRow key={r.user_id} {...rowProps(r)} />)}
       </Section>
 
-      <Section title={`Active (${aActive.length})`} hint="People with a role and access to the dashboard.">
+      <Section title={`"Active" (${aActive.length})`} hint="People with a role and access to the dashboard.">
         {aActive.length === 0
           ? <Empty>{searching ? "No matches." : "No active accounts yet."}</Empty>
           : aActive.map((r) => <PersonRow key={r.user_id} {...rowProps(r)} />)}
@@ -222,7 +222,8 @@ function Section({ title, hint, highlight, children }:
     <div style={{ marginBottom: 20 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
         {highlight && <span style={{ color: palette.warn, display: "inline-flex" }}><IconAlert size={15} /></span>}
-        <span style={{ fontWeight: 700, fontSize: 21 }}>{title}</span>
+        {/* header estilo Off-White: mayusculas industriales + tracking; las comillas van en el title */}
+        <span style={{ fontWeight: 700, fontSize: 21, textTransform: "uppercase", letterSpacing: "0.06em" }}>{title}</span>
       </div>
       {hint && <div style={{ color: palette.textDim, fontSize: 18, marginBottom: 8 }}>{hint}</div>}
       <div style={{ border: `1px solid ${highlight ? palette.warn + "55" : palette.border}`, borderRadius: 8,
