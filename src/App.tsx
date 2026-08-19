@@ -8,6 +8,7 @@ import Overview from "./components/Overview";
 import Distribution from "./components/Distribution";
 import Employees from "./components/Employees";
 import Planned from "./components/Planned";
+import Folders from "./components/Folders";
 
 interface ManagerRow {
   user_id: string;
@@ -29,7 +30,7 @@ export default function App() {
   const [manager, setManager] = useState<ManagerRow | null>(null);
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamId, setTeamId] = useState<string>("");
-  const [tab, setTab] = useState<"overview" | "distribution" | "employees" | "planned">("overview");
+  const [tab, setTab] = useState<"overview" | "distribution" | "employees" | "planned" | "folders">("overview");
   const [refreshTick, setRefreshTick] = useState(0);
 
   // auto-refresco: cada 15s bumpea el tick y las vistas re-consultan (sin recargar la pagina)
@@ -108,6 +109,7 @@ export default function App() {
           <TabBtn active={tab === "distribution"} onClick={() => setTab("distribution")}>Distribution</TabBtn>
           <TabBtn active={tab === "employees"} onClick={() => setTab("employees")}>Employees</TabBtn>
           <TabBtn active={tab === "planned"} onClick={() => setTab("planned")}>Planned</TabBtn>
+          <TabBtn active={tab === "folders"} onClick={() => setTab("folders")}>Folders</TabBtn>
         </nav>
       </div>
 
@@ -115,6 +117,7 @@ export default function App() {
       {team && tab === "distribution" && <Distribution team={team} refreshKey={refreshTick} />}
       {team && tab === "employees" && <Employees team={team} refreshKey={refreshTick} />}
       {team && tab === "planned" && <Planned team={team} />}
+      {team && tab === "folders" && <Folders team={team} />}
     </div>
   );
 }

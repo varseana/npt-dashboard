@@ -11,6 +11,7 @@ import { StatusChip } from "./status";
 import { downloadEml } from "../lib/reminder";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
+interface Folder { id: string; name: string; aliases: string[]; }
 
 interface Row {
   alias: string;
@@ -28,6 +29,8 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
   const [weekKey, setWeekKey] = useState(() => weekInfo(new Date()).key);
   const [rows, setRows] = useState<NptDailyRow[]>([]);
   const [planned, setPlanned] = useState<PlannedRow[]>([]);
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [groupBy, setGroupBy] = useState(false);
   const [filter, setFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
@@ -40,19 +43,17 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
     (async () => {
       if (first.current) setLoading(true);
       setErr("");
-      const [{ data: d, error }, { data: p }] = await Promise.all([
-        supabase
-          .from("npt_daily")
-          .select("alias,tenant,work_date,profile,aux_seconds")
-          .eq("team_id", team.id)
-          .gte("work_date", isoDate(sel.start))
-          .lte("work_date", isoDate(sel.end)),
+      const [{ data: d, error }, { data: p }, { data: f }] = await Promise.all([
+        supabase.from("npt_daily").select("alias,tenant,work_date,profile,aux_seconds")
+          .eq("team_id", team.id).gte("work_date", isoDate(sel.start)).lte("work_date", isoDate(sel.end)),
         supabase.from("npt_planned").select("alias,week_key,planned_seconds").eq("team_id", team.id),
+        supabase.from("manager_folders").select("id,name,aliases").eq("team_id", team.id).order("created_at"),
       ]);
       if (cancelled) return;
       if (error) setErr(error.message);
       setRows((d as NptDailyRow[]) ?? []);
       setPlanned((p as PlannedRow[]) ?? []);
+      setFolders((f as Folder[]) ?? []);
       first.current = false;
       setLoading(false);
     })();
@@ -94,15 +95,24 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
   function remind(u: Row) {
     if (u.planned == null) return;
     downloadEml({
-      alias: u.alias,
-      weekNum: sel.week,
-      weekRange: weekRangeLabel(sel),
-      status: u.status,
-      actual: u.nptSeconds,
-      planned: u.planned,
-      remaining: u.remaining ?? 0,
+      alias: u.alias, weekNum: sel.week, weekRange: weekRangeLabel(sel),
+      status: u.status, actual: u.nptSeconds, planned: u.planned, remaining: u.remaining ?? 0,
     });
   }
+
+  // agrupacion visual por carpeta (no afecta numeros)
+  const groups = useMemo(() => {
+    if (!groupBy || !folders.length) return null;
+    const assigned = new Set<string>();
+    folders.forEach((f) => f.aliases.forEach((a) => assigned.add(a)));
+    const sections = folders.map((f) => ({
+      name: f.name,
+      rows: shown.filter((u) => f.aliases.includes(u.alias)),
+    }));
+    const others = shown.filter((u) => !assigned.has(u.alias));
+    if (others.length) sections.push({ name: "Others", rows: others });
+    return sections;
+  }, [groupBy, folders, shown]);
 
   return (
     <div>
@@ -115,11 +125,14 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
         <Field label="Filter user">
           <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="username" style={input} />
         </Field>
-        <button
-          onClick={() => flagged.forEach(remind)}
-          disabled={!flagged.length}
-          title="Genera un .eml por cada persona en amarillo o rojo"
-          style={{ ...emlBtn, marginLeft: "auto" }}>
+        {folders.length > 0 && (
+          <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, cursor: "pointer", paddingBottom: 8 }}>
+            <input type="checkbox" checked={groupBy} onChange={(e) => setGroupBy(e.target.checked)} />
+            Group by folder
+          </label>
+        )}
+        <button onClick={() => flagged.forEach(remind)} disabled={!flagged.length}
+          title="Genera un .eml por cada persona en amarillo o rojo" style={{ ...emlBtn, marginLeft: "auto" }}>
           Email flagged ({flagged.length})
         </button>
       </div>
@@ -138,38 +151,57 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
             <Stat label="Near limit (<=1h)" value={String(warnCount)} tone={warnCount ? "warn" : "ok"} />
           </div>
 
-          <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
-            <thead>
-              <tr>
-                {["#", "Investigator", "Days", "Planned", "Actual NPT", "Remaining", "Status"].map((h, i) => (
-                  <th key={h} style={{ ...th, textAlign: i <= 1 ? "left" : "right" }}>{h}</th>
-                ))}
-                <th style={{ ...th, textAlign: "right" }}></th>
-              </tr>
-            </thead>
-            <tbody>
-              {shown.map((u, i) => (
-                <tr key={u.alias} style={{ background: i % 2 ? palette.panel : palette.panelAlt }}>
-                  <td style={{ ...td, color: palette.textDim }}>{i + 1}</td>
-                  <td style={{ ...td, fontWeight: 600 }}>{u.alias}</td>
-                  <td style={{ ...td, textAlign: "right" }}>{u.daysReported}</td>
-                  <td style={{ ...td, textAlign: "right", color: palette.textDim }}>{u.planned != null ? fmtHms(u.planned) : "-"}</td>
-                  <td style={{ ...td, textAlign: "right", fontWeight: 600 }}>{fmtHms(u.nptSeconds)}</td>
-                  <td style={{ ...td, textAlign: "right", color: remainingColor(u.status) }}>{u.remaining != null ? fmtHms(u.remaining) : "-"}</td>
-                  <td style={{ ...td, textAlign: "right" }}><StatusChip status={u.status} /></td>
-                  <td style={{ ...td, textAlign: "right" }}>
-                    <button onClick={() => remind(u)} disabled={u.status === "none"} title="Descargar .eml de recordatorio" style={emlBtn}>Remind</button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {groups ? (
+            groups.map((g) => (
+              <div key={g.name} style={{ marginBottom: 20 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, margin: "4px 0 8px" }}>
+                  {g.name} <span style={{ color: palette.textDim, fontWeight: 400, fontSize: 13 }}>
+                    ({g.rows.length}, NPT {fmtHms(g.rows.reduce((a, u) => a + u.nptSeconds, 0))})
+                  </span>
+                </div>
+                {g.rows.length ? <UserTable rows={g.rows} remind={remind} /> : <div style={{ color: palette.textDim, fontSize: 13 }}>Sin miembros con data esta semana.</div>}
+              </div>
+            ))
+          ) : (
+            <UserTable rows={shown} remind={remind} />
+          )}
           <div style={{ color: palette.textDim, fontSize: 11, marginTop: 8 }}>
             NPT = Meeting + Training + Project + Personal + System. Remaining = Planned - Actual. Times in Hh:mm:ss.
           </div>
         </>
       )}
     </div>
+  );
+}
+
+function UserTable({ rows, remind }: { rows: Row[]; remind: (u: Row) => void }) {
+  return (
+    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+      <thead>
+        <tr>
+          {["#", "Investigator", "Days", "Planned", "Actual NPT", "Remaining", "Status"].map((h, i) => (
+            <th key={h} style={{ ...th, textAlign: i <= 1 ? "left" : "right" }}>{h}</th>
+          ))}
+          <th style={{ ...th, textAlign: "right" }}></th>
+        </tr>
+      </thead>
+      <tbody>
+        {rows.map((u, i) => (
+          <tr key={u.alias} style={{ background: i % 2 ? palette.panel : palette.panelAlt }}>
+            <td style={{ ...td, color: palette.textDim }}>{i + 1}</td>
+            <td style={{ ...td, fontWeight: 600 }}>{u.alias}</td>
+            <td style={{ ...td, textAlign: "right" }}>{u.daysReported}</td>
+            <td style={{ ...td, textAlign: "right", color: palette.textDim }}>{u.planned != null ? fmtHms(u.planned) : "-"}</td>
+            <td style={{ ...td, textAlign: "right", fontWeight: 600 }}>{fmtHms(u.nptSeconds)}</td>
+            <td style={{ ...td, textAlign: "right", color: remainingColor(u.status) }}>{u.remaining != null ? fmtHms(u.remaining) : "-"}</td>
+            <td style={{ ...td, textAlign: "right" }}><StatusChip status={u.status} /></td>
+            <td style={{ ...td, textAlign: "right" }}>
+              <button onClick={() => remind(u)} disabled={u.status === "none"} title="Descargar .eml de recordatorio" style={emlBtn}>Remind</button>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }
 

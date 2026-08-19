@@ -1,0 +1,103 @@
+import * as React from "react";
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
+import { palette } from "../theme";
+
+interface Team { id: string; name: string; npt_target_pct: number; }
+interface Folder { id: string; name: string; aliases: string[]; }
+
+export default function Folders({ team }: { team: Team }) {
+  const [folders, setFolders] = useState<Folder[]>([]);
+  const [known, setKnown] = useState<string[]>([]);
+  const [newName, setNewName] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [msg, setMsg] = useState("");
+
+  async function load() {
+    setLoading(true);
+    const [{ data: f }, { data: r }, { data: d }] = await Promise.all([
+      supabase.from("manager_folders").select("id,name,aliases").eq("team_id", team.id).order("created_at"),
+      supabase.from("roster").select("alias").eq("team_id", team.id),
+      supabase.from("npt_daily").select("alias").eq("team_id", team.id),
+    ]);
+    setFolders((f as Folder[]) ?? []);
+    const set = new Set<string>();
+    for (const x of (r as { alias: string }[]) ?? []) set.add(x.alias);
+    for (const x of (d as { alias: string }[]) ?? []) set.add(x.alias);
+    setKnown(Array.from(set).sort());
+    setLoading(false);
+  }
+
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [team.id]);
+
+  async function create() {
+    const name = newName.trim();
+    if (!name) return;
+    setMsg("");
+    const { error } = await supabase.from("manager_folders").insert({ team_id: team.id, name, aliases: [] });
+    if (error) setMsg("Error: " + error.message);
+    else { setNewName(""); await load(); }
+  }
+
+  async function remove(id: string) {
+    setMsg("");
+    const { error } = await supabase.from("manager_folders").delete().eq("id", id);
+    if (error) setMsg("Error: " + error.message);
+    else await load();
+  }
+
+  async function toggleMember(folder: Folder, alias: string) {
+    const has = folder.aliases.includes(alias);
+    const next = has ? folder.aliases.filter((a) => a !== alias) : [...folder.aliases, alias];
+    // optimista
+    setFolders((prev) => prev.map((f) => (f.id === folder.id ? { ...f, aliases: next } : f)));
+    const { error } = await supabase.from("manager_folders").update({ aliases: next }).eq("id", folder.id);
+    if (error) { setMsg("Error: " + error.message); await load(); }
+  }
+
+  if (loading) return <div style={{ color: palette.textDim }}>Loading...</div>;
+
+  return (
+    <div style={{ maxWidth: 720 }}>
+      <p style={{ color: palette.textDim, fontSize: 14, lineHeight: 1.6 }}>
+        Carpetas privadas para organizar tu vista por proyecto. Son solo tuyas y <strong>no afectan
+        ningun numero</strong>: agrupan investigadores en Overview cuando activas "Group by folder".
+      </p>
+
+      <div style={{ display: "flex", gap: 8, alignItems: "center", margin: "16px 0" }}>
+        <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Nombre de la carpeta (ej. Proyecto X)"
+          onKeyDown={(e) => { if (e.key === "Enter") create(); }} style={{ ...input, width: 280 }} />
+        <button onClick={create} disabled={!newName.trim()} style={btn}>Create folder</button>
+      </div>
+
+      {msg && <div style={{ marginBottom: 12, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 13 }}>{msg}</div>}
+
+      {folders.length === 0 ? (
+        <div style={{ color: palette.textDim }}>Sin carpetas todavia. Crea una arriba.</div>
+      ) : folders.map((f) => (
+        <div key={f.id} style={{ border: `1px solid ${palette.border}`, borderRadius: 8, padding: "12px 14px", marginBottom: 12 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
+            <div style={{ fontWeight: 700 }}>{f.name} <span style={{ color: palette.textDim, fontWeight: 400, fontSize: 13 }}>({f.aliases.length})</span></div>
+            <button onClick={() => remove(f.id)} style={btnRemove}>Delete folder</button>
+          </div>
+          {known.length === 0 ? (
+            <div style={{ color: palette.textDim, fontSize: 13 }}>Nadie en el team todavia (agrega gente en Employees).</div>
+          ) : (
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 6 }}>
+              {known.map((a) => (
+                <label key={a} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 14, cursor: "pointer" }}>
+                  <input type="checkbox" checked={f.aliases.includes(a)} onChange={() => toggleMember(f, a)} />
+                  <span>{a}</span>
+                </label>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 10px", fontSize: 14 };
+const btn: React.CSSProperties = { background: palette.accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 13, cursor: "pointer", fontWeight: 600 };
+const btnRemove: React.CSSProperties = { background: palette.panel, color: palette.bad, border: `1px solid ${palette.bad}55`, borderRadius: 8, padding: "6px 10px", fontSize: 12, cursor: "pointer" };
