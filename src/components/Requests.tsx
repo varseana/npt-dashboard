@@ -78,7 +78,7 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
     <div style={{ maxWidth: 720 }}>
       <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "14px 16px", marginBottom: 18 }}>
         <div style={{ fontWeight: 700, marginBottom: 4 }}>Request access to someone's NPT</div>
-        <div style={{ color: palette.textDim, fontSize: 13, marginBottom: 10 }}>
+        <div style={{ color: palette.textDim, fontSize: 15, marginBottom: 10 }}>
           Ask to view a shared member's NPT (e.g. someone who is also on your project). An admin approves it.
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -86,7 +86,7 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
             onKeyDown={(e) => { if (e.key === "Enter") submit(); }} style={{ ...input, width: 220 }} />
           <button onClick={submit} disabled={!alias.trim()} style={btn}>Request access</button>
         </div>
-        {msg && <div style={{ marginTop: 10, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 13 }}>{msg}</div>}
+        {msg && <div style={{ marginTop: 10, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 15 }}>{msg}</div>}
       </div>
 
       {isAdmin && (
@@ -121,13 +121,13 @@ function StatusPill({ status }: { status: AccessRequest["status"] }) {
     approved: { fg: palette.ok, bg: palette.okBg, label: "Approved" },
     denied: { fg: palette.bad, bg: palette.badBg, label: "Denied" },
   }[status];
-  return <span style={{ fontSize: 12, fontWeight: 600, padding: "2px 10px", borderRadius: 6, color: map.fg, background: map.bg, border: `1px solid ${map.fg}33` }}>{map.label}</span>;
+  return <span style={{ fontSize: 14, fontWeight: 600, padding: "2px 10px", borderRadius: 6, color: map.fg, background: map.bg, border: `1px solid ${map.fg}33` }}>{map.label}</span>;
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 18 }}>
-      <div style={{ fontWeight: 700, fontSize: 15, marginBottom: 8 }}>{title}</div>
+      <div style={{ fontWeight: 700, fontSize: 17, marginBottom: 8 }}>{title}</div>
       <div style={{ border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden" }}>{children}</div>
     </div>
   );
@@ -136,9 +136,9 @@ function Row({ children }: { children: React.ReactNode }) {
   return <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderBottom: `1px solid ${palette.border}` }}>{children}</div>;
 }
 function Dim({ children }: { children: React.ReactNode }) {
-  return <div style={{ padding: "10px 12px", color: palette.textDim, fontSize: 13 }}>{children}</div>;
+  return <div style={{ padding: "10px 12px", color: palette.textDim, fontSize: 15 }}>{children}</div>;
 }
 
-const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 10px", fontSize: 14 };
-const btn: React.CSSProperties = { background: palette.accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 13, cursor: "pointer", fontWeight: 600 };
-const btnGhost: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 12px", fontSize: 13, cursor: "pointer" };
+const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 10px", fontSize: 16 };
+const btn: React.CSSProperties = { background: palette.accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 15, cursor: "pointer", fontWeight: 600 };
+const btnGhost: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 12px", fontSize: 15, cursor: "pointer" };

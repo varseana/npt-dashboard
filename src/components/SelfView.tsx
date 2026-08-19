@@ -67,8 +67,8 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
   if (everReported === false) {
     return (
       <div style={card}>
-        <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>No NPT data for "{alias}"</h2>
-        <p style={{ color: palette.textDim, fontSize: 14, margin: 0, lineHeight: 1.5 }}>
+        <h2 style={{ margin: "0 0 8px", fontSize: 21 }}>No NPT data for "{alias}"</h2>
+        <p style={{ color: palette.textDim, fontSize: 16, margin: 0, lineHeight: 1.5 }}>
           We could not find any reported NPT for the user <strong>{alias}</strong> (derived from
           your email). Make sure you are enrolled in STAR Tracker with your work account and that
           it has uploaded at least once. If your Paragon username is different from your email,
@@ -84,7 +84,7 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
         <select value={weekKey} onChange={(e) => setWeekKey(e.target.value)} style={select}>
           {weeks.map((w) => <option key={w.key} value={w.key}>{weekLabel(w)}</option>)}
         </select>
-        <span style={{ color: palette.textDim, fontSize: 13 }}>Signed in as {alias}</span>
+        <span style={{ color: palette.textDim, fontSize: 15 }}>Signed in as {alias}</span>
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 20 }}>
@@ -95,8 +95,8 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
       </div>
 
       <div style={card}>
-        <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 15 }}>Breakdown (what counts as NPT)</div>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+        <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 17 }}>Breakdown (what counts as NPT)</div>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 16 }}>
           <tbody>
             {NPT_AUX.map((a) => (
               <tr key={a} style={{ borderBottom: `1px solid ${palette.border}` }}>
@@ -111,7 +111,7 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
           </tbody>
         </table>
         {plannedSec == null && (
-          <div style={{ marginTop: 12, color: palette.textDim, fontSize: 13 }}>
+          <div style={{ marginTop: 12, color: palette.textDim, fontSize: 15 }}>
             Your manager has not set a planned NPT for this week yet.
           </div>
         )}
@@ -123,9 +123,9 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
 function Stat({ label, value, extra }: { label: string; value: string; extra?: React.ReactNode }) {
   return (
     <div style={{ ...card, padding: "16px 18px" }}>
-      <div style={{ color: palette.textDim, fontSize: 12, marginBottom: 6 }}>{label}</div>
+      <div style={{ color: palette.textDim, fontSize: 14, marginBottom: 6 }}>{label}</div>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ fontSize: 22, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{value}</span>
+        <span style={{ fontSize: 26, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{value}</span>
         {extra}
       </div>
     </div>
@@ -137,5 +137,5 @@ const card: React.CSSProperties = {
 };
 const select: React.CSSProperties = {
   background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
-  borderRadius: 8, padding: "8px 10px", fontSize: 14,
+  borderRadius: 8, padding: "8px 10px", fontSize: 16,
 };

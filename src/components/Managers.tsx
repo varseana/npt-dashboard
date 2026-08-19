@@ -93,7 +93,7 @@ export default function Managers({ teams, myUserId, refreshKey }:
 
   return (
     <div style={{ maxWidth: 1000 }}>
-      {msg && <div style={{ marginBottom: 12, color: palette.bad, fontSize: 13 }}>{msg}</div>}
+      {msg && <div style={{ marginBottom: 12, color: palette.bad, fontSize: 15 }}>{msg}</div>}
 
       <Section title={`Standby - no access (${standby.length})`}
         hint="These people signed up and are waiting for you to assign a role." highlight={standby.length > 0}>
@@ -155,7 +155,7 @@ function PersonRow({ r, teams, isMe, matched, onRole, onTeam, onAlias, onDelete 
             {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
         )
-        : <span style={{ fontSize: 12, color: palette.textDim }}>{r.role === "admin" ? "All teams" : "-"}</span>}
+        : <span style={{ fontSize: 14, color: palette.textDim }}>{r.role === "admin" ? "All teams" : "-"}</span>}
 
       {showAlias
         ? (
@@ -170,7 +170,7 @@ function PersonRow({ r, teams, isMe, matched, onRole, onTeam, onAlias, onDelete 
 
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <button onClick={onDelete} disabled={isMe} className="npt-btn-remove"
-          title={isMe ? "You can't delete yourself" : "Delete account"} style={{ padding: "7px 12px", fontSize: 13 }}>
+          title={isMe ? "You can't delete yourself" : "Delete account"} style={{ padding: "7px 12px", fontSize: 15 }}>
           Delete
         </button>
       </div>
@@ -180,8 +180,8 @@ function PersonRow({ r, teams, isMe, matched, onRole, onTeam, onAlias, onDelete 
 
 function MatchChip({ matched }: { matched: boolean }) {
   return matched
-    ? <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6, color: palette.ok, background: palette.okBg, whiteSpace: "nowrap" }}>has data</span>
-    : <span style={{ fontSize: 11, fontWeight: 600, padding: "2px 8px", borderRadius: 6, color: palette.textDim, background: palette.panelAlt, whiteSpace: "nowrap" }}>no data</span>;
+    ? <span style={{ fontSize: 13, fontWeight: 600, padding: "2px 8px", borderRadius: 6, color: palette.ok, background: palette.okBg, whiteSpace: "nowrap" }}>has data</span>
+    : <span style={{ fontSize: 13, fontWeight: 600, padding: "2px 8px", borderRadius: 6, color: palette.textDim, background: palette.panelAlt, whiteSpace: "nowrap" }}>no data</span>;
 }
 
 function Section({ title, hint, highlight, children }:
@@ -190,9 +190,9 @@ function Section({ title, hint, highlight, children }:
     <div style={{ marginBottom: 20 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
         {highlight && <span style={{ color: palette.warn, display: "inline-flex" }}><IconAlert size={15} /></span>}
-        <span style={{ fontWeight: 700, fontSize: 15 }}>{title}</span>
+        <span style={{ fontWeight: 700, fontSize: 17 }}>{title}</span>
       </div>
-      {hint && <div style={{ color: palette.textDim, fontSize: 13, marginBottom: 8 }}>{hint}</div>}
+      {hint && <div style={{ color: palette.textDim, fontSize: 15, marginBottom: 8 }}>{hint}</div>}
       <div style={{ border: `1px solid ${highlight ? palette.warn + "55" : palette.border}`, borderRadius: 8,
         overflow: "hidden", background: highlight ? palette.warnBg : palette.panel }}>
         {children}
@@ -202,7 +202,7 @@ function Section({ title, hint, highlight, children }:
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
-  return <div style={{ padding: "12px 14px", color: palette.textDim, fontSize: 13 }}>{children}</div>;
+  return <div style={{ padding: "12px 14px", color: palette.textDim, fontSize: 15 }}>{children}</div>;
 }
 
 function Confirm({ title, body, confirmLabel, danger, onCancel, onConfirm }: {
@@ -214,8 +214,8 @@ function Confirm({ title, body, confirmLabel, danger, onCancel, onConfirm }: {
       style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 24 }}>
       <div onClick={(e) => e.stopPropagation()}
         style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: 24, width: 400, maxWidth: "90vw" }}>
-        <h2 style={{ margin: "0 0 8px", fontSize: 18, color: palette.text }}>{title}</h2>
-        <p style={{ margin: "0 0 20px", color: palette.textDim, fontSize: 14 }}>{body}</p>
+        <h2 style={{ margin: "0 0 8px", fontSize: 21, color: palette.text }}>{title}</h2>
+        <p style={{ margin: "0 0 20px", color: palette.textDim, fontSize: 16 }}>{body}</p>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
           <button onClick={onCancel} style={btnGhost}>Cancel</button>
           <button onClick={onConfirm} style={{ ...btn, background: danger ? palette.bad : palette.accent }}>{confirmLabel}</button>
@@ -227,13 +227,13 @@ function Confirm({ title, body, confirmLabel, danger, onCancel, onConfirm }: {
 
 const cell: React.CSSProperties = {
   background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
-  borderRadius: 8, padding: "7px 8px", fontSize: 13, width: "100%", boxSizing: "border-box",
+  borderRadius: 8, padding: "7px 8px", fontSize: 15, width: "100%", boxSizing: "border-box",
 };
 const btn: React.CSSProperties = {
   background: palette.accent, color: "#fff", border: "none", borderRadius: 8,
-  padding: "7px 14px", fontSize: 13, cursor: "pointer", fontWeight: 600,
+  padding: "7px 14px", fontSize: 15, cursor: "pointer", fontWeight: 600,
 };
 const btnGhost: React.CSSProperties = {
   background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
-  borderRadius: 8, padding: "7px 12px", fontSize: 13, cursor: "pointer",
+  borderRadius: 8, padding: "7px 12px", fontSize: 15, cursor: "pointer",
 };

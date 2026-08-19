@@ -82,14 +82,14 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
 
   return (
     <div style={{ maxWidth: 760 }}>
-      {msg && <div style={{ marginBottom: 12, color: msg.startsWith("Error") ? palette.bad : palette.warn, fontSize: 13 }}>{msg}</div>}
+      {msg && <div style={{ marginBottom: 12, color: msg.startsWith("Error") ? palette.bad : palette.warn, fontSize: 15 }}>{msg}</div>}
 
       <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "14px 16px", marginBottom: 20 }}>
         <div style={{ fontWeight: 700, marginBottom: 10 }}>New team</div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Team name"
             style={{ ...input, width: 200 }} />
-          <label style={{ fontSize: 13, color: palette.textDim, display: "flex", alignItems: "center", gap: 6 }}>
+          <label style={{ fontSize: 15, color: palette.textDim, display: "flex", alignItems: "center", gap: 6 }}>
             Target NPT %
             <input value={newTarget} onChange={(e) => setNewTarget(e.target.value)} type="number" min={0} max={100}
               style={{ ...input, width: 70 }} />
@@ -98,7 +98,7 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
             style={{ ...input, width: 200, textTransform: "uppercase" }} />
           <button onClick={createTeam} disabled={!newName.trim()} style={btn}>Create team</button>
         </div>
-        <div style={{ color: palette.textDim, fontSize: 12, marginTop: 8 }}>
+        <div style={{ color: palette.textDim, fontSize: 14, marginTop: 8 }}>
           The enrollment code is what investigators type in STAR Tracker to join this team.
         </div>
       </div>
@@ -113,7 +113,7 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
                 <input defaultValue={t.name}
                   onBlur={(e) => { const v = e.target.value.trim(); if (v && v !== t.name) saveTeam(t, { name: v }); }}
                   style={{ ...input, fontWeight: 600, width: 220 }} title="Rename team (saves on blur)" />
-                <label style={{ fontSize: 13, color: palette.textDim, display: "flex", alignItems: "center", gap: 6 }}>
+                <label style={{ fontSize: 15, color: palette.textDim, display: "flex", alignItems: "center", gap: 6 }}>
                   Target %
                   <input type="number" min={0} max={100} defaultValue={t.npt_target_pct}
                     onBlur={(e) => { const v = Number(e.target.value); if (isFinite(v) && v !== t.npt_target_pct) saveTeam(t, { npt_target_pct: v }); }}
@@ -121,12 +121,12 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
                 </label>
               </div>
               <div style={{ padding: "10px 14px", borderTop: `1px solid ${palette.border}`, background: palette.bg }}>
-                <div style={{ fontSize: 12, color: palette.textDim, marginBottom: 8, fontWeight: 600 }}>Enrollment codes</div>
-                {tCodes.length === 0 && <div style={{ fontSize: 13, color: palette.textDim, marginBottom: 8 }}>No codes yet.</div>}
+                <div style={{ fontSize: 14, color: palette.textDim, marginBottom: 8, fontWeight: 600 }}>Enrollment codes</div>
+                {tCodes.length === 0 && <div style={{ fontSize: 15, color: palette.textDim, marginBottom: 8 }}>No codes yet.</div>}
                 {tCodes.map((c) => (
                   <div key={c.code} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>
-                    <code style={{ fontSize: 13, fontWeight: 700 }}>{c.code}</code>
-                    <span style={{ fontSize: 12, padding: "1px 8px", borderRadius: 6, color: c.active ? palette.ok : palette.textDim, background: c.active ? palette.okBg : palette.panelAlt }}>
+                    <code style={{ fontSize: 15, fontWeight: 700 }}>{c.code}</code>
+                    <span style={{ fontSize: 14, padding: "1px 8px", borderRadius: 6, color: c.active ? palette.ok : palette.textDim, background: c.active ? palette.okBg : palette.panelAlt }}>
                       {c.active ? "active" : "inactive"}
                     </span>
                     <button onClick={() => toggleCode(c)} style={btnGhost}>{c.active ? "Deactivate" : "Activate"}</button>
@@ -147,18 +147,18 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
-  return <div style={{ padding: "12px 14px", color: palette.textDim, fontSize: 13, border: `1px solid ${palette.border}`, borderRadius: 8 }}>{children}</div>;
+  return <div style={{ padding: "12px 14px", color: palette.textDim, fontSize: 15, border: `1px solid ${palette.border}`, borderRadius: 8 }}>{children}</div>;
 }
 
 const input: React.CSSProperties = {
   background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
-  borderRadius: 8, padding: "8px 10px", fontSize: 14, boxSizing: "border-box",
+  borderRadius: 8, padding: "8px 10px", fontSize: 16, boxSizing: "border-box",
 };
 const btn: React.CSSProperties = {
   background: palette.accent, color: "#fff", border: "none", borderRadius: 8,
-  padding: "8px 14px", fontSize: 13, cursor: "pointer", fontWeight: 600,
+  padding: "8px 14px", fontSize: 15, cursor: "pointer", fontWeight: 600,
 };
 const btnGhost: React.CSSProperties = {
   background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
-  borderRadius: 8, padding: "6px 12px", fontSize: 13, cursor: "pointer",
+  borderRadius: 8, padding: "6px 12px", fontSize: 15, cursor: "pointer",
 };

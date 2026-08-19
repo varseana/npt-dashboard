@@ -90,15 +90,15 @@ export default function Org() {
     <div>
       <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", marginBottom: 16 }}>
         <div>
-          <div style={{ fontSize: 11, color: palette.textDim, marginBottom: 4 }}>Week</div>
+          <div style={{ fontSize: 13, color: palette.textDim, marginBottom: 4 }}>Week</div>
           <select value={weekKey} onChange={(e) => setWeekKey(e.target.value)} style={select}>
             {weeks.map((w) => (<option key={w.key} value={w.key}>{weekLabel(w)}</option>))}
           </select>
         </div>
-        <div style={{ color: palette.textDim, fontSize: 13 }}>{realManagers.length} managers</div>
+        <div style={{ color: palette.textDim, fontSize: 15 }}>{realManagers.length} managers</div>
       </div>
 
-      {msg && <div style={{ color: msg.startsWith("Error") ? palette.bad : palette.ok, marginBottom: 12, fontSize: 13 }}>{msg}</div>}
+      {msg && <div style={{ color: msg.startsWith("Error") ? palette.bad : palette.ok, marginBottom: 12, fontSize: 15 }}>{msg}</div>}
 
       {realManagers.length === 0 ? (
         <div style={{ color: palette.textDim }}>No managers yet. Create them in Supabase (managers table).</div>
@@ -108,12 +108,12 @@ export default function Org() {
         return (
           <div key={mgr.user_id} style={{ border: `1px solid ${palette.border}`, borderRadius: 8, padding: "12px 14px", marginBottom: 14 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-              <div style={{ fontWeight: 700 }}>{mgr.email} <span style={{ color: palette.textDim, fontWeight: 400, fontSize: 13 }}>({mine.length} members, NPT {fmtHms(teamNpt)})</span></div>
+              <div style={{ fontWeight: 700 }}>{mgr.email} <span style={{ color: palette.textDim, fontWeight: 400, fontSize: 15 }}>({mine.length} members, NPT {fmtHms(teamNpt)})</span></div>
             </div>
             {mine.length === 0 ? (
-              <div style={{ color: palette.textDim, fontSize: 13, marginBottom: 8 }}>No members assigned.</div>
+              <div style={{ color: palette.textDim, fontSize: 15, marginBottom: 8 }}>No members assigned.</div>
             ) : (
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13, marginBottom: 8 }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 15, marginBottom: 8 }}>
                 <thead>
                   <tr>
                     <th style={{ ...th, textAlign: "left" }}>Member</th>
@@ -169,6 +169,6 @@ function remainColor(s: NptStatus): string {
 
 const th: React.CSSProperties = { textAlign: "right", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
 const td: React.CSSProperties = { textAlign: "right", padding: "8px 10px", borderBottom: `1px solid ${palette.border}` };
-const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 14 };
+const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 16 };
 const select: React.CSSProperties = { ...input, minWidth: 260 };
-const btn: React.CSSProperties = { background: palette.accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", fontSize: 13, cursor: "pointer", fontWeight: 600 };
+const btn: React.CSSProperties = { background: palette.accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", fontSize: 15, cursor: "pointer", fontWeight: 600 };
