@@ -14,6 +14,7 @@ import Org from "./components/Org";
 import Requests from "./components/Requests";
 import Managers from "./components/Managers";
 import Teams from "./components/Teams";
+import Unassigned from "./components/Unassigned";
 import SelfView from "./components/SelfView";
 import { IconLogout } from "./components/icons";
 import Mascot from "./components/Mascot";
@@ -43,9 +44,17 @@ export default function App() {
   const [section, setSection] = useState<"dashboard" | "team" | "access">("dashboard");
   const [dashView, setDashView] = useState<"summary" | "breakdown">("summary");
   const [teamTab, setTeamTab] = useState<"employees" | "planned" | "folders">("employees");
-  const [accessTab, setAccessTab] = useState<"requests" | "org" | "managers" | "teams">("requests");
+  const [accessTab, setAccessTab] = useState<"requests" | "org" | "managers" | "teams" | "unassigned">("requests");
   const [askLogout, setAskLogout] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
+  const [pendingReq, setPendingReq] = useState(0);   // access requests pendientes (badge en Access)
+
+  // conteo de access_requests pendientes (RLS: admin ve todas, manager solo las suyas)
+  async function loadPending() {
+    const { count } = await supabase.from("access_requests")
+      .select("*", { count: "exact", head: true }).eq("status", "pending");
+    setPendingReq(count ?? 0);
+  }
 
   // auto-refresco: cada 15s bumpea el tick y las vistas re-consultan (sin recargar la pagina)
   useEffect(() => {
@@ -58,7 +67,19 @@ export default function App() {
       setSession(data.session);
       setLoading(false);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      setSession(s);
+      // al ENTRAR o SALIR: cerrar el modal de logout (bug: quedaba abierto al re-loguear) y
+      // resetear la nav al default (Dashboard > Summary). NO en TOKEN_REFRESHED para no sacar
+      // al usuario de donde esta.
+      if (event === "SIGNED_IN" || event === "SIGNED_OUT") {
+        setAskLogout(false);
+        setSection("dashboard");
+        setDashView("summary");
+        setTeamTab("employees");
+        setAccessTab("requests");
+      }
+    });
     return () => sub.subscription.unsubscribe();
   }, []);
 
@@ -92,6 +113,7 @@ export default function App() {
     const tt = (t as Team[]) ?? [];
     setTeams(tt);
     if (tt.length) setTeamId((prev) => prev || (m as ManagerRow)?.team_id || tt[0].id);
+    loadPending();
   }
 
   useEffect(() => {
@@ -109,10 +131,17 @@ export default function App() {
         loadManager(session);
         setRefreshTick((t) => t + 1);
       })
+      // badge de Access en vivo: nueva/cambiada access_request => refrescar el conteo pendiente
+      .on("postgres_changes", { event: "*", schema: "public", table: "access_requests" }, () => {
+        loadPending();
+      })
       .subscribe();
     return () => { supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
+
+  // fallback: refrescar el conteo pendiente en cada tick (por si el realtime no esta ON)
+  useEffect(() => { if (session) loadPending(); /* eslint-disable-next-line */ }, [refreshTick]);
 
   if (loading) return <Centered>Loading...</Centered>;
   if (!session) return <Login />;
@@ -164,7 +193,7 @@ export default function App() {
         <nav style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <TabBtn active={section === "dashboard"} onClick={() => setSection("dashboard")}>Dashboard</TabBtn>
           <TabBtn active={section === "team"} onClick={() => setSection("team")}>Team</TabBtn>
-          <TabBtn active={section === "access"} onClick={() => setSection("access")}>Access</TabBtn>
+          <TabBtn active={section === "access"} onClick={() => setSection("access")} badge={pendingReq}>Access</TabBtn>
         </nav>
       </div>
 
@@ -182,6 +211,7 @@ export default function App() {
           <SubBtn active={accessTab === "requests"} onClick={() => setAccessTab("requests")}>Requests</SubBtn>
           {manager.role === "admin" && <SubBtn active={accessTab === "managers"} onClick={() => setAccessTab("managers")}>Managers</SubBtn>}
           {manager.role === "admin" && <SubBtn active={accessTab === "teams"} onClick={() => setAccessTab("teams")}>Teams</SubBtn>}
+          {manager.role === "admin" && <SubBtn active={accessTab === "unassigned"} onClick={() => setAccessTab("unassigned")}>Unassigned</SubBtn>}
           {manager.role === "admin" && <SubBtn active={accessTab === "org"} onClick={() => setAccessTab("org")}>Org</SubBtn>}
         </>)}
       </div>
@@ -196,6 +226,8 @@ export default function App() {
         <Managers teams={teams} myUserId={manager.user_id} refreshKey={refreshTick} />}
       {section === "access" && accessTab === "teams" && manager.role === "admin" &&
         <Teams refreshKey={refreshTick} />}
+      {section === "access" && accessTab === "unassigned" && manager.role === "admin" &&
+        <Unassigned teams={teams} refreshKey={refreshTick} />}
       {section === "access" && accessTab === "org" && manager.role === "admin" && <Org />}
       </>)}
 
@@ -240,18 +272,29 @@ function Centered({ children }: { children: React.ReactNode }) {
   );
 }
 
-function TabBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
+function TabBtn({ active, onClick, badge, children }:
+  { active: boolean; onClick: () => void; badge?: number; children: React.ReactNode }) {
   return (
     <button
       onClick={onClick}
       style={{
         ...btn,
+        position: "relative",
         background: active ? palette.accent : palette.panel,
         borderColor: active ? palette.accent : palette.border,
         color: active ? "#fff" : palette.text,
       }}
     >
       {children}
+      {badge != null && badge > 0 && (
+        // burbuja cyan de notificacion (sin sombra ni glow), arriba a la derecha
+        <span style={{
+          position: "absolute", top: -7, right: -7, minWidth: 20, height: 20, padding: "0 5px",
+          borderRadius: 10, background: "#06b6d4", color: "#fff", fontSize: 13, fontWeight: 700,
+          display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
+          border: `2px solid ${palette.bg}`, boxShadow: "none",
+        }}>{badge}</span>
+      )}
     </button>
   );
 }
