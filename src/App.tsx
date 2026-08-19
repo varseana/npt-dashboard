@@ -13,6 +13,7 @@ import Clock from "./components/Clock";
 import Org from "./components/Org";
 import Requests from "./components/Requests";
 import { IconLogout } from "./components/icons";
+import Mascot from "./components/Mascot";
 
 interface ManagerRow {
   user_id: string;
@@ -159,6 +160,8 @@ export default function App() {
           onConfirm={() => supabase.auth.signOut()}
         />
       )}
+
+      <Mascot />
     </div>
   );
 }
