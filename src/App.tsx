@@ -9,6 +9,7 @@ import Distribution from "./components/Distribution";
 import Employees from "./components/Employees";
 import Planned from "./components/Planned";
 import Folders from "./components/Folders";
+import Clock from "./components/Clock";
 
 interface ManagerRow {
   user_id: string;
@@ -93,7 +94,10 @@ export default function App() {
           <h1 style={{ margin: 0, fontSize: 22, color: palette.text }}>STAR NPT Dashboard</h1>
           <div style={{ color: palette.textDim, fontSize: 13 }}>{manager.email} ({manager.role})</div>
         </div>
-        <button style={btn} onClick={() => supabase.auth.signOut()}>Sign out</button>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+          <Clock />
+          <button style={btn} onClick={() => supabase.auth.signOut()}>Sign out</button>
+        </div>
       </header>
 
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
