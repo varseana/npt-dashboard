@@ -111,13 +111,13 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
         {showBulk && (
           <div style={{ marginTop: 10 }}>
             <textarea value={bulk} onChange={(e) => setBulk(e.target.value)} rows={5}
-              placeholder="Un username por linea (o separados por coma/espacio)"
+              placeholder="One username per line (or comma/space separated)"
               style={{ ...input, width: "100%", fontFamily: "monospace", resize: "vertical" }} />
             <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6 }}>
               <button onClick={() => add(parseAliases(bulk))} disabled={saving || !bulk.trim()} style={btn}>
                 Add {parseAliases(bulk).length || ""} in bulk
               </button>
-              <span style={{ color: palette.textDim, fontSize: 12 }}>{parseAliases(bulk).length} usernames detectados</span>
+              <span style={{ color: palette.textDim, fontSize: 12 }}>{parseAliases(bulk).length} usernames detected</span>
             </div>
           </div>
         )}
@@ -133,7 +133,7 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
       {loading ? (
         <div style={{ color: palette.textDim }}>Loading...</div>
       ) : people.length === 0 ? (
-        <div style={{ color: palette.textDim }}>Sin empleados aun. Agregalos arriba.</div>
+        <div style={{ color: palette.textDim }}>No employees yet. Add them above.</div>
       ) : (
         <div style={{ border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
@@ -154,8 +154,8 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
                   <td style={{ ...td, textAlign: "right" }}>{p.last ?? "-"}</td>
                   <td style={{ ...td, textAlign: "right" }}>
                     {p.expected
-                      ? <button onClick={() => removeFromRoster(p.alias)} disabled={saving} style={btnRemove} title="Quitar del roster">Remove</button>
-                      : <button onClick={() => add([p.alias])} disabled={saving} style={btnGhost} title="Agregar al roster">Add to roster</button>}
+                      ? <button onClick={() => removeFromRoster(p.alias)} disabled={saving} style={btnRemove} title="Remove from roster">Remove</button>
+                      : <button onClick={() => add([p.alias])} disabled={saving} style={btnGhost} title="Add to roster">Add to roster</button>}
                   </td>
                 </tr>
               ))}

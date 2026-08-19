@@ -76,7 +76,7 @@ export default function Planned({ team }: { team: Team }) {
       await upsertOrDelete("", teamInput);
       for (const a of aliases) await upsertOrDelete(a, personInputs[a] ?? "");
       await load();
-      setMsg("Saved. Planned aplicado; Remaining y colores se recalculan.");
+      setMsg("Saved. Planned applied; Remaining and colors recompute.");
     } catch (e: any) {
       setMsg("Error: " + (e?.message || String(e)));
     }
@@ -85,20 +85,20 @@ export default function Planned({ team }: { team: Team }) {
 
   if (loading) return <div style={{ color: palette.textDim }}>Loading...</div>;
 
-  const scopeLabel = scope === "standing" ? "standing (todas las semanas)" : weekLabel(weekInfo(new Date(weekKey + "T12:00:00")));
+  const scopeLabel = scope === "standing" ? "standing (all weeks)" : weekLabel(weekInfo(new Date(weekKey + "T12:00:00")));
 
   return (
     <div style={{ maxWidth: 640 }}>
       <p style={{ color: palette.textDim, fontSize: 14, lineHeight: 1.6 }}>
-        Planned NPT por semana. Formato <strong>H:MM</strong> (o H:MM:SS, o horas decimales). Vacio =
-        hereda del nivel de arriba. Prioridad: persona+semana &gt; persona+standing &gt; team+semana &gt; team+standing.
+        Planned NPT per week. Format <strong>H:MM</strong> (or H:MM:SS, or decimal hours). Empty =
+        inherits from the level above. Priority: person+week &gt; person+standing &gt; team+week &gt; team+standing.
       </p>
 
       <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", margin: "16px 0" }}>
         <Field label="Scope">
           <select value={scope} onChange={(e) => setScope(e.target.value as Scope)} style={select}>
-            <option value="standing">Standing (se reusa)</option>
-            <option value="week">Override de una semana</option>
+            <option value="standing">Standing (reused)</option>
+            <option value="week">Override a single week</option>
           </select>
         </Field>
         {scope === "week" && (
@@ -112,7 +112,7 @@ export default function Planned({ team }: { team: Team }) {
 
       <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "12px 14px", marginBottom: 16 }}>
         <div style={{ fontSize: 12, color: palette.textDim, marginBottom: 6 }}>Team default ({team.name}) :: {scopeLabel}</div>
-        <input value={teamInput} onChange={(e) => setTeamInput(e.target.value)} placeholder="H:MM (ej. 3:45)" style={{ ...input, width: 160 }} />
+        <input value={teamInput} onChange={(e) => setTeamInput(e.target.value)} placeholder="H:MM (e.g. 3:45)" style={{ ...input, width: 160 }} />
       </div>
 
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
@@ -125,7 +125,7 @@ export default function Planned({ team }: { team: Team }) {
         </thead>
         <tbody>
           {aliases.length === 0 ? (
-            <tr><td colSpan={3} style={{ ...td, color: palette.textDim }}>Nadie ha reportado todavia.</td></tr>
+            <tr><td colSpan={3} style={{ ...td, color: palette.textDim }}>No one has reported yet.</td></tr>
           ) : aliases.map((a, i) => {
             const eff = resolvePlanned(rows, a, scopeKey);
             return (

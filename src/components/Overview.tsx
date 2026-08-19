@@ -132,7 +132,7 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
           </label>
         )}
         <button onClick={() => flagged.forEach(remind)} disabled={!flagged.length}
-          title="Genera un .eml por cada persona en amarillo o rojo" style={{ ...emlBtn, marginLeft: "auto" }}>
+          title="Generate one .eml per person in yellow or red" style={{ ...emlBtn, marginLeft: "auto" }}>
           Email flagged ({flagged.length})
         </button>
       </div>
@@ -159,7 +159,7 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
                     ({g.rows.length}, NPT {fmtHms(g.rows.reduce((a, u) => a + u.nptSeconds, 0))})
                   </span>
                 </div>
-                {g.rows.length ? <UserTable rows={g.rows} remind={remind} /> : <div style={{ color: palette.textDim, fontSize: 13 }}>Sin miembros con data esta semana.</div>}
+                {g.rows.length ? <UserTable rows={g.rows} remind={remind} /> : <div style={{ color: palette.textDim, fontSize: 13 }}>No members with data this week.</div>}
               </div>
             ))
           ) : (
@@ -196,7 +196,7 @@ function UserTable({ rows, remind }: { rows: Row[]; remind: (u: Row) => void }) 
             <td style={{ ...td, textAlign: "right", color: remainingColor(u.status) }}>{u.remaining != null ? fmtHms(u.remaining) : "-"}</td>
             <td style={{ ...td, textAlign: "right" }}><StatusChip status={u.status} /></td>
             <td style={{ ...td, textAlign: "right" }}>
-              <button onClick={() => remind(u)} disabled={u.status === "none"} title="Descargar .eml de recordatorio" style={emlBtn}>Remind</button>
+              <button onClick={() => remind(u)} disabled={u.status === "none"} title="Download reminder .eml" style={emlBtn}>Remind</button>
             </td>
           </tr>
         ))}

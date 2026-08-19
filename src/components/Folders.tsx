@@ -60,12 +60,12 @@ export default function Folders({ team }: { team: Team }) {
   return (
     <div style={{ maxWidth: 720 }}>
       <p style={{ color: palette.textDim, fontSize: 14, lineHeight: 1.6 }}>
-        Carpetas privadas para organizar tu vista por proyecto. Son solo tuyas y <strong>no afectan
-        ningun numero</strong>: agrupan investigadores en Overview cuando activas "Group by folder".
+        Private folders to organize your view by project. They are yours only and <strong>do not
+        affect any numbers</strong>: they group investigators in Overview when you turn on Group by folder.
       </p>
 
       <div style={{ display: "flex", gap: 8, alignItems: "center", margin: "16px 0" }}>
-        <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Nombre de la carpeta (ej. Proyecto X)"
+        <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Folder name (e.g. Project X)"
           onKeyDown={(e) => { if (e.key === "Enter") create(); }} style={{ ...input, width: 280 }} />
         <button onClick={create} disabled={!newName.trim()} style={btn}>Create folder</button>
       </div>
@@ -73,7 +73,7 @@ export default function Folders({ team }: { team: Team }) {
       {msg && <div style={{ marginBottom: 12, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 13 }}>{msg}</div>}
 
       {folders.length === 0 ? (
-        <div style={{ color: palette.textDim }}>Sin carpetas todavia. Crea una arriba.</div>
+        <div style={{ color: palette.textDim }}>No folders yet. Create one above.</div>
       ) : folders.map((f) => (
         <div key={f.id} style={{ border: `1px solid ${palette.border}`, borderRadius: 8, padding: "12px 14px", marginBottom: 12 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
@@ -81,7 +81,7 @@ export default function Folders({ team }: { team: Team }) {
             <button onClick={() => remove(f.id)} style={btnRemove}>Delete folder</button>
           </div>
           {known.length === 0 ? (
-            <div style={{ color: palette.textDim, fontSize: 13 }}>Nadie en el team todavia (agrega gente en Employees).</div>
+            <div style={{ color: palette.textDim, fontSize: 13 }}>No one in the team yet (add people in Employees).</div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 6 }}>
               {known.map((a) => (
