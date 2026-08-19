@@ -3,9 +3,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import {
-  computeDay, fmtHms, resolvePlanned, statusFor,
+  computeDay, fmtHms, resolvePlanned, resolveTeamBudget, statusFor,
   weekInfo, weekLabel, weekRangeLabel, recentWeeks, isoDate,
-  type NptDailyRow, type NptStatus, type PlannedRow,
+  type NptDailyRow, type NptStatus, type PlannedRow, type TeamBudgetRow,
 } from "../lib/npt";
 import { StatusChip } from "./status";
 import { downloadEml } from "../lib/reminder";
@@ -31,6 +31,7 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
   const [weekKey, setWeekKey] = useState(() => weekInfo(new Date()).key);
   const [rows, setRows] = useState<NptDailyRow[]>([]);
   const [planned, setPlanned] = useState<PlannedRow[]>([]);
+  const [budget, setBudget] = useState<TeamBudgetRow[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [groupBy, setGroupBy] = useState(false);
   const [filter, setFilter] = useState("");
@@ -45,16 +46,18 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
     (async () => {
       if (first.current) setLoading(true);
       setErr("");
-      const [{ data: d, error }, { data: p }, { data: f }] = await Promise.all([
+      const [{ data: d, error }, { data: p }, { data: b }, { data: f }] = await Promise.all([
         supabase.from("npt_daily").select("alias,tenant,work_date,profile,aux_seconds")
           .eq("team_id", team.id).gte("work_date", isoDate(sel.start)).lte("work_date", isoDate(sel.end)),
         supabase.from("npt_planned").select("alias,week_key,planned_seconds").eq("team_id", team.id),
+        supabase.from("npt_team_budget").select("week_key,planned_seconds").eq("team_id", team.id),
         supabase.from("manager_folders").select("id,name,aliases").eq("team_id", team.id).order("created_at"),
       ]);
       if (cancelled) return;
       if (error) setErr(error.message);
       setRows((d as NptDailyRow[]) ?? []);
       setPlanned((p as PlannedRow[]) ?? []);
+      setBudget((b as TeamBudgetRow[]) ?? []);
       setFolders((f as Folder[]) ?? []);
       first.current = false;
       setLoading(false);
@@ -90,6 +93,10 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
   }, [users, filter]);
 
   const teamNpt = users.reduce((a, u) => a + u.nptSeconds, 0);
+  // presupuesto TOTAL del team para la semana (techo agregado que todos consumen)
+  const teamBudget = resolveTeamBudget(budget, weekKey);
+  const teamRemaining = teamBudget != null ? teamBudget - teamNpt : null;
+  const teamStatus = statusFor(teamBudget, teamNpt);
   const overCount = users.filter((u) => u.status === "bad").length;
   const warnCount = users.filter((u) => u.status === "warn").length;
   const flagged = users.filter((u) => u.status === "bad" || u.status === "warn");
@@ -146,6 +153,7 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
         <div style={{ color: palette.textDim }}>No reported data for {weekLabel(sel)}.</div>
       ) : (
         <>
+          <TeamBudgetCard budget={teamBudget} used={teamNpt} remaining={teamRemaining} status={teamStatus} />
           <div style={{ display: "flex", gap: 12, marginBottom: 18, flexWrap: "wrap" }}>
             <Stat label="Investigators reporting" value={String(users.length)} />
             <Stat label="Team NPT (actual)" value={fmtHms(teamNpt)} />
@@ -161,11 +169,11 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
                     ({g.rows.length}, NPT {fmtHms(g.rows.reduce((a, u) => a + u.nptSeconds, 0))})
                   </span>
                 </div>
-                {g.rows.length ? <UserTable rows={g.rows} remind={remind} /> : <div style={{ color: palette.textDim, fontSize: 18 }}>No members with data this week.</div>}
+                {g.rows.length ? <UserTable rows={g.rows} remind={remind} teamBudget={teamBudget} /> : <div style={{ color: palette.textDim, fontSize: 18 }}>No members with data this week.</div>}
               </div>
             ))
           ) : (
-            <UserTable rows={shown} remind={remind} />
+            <UserTable rows={shown} remind={remind} teamBudget={teamBudget} />
           )}
           <div style={{ color: palette.textDim, fontSize: 16, marginTop: 8 }}>
             NPT = Meeting + Training + Project + Personal + System. Remaining = Planned - Actual. Times in Hh:mm:ss.
@@ -176,12 +184,12 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
   );
 }
 
-function UserTable({ rows, remind }: { rows: Row[]; remind: (u: Row) => void }) {
+function UserTable({ rows, remind, teamBudget }: { rows: Row[]; remind: (u: Row) => void; teamBudget: number | null }) {
   return (
     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19 }}>
       <thead>
         <tr>
-          {["#", "Investigator", "Days", "Planned", "Actual NPT", "Remaining", "Status"].map((h, i) => (
+          {["#", "Investigator", "Days", "Planned", "Actual NPT", "% of budget", "Remaining", "Status"].map((h, i) => (
             <th key={h} style={{ ...th, textAlign: i <= 1 ? "left" : "right" }}>{h}</th>
           ))}
           <th style={{ ...th, textAlign: "right" }}></th>
@@ -195,6 +203,9 @@ function UserTable({ rows, remind }: { rows: Row[]; remind: (u: Row) => void }) 
             <td style={{ ...td, textAlign: "right" }}>{u.daysReported}</td>
             <td style={{ ...td, textAlign: "right", color: palette.textDim }}>{u.planned != null ? fmtHms(u.planned) : "-"}</td>
             <td style={{ ...td, textAlign: "right", fontWeight: 600 }}>{fmtHms(u.nptSeconds)}</td>
+            <td style={{ ...td, textAlign: "right", color: palette.textDim }}>
+              {teamBudget ? (u.nptSeconds / teamBudget * 100).toFixed(1) + "%" : "-"}
+            </td>
             <td style={{ ...td, textAlign: "right", color: remainingColor(u.status) }}>{u.remaining != null ? fmtHms(u.remaining) : "-"}</td>
             <td style={{ ...td, textAlign: "right" }}><StatusChip status={u.status} /></td>
             <td style={{ ...td, textAlign: "right" }}>
@@ -212,6 +223,47 @@ function UserTable({ rows, remind }: { rows: Row[]; remind: (u: Row) => void }) 
 
 function remainingColor(s: NptStatus): string {
   return s === "bad" ? palette.bad : s === "warn" ? palette.warn : s === "ok" ? palette.ok : palette.textDim;
+}
+
+// rollup del TEAM: presupuesto total de la semana vs lo consumido por todos, con barra.
+function TeamBudgetCard({ budget, used, remaining, status }:
+  { budget: number | null; used: number; remaining: number | null; status: NptStatus }) {
+  const fillColor = status === "bad" ? palette.bad : status === "warn" ? palette.warn : palette.ok;
+  const pct = budget ? Math.min(100, (used / budget) * 100) : 0;
+  return (
+    <div style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: "16px 20px", marginBottom: 18 }}>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
+        <span style={{ fontWeight: 700, fontSize: 21, textTransform: "uppercase", letterSpacing: "0.06em" }}>"Team" // weekly NPT budget</span>
+        {budget != null && <StatusChip status={status} />}
+      </div>
+      {budget == null ? (
+        <div style={{ color: palette.textDim, fontSize: 18 }}>
+          No team budget set for this week. Set it in the Planned tab (Team weekly budget).
+        </div>
+      ) : (
+        <>
+          <div style={{ display: "flex", gap: 28, flexWrap: "wrap", marginBottom: 12 }}>
+            <BudgetStat label="Budget" value={fmtHms(budget)} />
+            <BudgetStat label="Used (all members)" value={fmtHms(used)} />
+            <BudgetStat label="Remaining" value={fmtHms(remaining ?? 0)} color={remainingColor(status)} />
+            <BudgetStat label="Used %" value={((used / budget) * 100).toFixed(1) + "%"} />
+          </div>
+          <div style={{ height: 12, borderRadius: 6, background: palette.panelAlt, overflow: "hidden" }}>
+            <div style={{ width: pct + "%", height: "100%", background: fillColor, transition: "width .3s" }} />
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function BudgetStat({ label, value, color }: { label: string; value: string; color?: string }) {
+  return (
+    <div>
+      <div style={{ fontSize: 15, color: palette.textDim, marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 24, fontWeight: 700, fontVariantNumeric: "tabular-nums", color: color || palette.text }}>{value}</div>
+    </div>
+  );
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {

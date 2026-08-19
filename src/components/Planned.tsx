@@ -17,7 +17,9 @@ export default function Planned({ team }: { team: Team }) {
   const [scope, setScope] = useState<Scope>("standing");
   const [weekKey, setWeekKey] = useState(() => weekInfo(new Date()).key);
   const [rows, setRows] = useState<PlannedRow[]>([]);
+  const [budgetRows, setBudgetRows] = useState<{ week_key: string; planned_seconds: number }[]>([]);
   const [aliases, setAliases] = useState<string[]>([]);
+  const [budgetInput, setBudgetInput] = useState("");
   const [teamInput, setTeamInput] = useState("");
   const [personInputs, setPersonInputs] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -28,11 +30,13 @@ export default function Planned({ team }: { team: Team }) {
 
   async function load() {
     setLoading(true);
-    const [{ data: p }, { data: d }] = await Promise.all([
+    const [{ data: p }, { data: b }, { data: d }] = await Promise.all([
       supabase.from("npt_planned").select("alias,week_key,planned_seconds").eq("team_id", team.id),
+      supabase.from("npt_team_budget").select("week_key,planned_seconds").eq("team_id", team.id),
       supabase.from("npt_daily").select("alias").eq("team_id", team.id).limit(2000),
     ]);
     setRows((p as PlannedRow[]) ?? []);
+    setBudgetRows((b as { week_key: string; planned_seconds: number }[]) ?? []);
     const set = new Set<string>();
     for (const r of (d as { alias: string }[]) ?? []) set.add(r.alias);
     setAliases(Array.from(set).sort());
@@ -45,13 +49,15 @@ export default function Planned({ team }: { team: Team }) {
   useEffect(() => {
     const t = rows.find((r) => r.alias === "" && r.week_key === scopeKey);
     setTeamInput(t ? fmtHms(t.planned_seconds) : "");
+    const bud = budgetRows.find((r) => r.week_key === scopeKey);
+    setBudgetInput(bud ? fmtHms(bud.planned_seconds) : "");
     const pi: Record<string, string> = {};
     for (const a of aliases) {
       const row = rows.find((r) => r.alias === a && r.week_key === scopeKey);
       pi[a] = row ? fmtHms(row.planned_seconds) : "";
     }
     setPersonInputs(pi);
-  }, [rows, aliases, scopeKey]);
+  }, [rows, budgetRows, aliases, scopeKey]);
 
   async function upsertOrDelete(alias: string, input: string) {
     const secs = parseDuration(input);
@@ -71,13 +77,31 @@ export default function Planned({ team }: { team: Team }) {
     if (error) throw error;
   }
 
+  // presupuesto TOTAL del team (tabla npt_team_budget, distinta de npt_planned por-persona)
+  async function upsertOrDeleteBudget(input: string) {
+    const secs = parseDuration(input);
+    if (secs == null) {
+      if (budgetRows.some((r) => r.week_key === scopeKey)) {
+        const { error } = await supabase.from("npt_team_budget").delete()
+          .match({ team_id: team.id, week_key: scopeKey });
+        if (error) throw error;
+      }
+      return;
+    }
+    const { error } = await supabase.from("npt_team_budget").upsert(
+      { team_id: team.id, week_key: scopeKey, planned_seconds: secs, updated_at: new Date().toISOString() },
+      { onConflict: "team_id,week_key" });
+    if (error) throw error;
+  }
+
   async function save() {
     setSaving(true); setMsg("");
     try {
+      await upsertOrDeleteBudget(budgetInput);
       await upsertOrDelete("", teamInput);
       for (const a of aliases) await upsertOrDelete(a, personInputs[a] ?? "");
       await load();
-      setMsg("Saved. Planned applied; Remaining and colors recompute.");
+      setMsg("Saved. Team budget and planned applied; Remaining and colors recompute.");
     } catch (e: any) {
       setMsg("Error: " + (e?.message || String(e)));
     }
@@ -111,8 +135,18 @@ export default function Planned({ team }: { team: Team }) {
         )}
       </div>
 
+      <div style={{ background: palette.panel, border: `2px solid ${palette.text}`, borderRadius: 8, padding: "14px 16px", marginBottom: 16 }}>
+        <div style={{ fontWeight: 700, fontSize: 19, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+          "Team" // weekly NPT budget (total)
+        </div>
+        <div style={{ fontSize: 16, color: palette.textDim, marginBottom: 8 }}>
+          Total NPT the whole team can spend this {scope === "standing" ? "week (every week)" : "specific week"}. All members draw down from it. ({scopeLabel})
+        </div>
+        <input value={budgetInput} onChange={(e) => setBudgetInput(e.target.value)} placeholder="H:MM (e.g. 10:00)" style={{ ...input, width: 180 }} />
+      </div>
+
       <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "12px 14px", marginBottom: 16 }}>
-        <div style={{ fontSize: 17, color: palette.textDim, marginBottom: 6 }}>Team default ({team.name}) :: {scopeLabel}</div>
+        <div style={{ fontSize: 17, color: palette.textDim, marginBottom: 6 }}>Default per person ({team.name}) :: {scopeLabel} <span style={{ opacity: 0.7 }}>(optional individual target, not the team total)</span></div>
         <input value={teamInput} onChange={(e) => setTeamInput(e.target.value)} placeholder="H:MM (e.g. 3:45)" style={{ ...input, width: 160 }} />
       </div>
 

@@ -202,6 +202,21 @@ export function resolvePlanned(rows: PlannedRow[], alias: string, weekKey: strin
   return best ? best.planned_seconds : null;
 }
 
+export interface TeamBudgetRow { week_key: string; planned_seconds: number; }
+
+// resuelve el presupuesto TOTAL del team para una semana: semana especifica > standing ('').
+// null si no hay presupuesto seteado. distinto de resolvePlanned (que es por-persona).
+export function resolveTeamBudget(rows: TeamBudgetRow[], weekKey: string): number | null {
+  let best: TeamBudgetRow | null = null;
+  let bestScore = -1;
+  for (const r of rows) {
+    if (r.week_key !== weekKey && r.week_key !== "") continue;
+    const score = r.week_key !== "" ? 1 : 0;
+    if (score > bestScore) { bestScore = score; best = r; }
+  }
+  return best ? best.planned_seconds : null;
+}
+
 export type NptStatus = "ok" | "warn" | "bad" | "none";
 
 // estado segun remaining = planned - actual. amarillo cuando queda <= 1h; rojo si se paso.
