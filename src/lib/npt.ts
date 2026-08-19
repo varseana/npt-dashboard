@@ -164,9 +164,14 @@ function shortDate(d: Date): string {
   return `${d.getDate()} ${MESES[d.getMonth()]}`;
 }
 
+// rango de fechas de la semana, ej. "Dom 17 Ago - Sab 23 Ago"
+export function weekRangeLabel(w: WeekInfo): string {
+  return `Dom ${shortDate(w.start)} - Sab ${shortDate(w.end)}`;
+}
+
 // etiqueta tipo "Week 34 :: Dom 17 Ago - Sab 23 Ago"
 export function weekLabel(w: WeekInfo): string {
-  return `Week ${w.week} :: Dom ${shortDate(w.start)} - Sab ${shortDate(w.end)}`;
+  return `Week ${w.week} :: ${weekRangeLabel(w)}`;
 }
 
 // lista de las ultimas n semanas (incluida la de hoy), mas nueva primero

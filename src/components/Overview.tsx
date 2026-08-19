@@ -4,10 +4,11 @@ import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import {
   computeDay, fmtHms, resolvePlanned, statusFor,
-  weekInfo, weekLabel, recentWeeks, isoDate,
+  weekInfo, weekLabel, weekRangeLabel, recentWeeks, isoDate,
   type NptDailyRow, type NptStatus, type PlannedRow,
 } from "../lib/npt";
 import { StatusChip } from "./status";
+import { downloadEml } from "../lib/reminder";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 
@@ -88,6 +89,20 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
   const teamNpt = users.reduce((a, u) => a + u.nptSeconds, 0);
   const overCount = users.filter((u) => u.status === "bad").length;
   const warnCount = users.filter((u) => u.status === "warn").length;
+  const flagged = users.filter((u) => u.status === "bad" || u.status === "warn");
+
+  function remind(u: Row) {
+    if (u.planned == null) return;
+    downloadEml({
+      alias: u.alias,
+      weekNum: sel.week,
+      weekRange: weekRangeLabel(sel),
+      status: u.status,
+      actual: u.nptSeconds,
+      planned: u.planned,
+      remaining: u.remaining ?? 0,
+    });
+  }
 
   return (
     <div>
@@ -100,6 +115,13 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
         <Field label="Filter user">
           <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="username" style={input} />
         </Field>
+        <button
+          onClick={() => flagged.forEach(remind)}
+          disabled={!flagged.length}
+          title="Genera un .eml por cada persona en amarillo o rojo"
+          style={{ ...emlBtn, marginLeft: "auto" }}>
+          Email flagged ({flagged.length})
+        </button>
       </div>
 
       {err && <div style={{ color: palette.bad, marginBottom: 12 }}>{err}</div>}
@@ -122,6 +144,7 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
                 {["#", "Investigator", "Days", "Planned", "Actual NPT", "Remaining", "Status"].map((h, i) => (
                   <th key={h} style={{ ...th, textAlign: i <= 1 ? "left" : "right" }}>{h}</th>
                 ))}
+                <th style={{ ...th, textAlign: "right" }}></th>
               </tr>
             </thead>
             <tbody>
@@ -134,6 +157,9 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
                   <td style={{ ...td, textAlign: "right", fontWeight: 600 }}>{fmtHms(u.nptSeconds)}</td>
                   <td style={{ ...td, textAlign: "right", color: remainingColor(u.status) }}>{u.remaining != null ? fmtHms(u.remaining) : "-"}</td>
                   <td style={{ ...td, textAlign: "right" }}><StatusChip status={u.status} /></td>
+                  <td style={{ ...td, textAlign: "right" }}>
+                    <button onClick={() => remind(u)} disabled={u.status === "none"} title="Descargar .eml de recordatorio" style={emlBtn}>Remind</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -174,3 +200,4 @@ const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", color:
 const td: React.CSSProperties = { padding: "8px 10px", borderBottom: `1px solid ${palette.border}` };
 const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 14 };
 const select: React.CSSProperties = { ...input, minWidth: 260 };
+const emlBtn: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "5px 10px", fontSize: 12, cursor: "pointer", fontWeight: 600 };
