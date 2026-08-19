@@ -14,14 +14,16 @@ import Org from "./components/Org";
 import Requests from "./components/Requests";
 import Managers from "./components/Managers";
 import Teams from "./components/Teams";
+import SelfView from "./components/SelfView";
 import { IconLogout } from "./components/icons";
 import Mascot from "./components/Mascot";
 
 interface ManagerRow {
   user_id: string;
   email: string;
-  role: "manager" | "admin";
+  role: "standby" | "user" | "manager" | "admin";
   team_id: string | null;
+  alias: string | null;
   approved: boolean;
 }
 
@@ -67,18 +69,19 @@ export default function App() {
   async function loadManager(s: Session) {
     let { data: m } = await supabase
       .from("managers")
-      .select("user_id,email,role,team_id,approved")
+      .select("user_id,email,role,team_id,alias,approved")
       .eq("user_id", s.user.id)
       .maybeSingle();
 
     if (!m) {
+      // fallback si el trigger de auth no corrio: crea la fila en standby (sin acceso)
       await supabase.from("managers").upsert(
-        { user_id: s.user.id, email: s.user.email ?? "", role: "manager", approved: false },
+        { user_id: s.user.id, email: s.user.email ?? "", role: "standby", approved: false },
         { onConflict: "user_id", ignoreDuplicates: true },
       );
       const re = await supabase
         .from("managers")
-        .select("user_id,email,role,team_id,approved")
+        .select("user_id,email,role,team_id,alias,approved")
         .eq("user_id", s.user.id)
         .maybeSingle();
       m = re.data;
@@ -113,14 +116,15 @@ export default function App() {
 
   if (loading) return <Centered>Loading...</Centered>;
   if (!session) return <Login />;
-  if (!manager || !manager.approved) {
+  // standby = registrado pero sin rol asignado todavia: no ve nada
+  if (!manager || manager.role === "standby" || !manager.approved) {
     return (
       <Centered>
-        <div style={{ textAlign: "center", maxWidth: 420 }}>
-          <h2 style={{ color: palette.accentSoft }}>Access pending approval</h2>
+        <div style={{ textAlign: "center", maxWidth: 440 }}>
+          <h2 style={{ color: palette.accentSoft }}>Account in standby</h2>
           <p style={{ color: palette.textDim }}>
-            Your account is signed in but not yet approved for the dashboard. The administrator
-            grants access. Contact Sean V. (varseana) if you need access.
+            Your account is signed in but does not have access yet. An administrator assigns
+            your role. Contact Sean V. (varseana) if you need access.
           </p>
           <button style={btn} onClick={() => supabase.auth.signOut()}>Sign out</button>
         </div>
@@ -128,6 +132,7 @@ export default function App() {
     );
   }
 
+  const isStaff = manager.role === "manager" || manager.role === "admin";
   const team = teams.find((t) => t.id === teamId) ?? null;
 
   return (
@@ -145,6 +150,9 @@ export default function App() {
         <Clock />
       </header>
 
+      {manager.role === "user" && <SelfView email={manager.email} aliasOverride={manager.alias} />}
+
+      {isStaff && (<>
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10, flexWrap: "wrap" }}>
         {teams.length > 1 && (
           <select value={teamId} onChange={(e) => setTeamId(e.target.value)} style={select}>
@@ -189,6 +197,7 @@ export default function App() {
       {section === "access" && accessTab === "teams" && manager.role === "admin" &&
         <Teams refreshKey={refreshTick} />}
       {section === "access" && accessTab === "org" && manager.role === "admin" && <Org />}
+      </>)}
 
       {askLogout && (
         <ConfirmModal

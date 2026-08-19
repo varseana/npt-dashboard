@@ -1,0 +1,141 @@
+import * as React from "react";
+import { useEffect, useMemo, useState } from "react";
+import { supabase } from "../lib/supabase";
+import { palette } from "../theme";
+import {
+  NPT_AUX, computeDay, fmtHms, resolvePlanned, statusFor,
+  weekInfo, weekLabel, recentWeeks, isoDate,
+  type NptDailyRow, type PlannedRow,
+} from "../lib/npt";
+import { StatusChip } from "./status";
+import { BlockSkeleton } from "./skeleton";
+
+// vista del rol 'user': su propio NPT de la semana vs lo que le asigno su manager.
+// el alias sale del override (si el admin lo puso) o del email local-part.
+export default function SelfView({ email, aliasOverride }: { email: string; aliasOverride: string | null }) {
+  const alias = useMemo(
+    () => (aliasOverride?.trim() || email.split("@")[0] || "").toLowerCase(),
+    [email, aliasOverride],
+  );
+  const weeks = useMemo(() => recentWeeks(new Date(), 16), []);
+  const [weekKey, setWeekKey] = useState(() => weekInfo(new Date()).key);
+  const [rows, setRows] = useState<NptDailyRow[]>([]);
+  const [planned, setPlanned] = useState<PlannedRow[]>([]);
+  const [everReported, setEverReported] = useState<boolean | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const sel = useMemo(() => weekInfo(new Date(weekKey + "T12:00:00")), [weekKey]);
+
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      setLoading(true);
+      const [{ data: d }, { data: p }, { data: any }] = await Promise.all([
+        supabase.from("npt_daily").select("alias,tenant,work_date,profile,aux_seconds")
+          .eq("alias", alias).gte("work_date", isoDate(sel.start)).lte("work_date", isoDate(sel.end)),
+        supabase.from("npt_planned").select("alias,week_key,planned_seconds"),
+        supabase.from("npt_daily").select("work_date").eq("alias", alias).limit(1),
+      ]);
+      if (!alive) return;
+      setRows((d as NptDailyRow[]) ?? []);
+      setPlanned((p as PlannedRow[]) ?? []);
+      setEverReported(((any as unknown[]) ?? []).length > 0);
+      setLoading(false);
+    })();
+    return () => { alive = false; };
+  }, [alias, sel.start, sel.end]);
+
+  // suma por AUX de NPT en la semana + total
+  const { perAux, totalNpt } = useMemo(() => {
+    const per: Record<string, number> = {};
+    for (const a of NPT_AUX) per[a] = 0;
+    let total = 0;
+    for (const r of rows) {
+      total += computeDay(r.aux_seconds).nptSeconds;
+      for (const a of NPT_AUX) per[a] += r.aux_seconds?.[a] ?? 0;
+    }
+    return { perAux: per, totalNpt: total };
+  }, [rows]);
+
+  const plannedSec = resolvePlanned(planned, alias, weekKey);
+  const remaining = plannedSec == null ? null : plannedSec - totalNpt;
+  const status = statusFor(plannedSec, totalNpt);
+
+  if (loading) return <BlockSkeleton />;
+
+  // sin data historica => probablemente no enrolado o typo en el email
+  if (everReported === false) {
+    return (
+      <div style={card}>
+        <h2 style={{ margin: "0 0 8px", fontSize: 18 }}>No NPT data for "{alias}"</h2>
+        <p style={{ color: palette.textDim, fontSize: 14, margin: 0, lineHeight: 1.5 }}>
+          We could not find any reported NPT for the user <strong>{alias}</strong> (derived from
+          your email). Make sure you are enrolled in STAR Tracker with your work account and that
+          it has uploaded at least once. If your Paragon username is different from your email,
+          ask the administrator to set it for you.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
+        <select value={weekKey} onChange={(e) => setWeekKey(e.target.value)} style={select}>
+          {weeks.map((w) => <option key={w.key} value={w.key}>{weekLabel(w)}</option>)}
+        </select>
+        <span style={{ color: palette.textDim, fontSize: 13 }}>Signed in as {alias}</span>
+      </div>
+
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 20 }}>
+        <Stat label="Your NPT this week" value={fmtHms(totalNpt)} />
+        <Stat label="Planned by your manager" value={plannedSec == null ? "Not set" : fmtHms(plannedSec)} />
+        <Stat label="Remaining" value={remaining == null ? "-" : fmtHms(remaining)}
+          extra={<StatusChip status={status} />} />
+      </div>
+
+      <div style={card}>
+        <div style={{ fontWeight: 700, marginBottom: 10, fontSize: 15 }}>Breakdown (what counts as NPT)</div>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14 }}>
+          <tbody>
+            {NPT_AUX.map((a) => (
+              <tr key={a} style={{ borderBottom: `1px solid ${palette.border}` }}>
+                <td style={{ padding: "8px 4px", color: palette.textDim }}>{a}</td>
+                <td style={{ padding: "8px 4px", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{fmtHms(perAux[a])}</td>
+              </tr>
+            ))}
+            <tr>
+              <td style={{ padding: "10px 4px", fontWeight: 700 }}>Total NPT</td>
+              <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{fmtHms(totalNpt)}</td>
+            </tr>
+          </tbody>
+        </table>
+        {plannedSec == null && (
+          <div style={{ marginTop: 12, color: palette.textDim, fontSize: 13 }}>
+            Your manager has not set a planned NPT for this week yet.
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, value, extra }: { label: string; value: string; extra?: React.ReactNode }) {
+  return (
+    <div style={{ ...card, padding: "16px 18px" }}>
+      <div style={{ color: palette.textDim, fontSize: 12, marginBottom: 6 }}>{label}</div>
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ fontSize: 22, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{value}</span>
+        {extra}
+      </div>
+    </div>
+  );
+}
+
+const card: React.CSSProperties = {
+  background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: 20,
+};
+const select: React.CSSProperties = {
+  background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
+  borderRadius: 8, padding: "8px 10px", fontSize: 14,
+};
