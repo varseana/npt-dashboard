@@ -9,7 +9,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource-variable/outfit": "^5.3.0",
     "@supabase/supabase-js": "^2.45.0",
+    "randoma11y": "^1.0.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },

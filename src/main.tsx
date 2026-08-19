@@ -1,5 +1,6 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom/client";
+import "@fontsource-variable/outfit";   // geometric sans self-hosteada (OFL), reemplaza la del sistema
 import App from "./App";
 import { palette, font } from "./theme";
 

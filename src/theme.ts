@@ -20,5 +20,7 @@ export const palette = {
   badBg: "#fbeae8",
 };
 
+// geometric sans (Outfit Variable, OFL, self-hosteada via @fontsource-variable/outfit en main.tsx).
+// alternativa documentada a la "Endless" (no distribuible en npm/Google Fonts). fallbacks del sistema.
 export const font =
-  "'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif";
+  "'Outfit Variable', 'Segoe UI', system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif";
