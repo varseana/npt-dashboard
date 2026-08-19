@@ -6,6 +6,9 @@ import { TableSkeleton } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 
+// UUID fijo del team Unassigned (igual que el trigger)
+const UNASSIGNED_ID = "00000000-0000-0000-0000-000000000001";
+
 type ConnStatus = "connected" | "pending" | "unlisted";
 
 interface Person {
@@ -25,7 +28,7 @@ function parseAliases(raw: string): string[] {
   ));
 }
 
-export default function Employees({ team, refreshKey }: { team: Team; refreshKey?: number }) {
+export default function Employees({ team, refreshKey, isAdmin }: { team: Team; refreshKey?: number; isAdmin?: boolean }) {
   const [roster, setRoster] = useState<string[]>([]);
   const [data, setData] = useState<{ alias: string; work_date: string }[]>([]);
   const [single, setSingle] = useState("");
@@ -96,6 +99,18 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
     setSaving(false);
   }
 
+  // saca a alguien de este team: mueve su team_id (y su NPT historico) a Unassigned via RPC admin,
+  // y lo quita del roster de este team. Solo admin. Aparece en Access -> Unassigned para reasignar.
+  async function moveToUnassigned(alias: string) {
+    setSaving(true); setMsg("");
+    const { error } = await supabase.rpc("admin_assign_alias", { p_alias: alias, p_team: UNASSIGNED_ID });
+    if (error) { setMsg("Error: " + error.message); setSaving(false); return; }
+    await supabase.from("roster").delete().match({ team_id: team.id, alias });
+    setMsg(alias + " moved to Unassigned.");
+    await load();
+    setSaving(false);
+  }
+
   return (
     <div>
       <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "14px 16px", marginBottom: 16 }}>
@@ -154,9 +169,15 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
                   <td style={{ ...td, textAlign: "right" }}>{p.days || "-"}</td>
                   <td style={{ ...td, textAlign: "right" }}>{p.last ?? "-"}</td>
                   <td style={{ ...td, textAlign: "right" }}>
-                    {p.expected
-                      ? <button onClick={() => removeFromRoster(p.alias)} disabled={saving} className="npt-btn-remove" title="Remove from roster">Remove</button>
-                      : <button onClick={() => add([p.alias])} disabled={saving} style={btnGhost} title="Add to roster">Add to roster</button>}
+                    <span style={{ display: "inline-flex", gap: 8, justifyContent: "flex-end" }}>
+                      {p.expected
+                        ? <button onClick={() => removeFromRoster(p.alias)} disabled={saving} className="npt-btn-remove" title="Remove from roster">Remove</button>
+                        : <button onClick={() => add([p.alias])} disabled={saving} style={btnGhost} title="Add to roster">Add to roster</button>}
+                      {isAdmin && p.connected && team.id !== UNASSIGNED_ID && (
+                        <button onClick={() => moveToUnassigned(p.alias)} disabled={saving} className="npt-btn-remove"
+                          title="Move this person out of this team into Unassigned (moves their NPT too)">Move to Unassigned</button>
+                      )}
+                    </span>
                   </td>
                 </tr>
               ))}
