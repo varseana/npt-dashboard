@@ -13,6 +13,7 @@ import Clock from "./components/Clock";
 import Org from "./components/Org";
 import Requests from "./components/Requests";
 import Managers from "./components/Managers";
+import Teams from "./components/Teams";
 import { IconLogout } from "./components/icons";
 import Mascot from "./components/Mascot";
 
@@ -40,7 +41,7 @@ export default function App() {
   const [section, setSection] = useState<"dashboard" | "team" | "access">("dashboard");
   const [dashView, setDashView] = useState<"summary" | "breakdown">("summary");
   const [teamTab, setTeamTab] = useState<"employees" | "planned" | "folders">("employees");
-  const [accessTab, setAccessTab] = useState<"requests" | "org" | "managers">("requests");
+  const [accessTab, setAccessTab] = useState<"requests" | "org" | "managers" | "teams">("requests");
   const [askLogout, setAskLogout] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
 
@@ -172,6 +173,7 @@ export default function App() {
         {section === "access" && (<>
           <SubBtn active={accessTab === "requests"} onClick={() => setAccessTab("requests")}>Requests</SubBtn>
           {manager.role === "admin" && <SubBtn active={accessTab === "managers"} onClick={() => setAccessTab("managers")}>Managers</SubBtn>}
+          {manager.role === "admin" && <SubBtn active={accessTab === "teams"} onClick={() => setAccessTab("teams")}>Teams</SubBtn>}
           {manager.role === "admin" && <SubBtn active={accessTab === "org"} onClick={() => setAccessTab("org")}>Org</SubBtn>}
         </>)}
       </div>
@@ -184,6 +186,8 @@ export default function App() {
       {section === "access" && accessTab === "requests" && <Requests role={manager.role} myUserId={manager.user_id} />}
       {section === "access" && accessTab === "managers" && manager.role === "admin" &&
         <Managers teams={teams} myUserId={manager.user_id} refreshKey={refreshTick} />}
+      {section === "access" && accessTab === "teams" && manager.role === "admin" &&
+        <Teams refreshKey={refreshTick} />}
       {section === "access" && accessTab === "org" && manager.role === "admin" && <Org />}
 
       {askLogout && (
