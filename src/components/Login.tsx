@@ -48,7 +48,7 @@ export default function Login() {
   return (
     <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       <form onSubmit={submit} style={{ width: 340, background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 14, padding: 24 }}>
-        <h1 style={{ margin: "0 0 4px", fontSize: 28, color: palette.text }}>STAR NPT Dashboard</h1>
+        <h1 style={{ margin: "0 0 4px", fontSize: 31, color: palette.text }}>STAR NPT Dashboard</h1>
         <p style={{ margin: "0 0 20px", fontSize: 18, color: palette.textDim }}>
           {mode === "in" ? "Manager access. Sign in to continue." : "Request access with your work email. An admin approves it."}
         </p>

@@ -139,7 +139,7 @@ export default function App() {
     <div style={{ maxWidth: "min(2100px, 97vw)", margin: "0 auto", padding: "24px 32px" }}>
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 31, color: palette.text }}>STAR NPT Dashboard</h1>
+          <h1 style={{ margin: 0, fontSize: 34, color: palette.text }}>STAR NPT Dashboard</h1>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ color: palette.textDim, fontSize: 18 }}>{manager.email} ({manager.role})</span>
             <button onClick={() => setAskLogout(true)} title="Log out" aria-label="Log out" className="npt-logout">
@@ -221,7 +221,7 @@ function ConfirmModal({ title, body, confirmLabel, onCancel, onConfirm }:
       style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 24 }}>
       <div onClick={(e) => e.stopPropagation()}
         style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: 24, width: 380, maxWidth: "90vw", boxShadow: "0 12px 40px rgba(0,0,0,.18)" }}>
-        <h2 style={{ margin: "0 0 8px", fontSize: 26, color: palette.text }}>{title}</h2>
+        <h2 style={{ margin: "0 0 8px", fontSize: 29, color: palette.text }}>{title}</h2>
         <p style={{ margin: "0 0 20px", color: palette.textDim, fontSize: 19 }}>{body}</p>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
           <button onClick={onCancel} style={btn}>Cancel</button>

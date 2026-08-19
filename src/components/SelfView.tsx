@@ -67,7 +67,7 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
   if (everReported === false) {
     return (
       <div style={card}>
-        <h2 style={{ margin: "0 0 8px", fontSize: 26 }}>No NPT data for "{alias}"</h2>
+        <h2 style={{ margin: "0 0 8px", fontSize: 29 }}>No NPT data for "{alias}"</h2>
         <p style={{ color: palette.textDim, fontSize: 19, margin: 0, lineHeight: 1.5 }}>
           We could not find any reported NPT for the user <strong>{alias}</strong> (derived from
           your email). Make sure you are enrolled in STAR Tracker with your work account and that
@@ -95,7 +95,7 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
       </div>
 
       <div style={card}>
-        <div className="npt-title" style={{ fontWeight: 700, marginBottom: 10, fontSize: 21 }}>Breakdown (what counts as NPT)</div>
+        <div className="npt-title" style={{ fontWeight: 700, marginBottom: 10, fontSize: 23 }}>Breakdown (what counts as NPT)</div>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19 }}>
           <tbody>
             {NPT_AUX.map((a) => (

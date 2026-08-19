@@ -16,9 +16,16 @@
         src: url('/silvester-pixel.otf') format('opentype');
         font-display: swap;
       }
+      /* variante outline disponible por si se quiere usar: font-family: 'Silvester Pixel Outline' */
+      @font-face {
+        font-family: 'Silvester Pixel Outline';
+        src: url('/silvester-pixel-outline.otf') format('opentype');
+        font-display: swap;
+      }
       h1, h2, h3,
       .npt-title {
         font-family: 'Silvester Pixel', 'Outfit Variable', 'Segoe UI', system-ui, sans-serif;
+        letter-spacing: 0.05em;   /* el pixel font se ve muy pegado; le damos aire */
       }
 
       /* botones destructivos: hover con transicion suave */

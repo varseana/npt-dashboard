@@ -164,7 +164,7 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
           {groups ? (
             groups.map((g) => (
               <div key={g.name} style={{ marginBottom: 20 }}>
-                <div className="npt-title" style={{ fontWeight: 700, fontSize: 21, margin: "4px 0 8px" }}>
+                <div className="npt-title" style={{ fontWeight: 700, fontSize: 23, margin: "4px 0 8px" }}>
                   {g.name} <span style={{ color: palette.textDim, fontWeight: 400, fontSize: 18 }}>
                     ({g.rows.length}, NPT {fmtHms(g.rows.reduce((a, u) => a + u.nptSeconds, 0))})
                   </span>
@@ -231,7 +231,7 @@ function TeamBudgetCard({ budget, used, remaining, status, users }:
   return (
     <div style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: "16px 20px", marginBottom: 18 }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
-        <span className="npt-title" style={{ fontWeight: 700, fontSize: 21, textTransform: "uppercase", letterSpacing: "0.06em" }}>"Team" // weekly NPT budget</span>
+        <span className="npt-title" style={{ fontWeight: 700, fontSize: 23, textTransform: "uppercase", letterSpacing: "0.06em" }}>"Team" // weekly NPT budget</span>
         {budget != null && <StatusChip status={status} />}
       </div>
       {budget == null ? (

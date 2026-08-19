@@ -127,7 +127,7 @@ function StatusPill({ status }: { status: AccessRequest["status"] }) {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 18 }}>
-      <div className="npt-title" style={{ fontWeight: 700, fontSize: 21, marginBottom: 8 }}>{title}</div>
+      <div className="npt-title" style={{ fontWeight: 700, fontSize: 23, marginBottom: 8 }}>{title}</div>
       <div style={{ border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden" }}>{children}</div>
     </div>
   );

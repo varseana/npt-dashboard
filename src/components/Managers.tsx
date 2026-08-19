@@ -223,7 +223,7 @@ function Section({ title, hint, highlight, children }:
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
         {highlight && <span style={{ color: palette.warn, display: "inline-flex" }}><IconAlert size={15} /></span>}
         {/* header estilo Off-White: mayusculas industriales + tracking; las comillas van en el title */}
-        <span className="npt-title" style={{ fontWeight: 700, fontSize: 21, textTransform: "uppercase", letterSpacing: "0.06em" }}>{title}</span>
+        <span className="npt-title" style={{ fontWeight: 700, fontSize: 23, textTransform: "uppercase", letterSpacing: "0.06em" }}>{title}</span>
       </div>
       {hint && <div style={{ color: palette.textDim, fontSize: 18, marginBottom: 8 }}>{hint}</div>}
       <div style={{ border: `1px solid ${highlight ? palette.warn + "55" : palette.border}`, borderRadius: 8,
@@ -247,7 +247,7 @@ function Confirm({ title, body, confirmLabel, danger, onCancel, onConfirm }: {
       style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 24 }}>
       <div onClick={(e) => e.stopPropagation()}
         style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: 24, width: 400, maxWidth: "90vw" }}>
-        <h2 style={{ margin: "0 0 8px", fontSize: 26, color: palette.text }}>{title}</h2>
+        <h2 style={{ margin: "0 0 8px", fontSize: 29, color: palette.text }}>{title}</h2>
         <p style={{ margin: "0 0 20px", color: palette.textDim, fontSize: 19 }}>{body}</p>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
           <button onClick={onCancel} style={btnGhost}>Cancel</button>
