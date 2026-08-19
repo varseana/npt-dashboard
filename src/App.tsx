@@ -103,8 +103,7 @@ export default function App() {
           <h1 style={{ margin: 0, fontSize: 22, color: palette.text }}>STAR NPT Dashboard</h1>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ color: palette.textDim, fontSize: 13 }}>{manager.email} ({manager.role})</span>
-            <button onClick={() => setAskLogout(true)} title="Log out" aria-label="Log out"
-              style={{ background: "transparent", border: "none", color: palette.textDim, cursor: "pointer", padding: 2, display: "inline-flex" }}>
+            <button onClick={() => setAskLogout(true)} title="Log out" aria-label="Log out" className="npt-logout">
               <IconLogout size={15} />
             </button>
           </div>

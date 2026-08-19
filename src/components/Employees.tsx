@@ -155,7 +155,7 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
                   <td style={{ ...td, textAlign: "right" }}>{p.last ?? "-"}</td>
                   <td style={{ ...td, textAlign: "right" }}>
                     {p.expected
-                      ? <button onClick={() => removeFromRoster(p.alias)} disabled={saving} style={btnRemove} title="Remove from roster">Remove</button>
+                      ? <button onClick={() => removeFromRoster(p.alias)} disabled={saving} className="npt-btn-remove" title="Remove from roster">Remove</button>
                       : <button onClick={() => add([p.alias])} disabled={saving} style={btnGhost} title="Add to roster">Add to roster</button>}
                   </td>
                 </tr>
@@ -183,4 +183,3 @@ const td: React.CSSProperties = { textAlign: "left", padding: "9px 12px", border
 const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 10px", fontSize: 14 };
 const btn: React.CSSProperties = { background: palette.accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 13, cursor: "pointer", fontWeight: 600 };
 const btnGhost: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 12px", fontSize: 13, cursor: "pointer" };
-const btnRemove: React.CSSProperties = { background: palette.panel, color: palette.bad, border: `1px solid ${palette.bad}55`, borderRadius: 8, padding: "6px 10px", fontSize: 12, cursor: "pointer" };

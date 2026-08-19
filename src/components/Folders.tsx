@@ -79,7 +79,7 @@ export default function Folders({ team }: { team: Team }) {
         <div key={f.id} style={{ border: `1px solid ${palette.border}`, borderRadius: 8, padding: "12px 14px", marginBottom: 12 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
             <div style={{ fontWeight: 700 }}>{f.name} <span style={{ color: palette.textDim, fontWeight: 400, fontSize: 13 }}>({f.aliases.length})</span></div>
-            <button onClick={() => remove(f.id)} style={btnRemove}>Delete folder</button>
+            <button onClick={() => remove(f.id)} className="npt-btn-remove">Delete folder</button>
           </div>
           {known.length === 0 ? (
             <div style={{ color: palette.textDim, fontSize: 13 }}>No one in the team yet (add people in Employees).</div>
@@ -101,4 +101,3 @@ export default function Folders({ team }: { team: Team }) {
 
 const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 10px", fontSize: 14 };
 const btn: React.CSSProperties = { background: palette.accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 13, cursor: "pointer", fontWeight: 600 };
-const btnRemove: React.CSSProperties = { background: palette.panel, color: palette.bad, border: `1px solid ${palette.bad}55`, borderRadius: 8, padding: "6px 10px", fontSize: 12, cursor: "pointer" };

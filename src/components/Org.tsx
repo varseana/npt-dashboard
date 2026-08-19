@@ -138,7 +138,7 @@ export default function Org() {
                         <td style={{ ...td, color: remainColor(status) }}>{remaining != null ? fmtHms(remaining) : "-"}</td>
                         <td style={td}><StatusChip status={status} /></td>
                         <td style={{ ...td, textAlign: "right" }}>
-                          <button onClick={() => removeMember(mgr.user_id, m.alias)} style={btnRemove}>Remove</button>
+                          <button onClick={() => removeMember(mgr.user_id, m.alias)} className="npt-btn-remove">Remove</button>
                         </td>
                       </tr>
                     );
@@ -172,4 +172,3 @@ const td: React.CSSProperties = { textAlign: "right", padding: "8px 10px", borde
 const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 14 };
 const select: React.CSSProperties = { ...input, minWidth: 260 };
 const btn: React.CSSProperties = { background: palette.accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", fontSize: 13, cursor: "pointer", fontWeight: 600 };
-const btnRemove: React.CSSProperties = { background: palette.panel, color: palette.bad, border: `1px solid ${palette.bad}55`, borderRadius: 8, padding: "5px 9px", fontSize: 12, cursor: "pointer" };
