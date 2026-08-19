@@ -60,7 +60,7 @@ export default function Folders({ team }: { team: Team }) {
 
   return (
     <div style={{ maxWidth: 720 }}>
-      <p style={{ color: palette.textDim, fontSize: 16, lineHeight: 1.6 }}>
+      <p style={{ color: palette.textDim, fontSize: 24, lineHeight: 1.6 }}>
         Private folders to organize your view by project. They are yours only and <strong>do not
         affect any numbers</strong>: they group investigators in Overview when you turn on Group by folder.
       </p>
@@ -71,22 +71,22 @@ export default function Folders({ team }: { team: Team }) {
         <button onClick={create} disabled={!newName.trim()} style={btn}>Create folder</button>
       </div>
 
-      {msg && <div style={{ marginBottom: 12, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 15 }}>{msg}</div>}
+      {msg && <div style={{ marginBottom: 12, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 23 }}>{msg}</div>}
 
       {folders.length === 0 ? (
         <div style={{ color: palette.textDim }}>No folders yet. Create one above.</div>
       ) : folders.map((f) => (
         <div key={f.id} style={{ border: `1px solid ${palette.border}`, borderRadius: 8, padding: "12px 14px", marginBottom: 12 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-            <div style={{ fontWeight: 700 }}>{f.name} <span style={{ color: palette.textDim, fontWeight: 400, fontSize: 15 }}>({f.aliases.length})</span></div>
+            <div style={{ fontWeight: 700 }}>{f.name} <span style={{ color: palette.textDim, fontWeight: 400, fontSize: 23 }}>({f.aliases.length})</span></div>
             <button onClick={() => remove(f.id)} className="npt-btn-remove">Delete folder</button>
           </div>
           {known.length === 0 ? (
-            <div style={{ color: palette.textDim, fontSize: 15 }}>No one in the team yet (add people in Employees).</div>
+            <div style={{ color: palette.textDim, fontSize: 23 }}>No one in the team yet (add people in Employees).</div>
           ) : (
             <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 6 }}>
               {known.map((a) => (
-                <label key={a} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 16, cursor: "pointer" }}>
+                <label key={a} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 24, cursor: "pointer" }}>
                   <input type="checkbox" checked={f.aliases.includes(a)} onChange={() => toggleMember(f, a)} />
                   <span>{a}</span>
                 </label>
@@ -99,5 +99,5 @@ export default function Folders({ team }: { team: Team }) {
   );
 }
 
-const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 10px", fontSize: 16 };
-const btn: React.CSSProperties = { background: palette.accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 15, cursor: "pointer", fontWeight: 600 };
+const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 10px", fontSize: 24 };
+const btn: React.CSSProperties = { background: palette.accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 23, cursor: "pointer", fontWeight: 600 };

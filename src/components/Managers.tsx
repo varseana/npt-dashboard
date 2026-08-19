@@ -39,6 +39,8 @@ export default function Managers({ teams, myUserId, refreshKey }:
   const [msg, setMsg] = useState("");
   const [confirmAdmin, setConfirmAdmin] = useState<MgrRow | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<MgrRow | null>(null);
+  const [query, setQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"alpha" | "role">("alpha");
 
   async function load(showSpinner = false) {
     if (showSpinner) setLoading(true);
@@ -82,7 +84,25 @@ export default function Managers({ teams, myUserId, refreshKey }:
   const standby = useMemo(() => rows.filter((r) => r.role === "standby"), [rows]);
   const active = useMemo(() => rows.filter((r) => r.role !== "standby"), [rows]);
 
+  // filtro (buscador por email/alias) + orden (alfabetico o por rol: admin>manager>user>standby)
+  const ROLE_RANK: Record<Role, number> = { admin: 0, manager: 1, user: 2, standby: 3 };
+  const arrange = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return (list: MgrRow[]) => {
+      const filtered = q ? list.filter((r) => r.email.toLowerCase().includes(q) || aliasOf(r).includes(q)) : list;
+      return [...filtered].sort((a, b) =>
+        sortBy === "role"
+          ? (ROLE_RANK[a.role] - ROLE_RANK[b.role]) || a.email.localeCompare(b.email)
+          : a.email.localeCompare(b.email));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [query, sortBy]);
+
   if (loading) return <div style={{ maxWidth: 1000 }}><TableSkeleton rows={4} /></div>;
+
+  const aStandby = arrange(standby);
+  const aActive = arrange(active);
+  const searching = query.trim().length > 0;
 
   const rowProps = (r: MgrRow) => ({
     r, teams, isMe: r.user_id === myUserId, matched: knownAliases.has(aliasOf(r)),
@@ -93,19 +113,31 @@ export default function Managers({ teams, myUserId, refreshKey }:
 
   return (
     <div style={{ maxWidth: 1000 }}>
-      {msg && <div style={{ marginBottom: 12, color: palette.bad, fontSize: 15 }}>{msg}</div>}
+      {msg && <div style={{ marginBottom: 12, color: palette.bad, fontSize: 23 }}>{msg}</div>}
 
-      <Section title={`Standby - no access (${standby.length})`}
-        hint="These people signed up and are waiting for you to assign a role." highlight={standby.length > 0}>
-        {standby.length === 0
-          ? <Empty>Nobody is in standby.</Empty>
-          : standby.map((r) => <PersonRow key={r.user_id} {...rowProps(r)} />)}
+      <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 18, flexWrap: "wrap" }}>
+        <input value={query} onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search by email or username" style={searchInput} />
+        <label style={{ fontSize: 20, color: palette.textDim, display: "flex", alignItems: "center", gap: 6 }}>
+          Sort
+          <select value={sortBy} onChange={(e) => setSortBy(e.target.value as "alpha" | "role")} style={sortSelect}>
+            <option value="alpha">Alphabetical</option>
+            <option value="role">By role</option>
+          </select>
+        </label>
+      </div>
+
+      <Section title={`Standby - no access (${aStandby.length})`}
+        hint="These people signed up and are waiting for you to assign a role." highlight={aStandby.length > 0}>
+        {aStandby.length === 0
+          ? <Empty>{searching ? "No matches in standby." : "Nobody is in standby."}</Empty>
+          : aStandby.map((r) => <PersonRow key={r.user_id} {...rowProps(r)} />)}
       </Section>
 
-      <Section title={`Active (${active.length})`} hint="People with a role and access to the dashboard.">
-        {active.length === 0
-          ? <Empty>No active accounts yet.</Empty>
-          : active.map((r) => <PersonRow key={r.user_id} {...rowProps(r)} />)}
+      <Section title={`Active (${aActive.length})`} hint="People with a role and access to the dashboard.">
+        {aActive.length === 0
+          ? <Empty>{searching ? "No matches." : "No active accounts yet."}</Empty>
+          : aActive.map((r) => <PersonRow key={r.user_id} {...rowProps(r)} />)}
       </Section>
 
       {confirmAdmin && (
@@ -155,7 +187,7 @@ function PersonRow({ r, teams, isMe, matched, onRole, onTeam, onAlias, onDelete 
             {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
         )
-        : <span style={{ fontSize: 14, color: palette.textDim }}>{r.role === "admin" ? "All teams" : "-"}</span>}
+        : <span style={{ fontSize: 21, color: palette.textDim }}>{r.role === "admin" ? "All teams" : "-"}</span>}
 
       {showAlias
         ? (
@@ -170,7 +202,7 @@ function PersonRow({ r, teams, isMe, matched, onRole, onTeam, onAlias, onDelete 
 
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
         <button onClick={onDelete} disabled={isMe} className="npt-btn-remove"
-          title={isMe ? "You can't delete yourself" : "Delete account"} style={{ padding: "7px 12px", fontSize: 15 }}>
+          title={isMe ? "You can't delete yourself" : "Delete account"} style={{ padding: "7px 12px", fontSize: 23 }}>
           Delete
         </button>
       </div>
@@ -180,8 +212,8 @@ function PersonRow({ r, teams, isMe, matched, onRole, onTeam, onAlias, onDelete 
 
 function MatchChip({ matched }: { matched: boolean }) {
   return matched
-    ? <span style={{ fontSize: 13, fontWeight: 600, padding: "2px 8px", borderRadius: 6, color: palette.ok, background: palette.okBg, whiteSpace: "nowrap" }}>has data</span>
-    : <span style={{ fontSize: 13, fontWeight: 600, padding: "2px 8px", borderRadius: 6, color: palette.textDim, background: palette.panelAlt, whiteSpace: "nowrap" }}>no data</span>;
+    ? <span style={{ fontSize: 20, fontWeight: 600, padding: "2px 8px", borderRadius: 6, color: palette.ok, background: palette.okBg, whiteSpace: "nowrap" }}>has data</span>
+    : <span style={{ fontSize: 20, fontWeight: 600, padding: "2px 8px", borderRadius: 6, color: palette.textDim, background: palette.panelAlt, whiteSpace: "nowrap" }}>no data</span>;
 }
 
 function Section({ title, hint, highlight, children }:
@@ -190,9 +222,9 @@ function Section({ title, hint, highlight, children }:
     <div style={{ marginBottom: 20 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
         {highlight && <span style={{ color: palette.warn, display: "inline-flex" }}><IconAlert size={15} /></span>}
-        <span style={{ fontWeight: 700, fontSize: 17 }}>{title}</span>
+        <span style={{ fontWeight: 700, fontSize: 26 }}>{title}</span>
       </div>
-      {hint && <div style={{ color: palette.textDim, fontSize: 15, marginBottom: 8 }}>{hint}</div>}
+      {hint && <div style={{ color: palette.textDim, fontSize: 23, marginBottom: 8 }}>{hint}</div>}
       <div style={{ border: `1px solid ${highlight ? palette.warn + "55" : palette.border}`, borderRadius: 8,
         overflow: "hidden", background: highlight ? palette.warnBg : palette.panel }}>
         {children}
@@ -202,7 +234,7 @@ function Section({ title, hint, highlight, children }:
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
-  return <div style={{ padding: "12px 14px", color: palette.textDim, fontSize: 15 }}>{children}</div>;
+  return <div style={{ padding: "12px 14px", color: palette.textDim, fontSize: 23 }}>{children}</div>;
 }
 
 function Confirm({ title, body, confirmLabel, danger, onCancel, onConfirm }: {
@@ -214,8 +246,8 @@ function Confirm({ title, body, confirmLabel, danger, onCancel, onConfirm }: {
       style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 24 }}>
       <div onClick={(e) => e.stopPropagation()}
         style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: 24, width: 400, maxWidth: "90vw" }}>
-        <h2 style={{ margin: "0 0 8px", fontSize: 21, color: palette.text }}>{title}</h2>
-        <p style={{ margin: "0 0 20px", color: palette.textDim, fontSize: 16 }}>{body}</p>
+        <h2 style={{ margin: "0 0 8px", fontSize: 32, color: palette.text }}>{title}</h2>
+        <p style={{ margin: "0 0 20px", color: palette.textDim, fontSize: 24 }}>{body}</p>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
           <button onClick={onCancel} style={btnGhost}>Cancel</button>
           <button onClick={onConfirm} style={{ ...btn, background: danger ? palette.bad : palette.accent }}>{confirmLabel}</button>
@@ -227,13 +259,22 @@ function Confirm({ title, body, confirmLabel, danger, onCancel, onConfirm }: {
 
 const cell: React.CSSProperties = {
   background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
-  borderRadius: 8, padding: "7px 8px", fontSize: 15, width: "100%", boxSizing: "border-box",
+  borderRadius: 8, padding: "7px 8px", fontSize: 23, width: "100%", boxSizing: "border-box",
 };
 const btn: React.CSSProperties = {
   background: palette.accent, color: "#fff", border: "none", borderRadius: 8,
-  padding: "7px 14px", fontSize: 15, cursor: "pointer", fontWeight: 600,
+  padding: "7px 14px", fontSize: 23, cursor: "pointer", fontWeight: 600,
 };
 const btnGhost: React.CSSProperties = {
   background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
-  borderRadius: 8, padding: "7px 12px", fontSize: 15, cursor: "pointer",
+  borderRadius: 8, padding: "7px 12px", fontSize: 23, cursor: "pointer",
+};
+const searchInput: React.CSSProperties = {
+  flex: "1 1 240px", minWidth: 200, background: palette.panel, color: palette.text,
+  border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 12px", fontSize: 20,
+  boxSizing: "border-box",
+};
+const sortSelect: React.CSSProperties = {
+  background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
+  borderRadius: 8, padding: "8px 10px", fontSize: 20, cursor: "pointer",
 };

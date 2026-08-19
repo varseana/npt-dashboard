@@ -139,9 +139,9 @@ export default function App() {
     <div style={{ maxWidth: "min(1500px, 95vw)", margin: "0 auto", padding: "24px 28px" }}>
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 26, color: palette.text }}>STAR NPT Dashboard</h1>
+          <h1 style={{ margin: 0, fontSize: 39, color: palette.text }}>STAR NPT Dashboard</h1>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <span style={{ color: palette.textDim, fontSize: 15 }}>{manager.email} ({manager.role})</span>
+            <span style={{ color: palette.textDim, fontSize: 23 }}>{manager.email} ({manager.role})</span>
             <button onClick={() => setAskLogout(true)} title="Log out" aria-label="Log out" className="npt-logout">
               <IconLogout size={15} />
             </button>
@@ -221,8 +221,8 @@ function ConfirmModal({ title, body, confirmLabel, onCancel, onConfirm }:
       style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 24 }}>
       <div onClick={(e) => e.stopPropagation()}
         style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: 24, width: 380, maxWidth: "90vw", boxShadow: "0 12px 40px rgba(0,0,0,.18)" }}>
-        <h2 style={{ margin: "0 0 8px", fontSize: 21, color: palette.text }}>{title}</h2>
-        <p style={{ margin: "0 0 20px", color: palette.textDim, fontSize: 16 }}>{body}</p>
+        <h2 style={{ margin: "0 0 8px", fontSize: 32, color: palette.text }}>{title}</h2>
+        <p style={{ margin: "0 0 20px", color: palette.textDim, fontSize: 24 }}>{body}</p>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
           <button onClick={onCancel} style={btn}>Cancel</button>
           <button onClick={onConfirm} style={{ ...btn, background: palette.bad, color: "#fff", border: "none" }}>{confirmLabel}</button>
@@ -270,7 +270,7 @@ function SubBtn({ active, onClick, children }: { active: boolean; onClick: () =>
         padding: "8px 12px",
         marginBottom: -1,
         cursor: "pointer",
-        fontSize: 15,
+        fontSize: 23,
       }}
     >
       {children}
@@ -285,7 +285,7 @@ const btn: React.CSSProperties = {
   borderRadius: 8,
   padding: "8px 14px",
   cursor: "pointer",
-  fontSize: 16,
+  fontSize: 24,
 };
 
 const select: React.CSSProperties = {
@@ -294,5 +294,5 @@ const select: React.CSSProperties = {
   border: `1px solid ${palette.border}`,
   borderRadius: 8,
   padding: "8px 10px",
-  fontSize: 16,
+  fontSize: 24,
 };

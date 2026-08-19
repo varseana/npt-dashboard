@@ -128,7 +128,7 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
           <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="username" style={input} />
         </Field>
         {folders.length > 0 && (
-          <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 15, cursor: "pointer", paddingBottom: 8 }}>
+          <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 23, cursor: "pointer", paddingBottom: 8 }}>
             <input type="checkbox" checked={groupBy} onChange={(e) => setGroupBy(e.target.checked)} />
             Group by folder
           </label>
@@ -156,18 +156,18 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
           {groups ? (
             groups.map((g) => (
               <div key={g.name} style={{ marginBottom: 20 }}>
-                <div style={{ fontWeight: 700, fontSize: 17, margin: "4px 0 8px" }}>
-                  {g.name} <span style={{ color: palette.textDim, fontWeight: 400, fontSize: 15 }}>
+                <div style={{ fontWeight: 700, fontSize: 26, margin: "4px 0 8px" }}>
+                  {g.name} <span style={{ color: palette.textDim, fontWeight: 400, fontSize: 23 }}>
                     ({g.rows.length}, NPT {fmtHms(g.rows.reduce((a, u) => a + u.nptSeconds, 0))})
                   </span>
                 </div>
-                {g.rows.length ? <UserTable rows={g.rows} remind={remind} /> : <div style={{ color: palette.textDim, fontSize: 15 }}>No members with data this week.</div>}
+                {g.rows.length ? <UserTable rows={g.rows} remind={remind} /> : <div style={{ color: palette.textDim, fontSize: 23 }}>No members with data this week.</div>}
               </div>
             ))
           ) : (
             <UserTable rows={shown} remind={remind} />
           )}
-          <div style={{ color: palette.textDim, fontSize: 13, marginTop: 8 }}>
+          <div style={{ color: palette.textDim, fontSize: 20, marginTop: 8 }}>
             NPT = Meeting + Training + Project + Personal + System. Remaining = Planned - Actual. Times in Hh:mm:ss.
           </div>
         </>
@@ -178,7 +178,7 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
 
 function UserTable({ rows, remind }: { rows: Row[]; remind: (u: Row) => void }) {
   return (
-    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 16 }}>
+    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 24 }}>
       <thead>
         <tr>
           {["#", "Investigator", "Days", "Planned", "Actual NPT", "Remaining", "Status"].map((h, i) => (
@@ -217,7 +217,7 @@ function remainingColor(s: NptStatus): string {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <div style={{ fontSize: 13, color: palette.textDim, marginBottom: 4 }}>{label}</div>
+      <div style={{ fontSize: 20, color: palette.textDim, marginBottom: 4 }}>{label}</div>
       {children}
     </div>
   );
@@ -227,14 +227,14 @@ function Stat({ label, value, tone }: { label: string; value: string; tone?: "ok
   const color = tone === "bad" ? palette.bad : tone === "warn" ? palette.warn : tone === "ok" ? palette.ok : palette.text;
   return (
     <div style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: "12px 16px", minWidth: 150 }}>
-      <div style={{ fontSize: 14, color: palette.textDim }}>{label}</div>
-      <div style={{ fontSize: 26, fontWeight: 700, color }}>{value}</div>
+      <div style={{ fontSize: 21, color: palette.textDim }}>{label}</div>
+      <div style={{ fontSize: 39, fontWeight: 700, color }}>{value}</div>
     </div>
   );
 }
 
 const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
 const td: React.CSSProperties = { padding: "8px 10px", borderBottom: `1px solid ${palette.border}` };
-const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 16 };
+const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 24 };
 const select: React.CSSProperties = { ...input, minWidth: 260 };
-const emlBtn: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "5px 10px", fontSize: 14, cursor: "pointer", fontWeight: 600 };
+const emlBtn: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "5px 10px", fontSize: 21, cursor: "pointer", fontWeight: 600 };

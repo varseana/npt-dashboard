@@ -14,7 +14,7 @@ export function StatusChip({ status }: { status: NptStatus }) {
   return (
     <span style={{
       display: "inline-block",
-      fontSize: 14,
+      fontSize: 21,
       fontWeight: 600,
       padding: "2px 10px",
       borderRadius: 6,
