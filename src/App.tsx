@@ -12,6 +12,7 @@ import Folders from "./components/Folders";
 import Clock from "./components/Clock";
 import Org from "./components/Org";
 import Requests from "./components/Requests";
+import Managers from "./components/Managers";
 import { IconLogout } from "./components/icons";
 import Mascot from "./components/Mascot";
 
@@ -39,7 +40,7 @@ export default function App() {
   const [section, setSection] = useState<"dashboard" | "team" | "access">("dashboard");
   const [dashView, setDashView] = useState<"summary" | "breakdown">("summary");
   const [teamTab, setTeamTab] = useState<"employees" | "planned" | "folders">("employees");
-  const [accessTab, setAccessTab] = useState<"requests" | "org">("requests");
+  const [accessTab, setAccessTab] = useState<"requests" | "org" | "managers">("requests");
   const [askLogout, setAskLogout] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
 
@@ -58,23 +59,55 @@ export default function App() {
     return () => sub.subscription.unsubscribe();
   }, []);
 
+  // carga (o auto-crea) la fila del usuario en managers, mas la lista de teams.
+  // si el usuario se logueo pero no tiene fila (recien se registro, o lo crearon a mano
+  // en Auth), le creamos una fila PENDING: asi aparece solo en el panel de admin sin
+  // que nadie inyecte SQL. La policy mgr_self_signup permite crear solo la fila propia.
+  async function loadManager(s: Session) {
+    let { data: m } = await supabase
+      .from("managers")
+      .select("user_id,email,role,team_id,approved")
+      .eq("user_id", s.user.id)
+      .maybeSingle();
+
+    if (!m) {
+      await supabase.from("managers").upsert(
+        { user_id: s.user.id, email: s.user.email ?? "", role: "manager", approved: false },
+        { onConflict: "user_id", ignoreDuplicates: true },
+      );
+      const re = await supabase
+        .from("managers")
+        .select("user_id,email,role,team_id,approved")
+        .eq("user_id", s.user.id)
+        .maybeSingle();
+      m = re.data;
+    }
+
+    setManager((m as ManagerRow) ?? null);
+    const { data: t } = await supabase.from("teams").select("id,name,npt_target_pct");
+    const tt = (t as Team[]) ?? [];
+    setTeams(tt);
+    if (tt.length) setTeamId((prev) => prev || (m as ManagerRow)?.team_id || tt[0].id);
+  }
+
   useEffect(() => {
     if (!session) {
       setManager(null);
       return;
     }
-    (async () => {
-      const { data: m } = await supabase
-        .from("managers")
-        .select("user_id,email,role,team_id,approved")
-        .eq("user_id", session.user.id)
-        .maybeSingle();
-      setManager((m as ManagerRow) ?? null);
-      const { data: t } = await supabase.from("teams").select("id,name,npt_target_pct");
-      const tt = (t as Team[]) ?? [];
-      setTeams(tt);
-      if (tt.length) setTeamId((m as ManagerRow)?.team_id ?? tt[0].id);
-    })();
+    loadManager(session);
+    // realtime: cuando cambia la tabla managers (alguien se registra, o el admin
+    // aprueba/edita), recargamos la fila propia (el manager entra al aprobarse, sin
+    // refrescar) y bumpeamos el tick para que el panel de Managers se actualice en vivo.
+    const ch = supabase
+      .channel("managers-live")
+      .on("postgres_changes", { event: "*", schema: "public", table: "managers" }, () => {
+        loadManager(session);
+        setRefreshTick((t) => t + 1);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
 
   if (loading) return <Centered>Loading...</Centered>;
@@ -138,6 +171,7 @@ export default function App() {
         </>)}
         {section === "access" && (<>
           <SubBtn active={accessTab === "requests"} onClick={() => setAccessTab("requests")}>Requests</SubBtn>
+          {manager.role === "admin" && <SubBtn active={accessTab === "managers"} onClick={() => setAccessTab("managers")}>Managers</SubBtn>}
           {manager.role === "admin" && <SubBtn active={accessTab === "org"} onClick={() => setAccessTab("org")}>Org</SubBtn>}
         </>)}
       </div>
@@ -148,6 +182,8 @@ export default function App() {
       {section === "team" && team && teamTab === "planned" && <Planned team={team} />}
       {section === "team" && team && teamTab === "folders" && <Folders team={team} />}
       {section === "access" && accessTab === "requests" && <Requests role={manager.role} myUserId={manager.user_id} />}
+      {section === "access" && accessTab === "managers" && manager.role === "admin" &&
+        <Managers teams={teams} myUserId={manager.user_id} refreshKey={refreshTick} />}
       {section === "access" && accessTab === "org" && manager.role === "admin" && <Org />}
 
       {askLogout && (
