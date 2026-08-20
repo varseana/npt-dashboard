@@ -42,6 +42,29 @@ export function IconX({ size = 16, style }: P) {
   );
 }
 
+// ojo solido para revelar la contrasena: almendra en currentColor, pupila knockout = fondo del tema
+export function IconEye({ size = 16, style }: P) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: "block", ...style }} aria-hidden="true">
+      <path d="M12 5C5 5 1.5 11.2 1.5 12S5 19 12 19s10.5-6.2 10.5-7S19 5 12 5Z" fill="currentColor" />
+      <circle cx="12" cy="12" r="3.4" fill="var(--bg)" />
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+    </svg>
+  );
+}
+
+// ojo tachado (contrasena oculta): mismo ojo + slash con halo del fondo para que se vea sobre el relleno
+export function IconEyeOff({ size = 16, style }: P) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: "block", ...style }} aria-hidden="true">
+      <path d="M12 5C5 5 1.5 11.2 1.5 12S5 19 12 19s10.5-6.2 10.5-7S19 5 12 5Z" fill="currentColor" />
+      <circle cx="12" cy="12" r="3.4" fill="var(--bg)" />
+      <line x1="4" y1="3.6" x2="20" y2="20.4" stroke="var(--bg)" strokeWidth="4" strokeLinecap="round" />
+      <line x1="4" y1="3.6" x2="20" y2="20.4" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 // luna solida (se muestra en modo claro: click -> oscuro)
 export function IconMoon({ size = 16, style }: P) {
   return (
