@@ -42,12 +42,16 @@ export function StoryLink({ onClick, children }: { onClick: () => void; children
 // interaccion: HOVER lo muestra y al salir se quita al instante; CLICK en el asterisco lo FIJA
 // (queda abierto aunque saques el hover) y otro click lo cierra; la X del cuadro tambien lo cierra.
 // el cuadro se reubica solo (flip vertical + clamp horizontal) para no salirse NUNCA del viewport.
-export function InfoStar({ children, size = 11, spin = true }: { children: React.ReactNode; size?: number; spin?: boolean }) {
+export function InfoStar({ children, size = 11, spin = true, pages }:
+  { children?: React.ReactNode; size?: number; spin?: boolean; pages?: React.ReactNode[] }) {
   const [open, setOpen] = useState(false);
   const [locked, setLocked] = useState(false);   // fijado por click: ignora el hover-out
+  const [page, setPage] = useState(0);            // pagina actual (solo si se pasan `pages`)
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const trigRef = useRef<HTMLSpanElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
+  // al cerrar, volver a la primera pagina
+  useEffect(() => { if (!open) setPage(0); }, [open]);
 
   // calcula top/left en coords de viewport (position: fixed) sin dejar que se corte.
   const place = () => {
@@ -80,7 +84,7 @@ export function InfoStar({ children, size = 11, spin = true }: { children: React
       window.removeEventListener("resize", on);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
+  }, [open, page]);
 
   // cierre por hover: NO cierra si esta fijado, y usa un pequeño puente (120ms) para poder viajar
   // del asterisco al card (a clickear el hyperlink) sin que se cierre en el hueco. entrar al
@@ -134,6 +138,7 @@ export function InfoStar({ children, size = 11, spin = true }: { children: React
             color: palette.textDim,
             boxShadow: "none",
             textAlign: "left",
+            whiteSpace: "normal",   // que envuelva SIEMPRE, aunque este dentro de una tabla con nowrap
             cursor: "auto",
           }}
         >
@@ -147,9 +152,29 @@ export function InfoStar({ children, size = 11, spin = true }: { children: React
           >
             <IconX size={13} />
           </button>
-          <div style={{ paddingRight: 16 }}>{children}</div>
+          <div style={{ paddingRight: 16 }}>{pages ? pages[Math.min(page, pages.length - 1)] : children}</div>
+          {pages && pages.length > 1 && (
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginTop: 10, paddingTop: 8, borderTop: `1px solid ${palette.border}` }}>
+              <span style={{ fontSize: 13, color: palette.textDim }}>{page + 1} / {pages.length}</span>
+              <span style={{ display: "flex", gap: 14 }}>
+                {page > 0 && (
+                  <button type="button" className="npt-storylink" style={pgBtn}
+                    onClick={(e) => { e.stopPropagation(); setPage((p) => Math.max(0, p - 1)); }}>Back</button>
+                )}
+                {page < pages.length - 1 && (
+                  <button type="button" className="npt-storylink" style={pgBtn}
+                    onClick={(e) => { e.stopPropagation(); setPage((p) => Math.min(pages.length - 1, p + 1)); }}>Next</button>
+                )}
+              </span>
+            </div>
+          )}
         </div>
       )}
     </span>
   );
 }
+
+const pgBtn: React.CSSProperties = {
+  background: "transparent", border: "none", padding: 0, cursor: "pointer",
+  fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 3, color: palette.text, fontSize: 13,
+};

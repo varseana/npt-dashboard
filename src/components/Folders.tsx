@@ -2,17 +2,26 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
+import { InfoStar } from "./InfoStar";
 import { BlockSkeleton } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 interface Folder { id: string; name: string; aliases: string[]; }
+interface AdminFolder { id: string; name: string; aliases: string[]; owner: string; }
+interface ManagerLite { user_id: string; email: string; role: string; approved: boolean; }
+// highlight monocromatico dentro del texto del popover (bold en color de texto full)
+const hi = { color: palette.text, fontWeight: 700 } as React.CSSProperties;
 
-export default function Folders({ team }: { team: Team }) {
+export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdmin?: boolean; myUserId?: string }) {
   const [folders, setFolders] = useState<Folder[]>([]);
   const [known, setKnown] = useState<string[]>([]);
   const [newName, setNewName] = useState("");
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
+  // vista admin: folders de otros managers (read-only, colapsable)
+  const [allFolders, setAllFolders] = useState<AdminFolder[]>([]);
+  const [managers, setManagers] = useState<ManagerLite[]>([]);
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
   async function load() {
     setLoading(true);
@@ -26,10 +35,20 @@ export default function Folders({ team }: { team: Team }) {
     for (const x of (r as { alias: string }[]) ?? []) set.add(x.alias);
     for (const x of (d as { alias: string }[]) ?? []) set.add(x.alias);
     setKnown(Array.from(set).sort());
+
+    if (isAdmin) {
+      // RLS folders_admin_read deja al admin leer TODOS los folders; managers para etiquetar por email
+      const [{ data: af }, { data: mg }] = await Promise.all([
+        supabase.from("manager_folders").select("id,name,aliases,owner"),
+        supabase.from("managers").select("user_id,email,role,approved"),
+      ]);
+      setAllFolders((af as AdminFolder[]) ?? []);
+      setManagers((mg as ManagerLite[]) ?? []);
+    }
     setLoading(false);
   }
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [team.id]);
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [team.id, isAdmin]);
 
   async function create() {
     const name = newName.trim();
@@ -56,19 +75,29 @@ export default function Folders({ team }: { team: Team }) {
     if (error) { setMsg("Error: " + error.message); await load(); }
   }
 
+  function toggleExpand(uid: string) {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (next.has(uid)) next.delete(uid); else next.add(uid);
+      return next;
+    });
+  }
+
   if (loading) return <BlockSkeleton />;
+
+  const otherManagers = managers
+    .filter((m) => m.user_id !== myUserId && m.approved && (m.role === "manager" || m.role === "admin"))
+    .sort((a, b) => a.email.localeCompare(b.email));
 
   return (
     <div>
-      <p style={{ color: palette.textDim, fontSize: 19, lineHeight: 1.6 }}>
-        Private folders to organize your view by project. They are yours only and <strong>do not
-        affect any numbers</strong>: they group investigators in Overview when you turn on Group by folder.
-      </p>
-
-      <div style={{ display: "flex", gap: 8, alignItems: "center", margin: "16px 0" }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", margin: "0 0 16px" }}>
         <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Folder name (e.g. Project X)"
           onKeyDown={(e) => { if (e.key === "Enter") create(); }} style={{ ...input, width: 280 }} />
         <button onClick={create} disabled={!newName.trim()} style={btn}>Create folder</button>
+        <InfoStar spin={false}>{
+          <>Private folders to organize <strong style={hi}>your own view</strong> by project. They are <strong style={hi}>yours only</strong> and <strong style={hi}>do not affect any numbers</strong>: they just group employees in Overview when you turn on <strong style={hi}>Group by folder</strong>.</>
+        }</InfoStar>
       </div>
 
       {msg && <div style={{ marginBottom: 12, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 18 }}>{msg}</div>}
@@ -95,6 +124,41 @@ export default function Folders({ team }: { team: Team }) {
           )}
         </div>
       ))}
+
+      {isAdmin && (
+        <div style={{ marginTop: 28 }}>
+          <div className="npt-title" style={{ fontWeight: 700, fontSize: 24, marginBottom: 8 }}>
+            Other managers' folders<InfoStar spin={false}>{
+              <>A read-only peek at the folders other managers made. You <strong style={hi}>cannot create or edit</strong> theirs.</>
+            }</InfoStar>
+          </div>
+          {otherManagers.length === 0 ? (
+            <div style={{ color: palette.textDim, fontSize: 18 }}>No other managers yet.</div>
+          ) : otherManagers.map((m) => {
+            const mf = allFolders.filter((f) => f.owner === m.user_id);
+            const open = expanded.has(m.user_id);
+            return (
+              <div key={m.user_id} style={{ border: `1px solid ${palette.border}`, borderRadius: 8, marginBottom: 8 }}>
+                <button onClick={() => toggleExpand(m.user_id)}
+                  style={{ width: "100%", textAlign: "left", background: "transparent", border: "none", cursor: "pointer", padding: "10px 12px", color: palette.text, fontSize: 18, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <span>{open ? "▾" : "▸"} {m.email} <span style={{ color: palette.textDim }}>({mf.length})</span></span>
+                </button>
+                {open && (
+                  <div style={{ padding: "0 12px 12px", fontSize: 17, color: palette.textDim }}>
+                    {mf.length === 0 ? (
+                      <div>This manager has no folders.</div>
+                    ) : (
+                      <ul style={{ margin: 0, paddingLeft: 20 }}>
+                        {mf.map((f) => <li key={f.id}>{f.name} <span style={{ opacity: 0.7 }}>({f.aliases.length})</span></li>)}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

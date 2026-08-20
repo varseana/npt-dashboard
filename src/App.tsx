@@ -245,7 +245,7 @@ export default function App() {
       {section === "dashboard" && team && dashView === "breakdown" && <Distribution team={team} refreshKey={refreshTick} />}
       {section === "team" && team && teamTab === "employees" && <Employees team={team} refreshKey={refreshTick} isAdmin={manager.role === "admin"} />}
       {section === "team" && team && teamTab === "planned" && <Planned team={team} />}
-      {section === "team" && team && teamTab === "folders" && <Folders team={team} />}
+      {section === "team" && team && teamTab === "folders" && <Folders team={team} isAdmin={manager.role === "admin"} myUserId={manager.user_id} />}
       {section === "access" && accessTab === "requests" && <Requests role={manager.role} myUserId={manager.user_id} />}
       {section === "access" && accessTab === "managers" && manager.role === "admin" &&
         <Managers teams={teams} myUserId={manager.user_id} refreshKey={refreshTick} />}

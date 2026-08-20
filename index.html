@@ -60,6 +60,8 @@
       /* ojo de revelar contrasena: gris por defecto, contraste full en hover */
       .npt-eye { color: var(--textDim); transition: color .2s ease; }
       .npt-eye:hover { color: var(--text); }
+      /* oculta el ojo/limpiar NATIVO del navegador (Edge/IE) para no tener doble ojo; dejamos el nuestro */
+      input::-ms-reveal, input::-ms-clear { display: none; }
       /* accesibilidad: si el usuario pidio menos movimiento, no giramos */
       @media (prefers-reduced-motion: reduce) { .npt-aster { animation: none; } }
     </style>

@@ -111,6 +111,17 @@ export default function Planned({ team }: { team: Team }) {
   }
 
   async function save() {
+    // CAP: los customs (targets individuales) nunca pueden sumar mas que el budget (evita el bug de
+    // asignar mas NPT del que hay). Priorizamos los individuales; lo que sobra = fair share al resto.
+    const budgetSecs = parseDuration(budgetInput);
+    if (budgetSecs != null) {
+      let sum = 0;
+      for (const a of aliases) { const s = parseDuration(personInputs[a] ?? ""); if (s != null) sum += s; }
+      if (sum > budgetSecs) {
+        setMsg(`Custom targets add up to ${fmtHms(sum)}, more than the budget ${fmtHms(budgetSecs)}. Lower them so they fit.`);
+        return;
+      }
+    }
     setSaving(true); setMsg("");
     try {
       await upsertOrDeleteBudget(budgetInput);
@@ -149,9 +160,10 @@ export default function Planned({ team }: { team: Team }) {
       <div style={{ background: palette.panel, border: `2px solid ${palette.text}`, borderRadius: 8, padding: "14px 16px", marginBottom: 16 }}>
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
           <div className="npt-title" style={{ fontWeight: 700, fontSize: 28 }}>
-            Team weekly budget<InfoStar>{
-              <>The <strong style={hi}>total NPT the whole team can spend</strong> in a week (the number ops hands you). Everyone draws from it. Each person's target is their <strong style={hi}>fair share</strong> unless you give them a custom below. Type hours like <strong style={hi}>10</strong> (= 10:00:00) or H:MM. Applies to <strong style={hi}>{scopeLabel}</strong>.</>
-            }</InfoStar>
+            Team weekly budget<InfoStar pages={[
+              <>The <strong style={hi}>total NPT the whole team can spend</strong> in a week (the number ops hands you). Everyone draws from it. Type hours like <strong style={hi}>10</strong> (= 10:00:00) or H:MM. Applies to <strong style={hi}>{scopeLabel}</strong>.</>,
+              <><strong style={hi}>How it splits.</strong> Individual custom targets come <strong style={hi}>first</strong> and can never add up to more than the budget. Whatever is left over becomes the <strong style={hi}>fair share</strong>, split equally among everyone without a custom. Example: budget <strong style={hi}>10:00</strong>, one person set to <strong style={hi}>4:00</strong> leaves <strong style={hi}>6:00</strong> for the rest of the team.</>,
+            ]} />
           </div>
           {budgetSeconds != null && fair != null && (
             <div style={{ fontSize: 18, color: palette.textDim, whiteSpace: "nowrap" }}>
