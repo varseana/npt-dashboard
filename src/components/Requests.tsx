@@ -2,6 +2,10 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
+import { InfoStar } from "./InfoStar";
+
+// highlight monocromatico dentro del texto del popover (bold en color de texto full)
+const hi = { color: palette.text, fontWeight: 700 } as React.CSSProperties;
 
 interface AccessRequest {
   id: string;
@@ -77,14 +81,16 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
   return (
     <div>
       <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "14px 16px", marginBottom: 18 }}>
-        <div style={{ fontWeight: 700, marginBottom: 4 }}>Request access to someone's NPT</div>
-        <div style={{ color: palette.textDim, fontSize: 18, marginBottom: 10 }}>
-          Ask to view a shared member's NPT (e.g. someone who is also on your project). An admin approves it.
+        <div className="npt-title" style={{ fontWeight: 700, fontSize: 22, marginBottom: 10 }}>
+          Request access<InfoStar pages={[
+            <>Ask to view another employee's NPT, e.g. someone who is <strong style={hi}>also on your project</strong>. Type their username and send it.</>,
+            <>An <strong style={hi}>admin approves or denies</strong> it. Once approved, that person shows up in your team views.</>,
+          ]} />
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
           <input value={alias} onChange={(e) => setAlias(e.target.value)} placeholder="username"
             onKeyDown={(e) => { if (e.key === "Enter") submit(); }} style={{ ...input, width: 220 }} />
-          <button onClick={submit} disabled={!alias.trim()} style={btn}>Request access</button>
+          <button onClick={submit} disabled={!alias.trim()} style={btn}>Send request</button>
         </div>
         {msg && <div style={{ marginTop: 10, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 18 }}>{msg}</div>}
       </div>

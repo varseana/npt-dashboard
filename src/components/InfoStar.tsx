@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { palette } from "../theme";
 import { IconX } from "./icons";
 
@@ -115,7 +116,7 @@ export function InfoStar({ children, size = 11, spin = true, pages }:
       style={{ display: "inline-block", verticalAlign: "super", marginLeft: 3, cursor: "pointer", lineHeight: 0 }}
     >
       <AsterMark size={size} active={open} spin={spin} />
-      {open && (
+      {open && createPortal(
         <div
           ref={boxRef}
           onMouseEnter={onEnter}
@@ -168,7 +169,8 @@ export function InfoStar({ children, size = 11, spin = true, pages }:
               </span>
             </div>
           )}
-        </div>
+        </div>,
+        document.body
       )}
     </span>
   );
