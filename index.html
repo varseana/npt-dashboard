@@ -50,9 +50,8 @@
       // default = preferencia del sistema.
       (function () {
         try {
-          var v = localStorage.getItem("nptTheme");
-          var dark = v ? v === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
-          if (dark) document.documentElement.classList.add("dark");
+          // default = CLARO. Solo oscuro si el usuario lo eligio explicitamente antes.
+          if (localStorage.getItem("nptTheme") === "dark") document.documentElement.classList.add("dark");
         } catch (e) {}
       })();
     </script>
