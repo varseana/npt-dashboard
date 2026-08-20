@@ -1,13 +1,14 @@
 import * as React from "react";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { palette } from "../theme";
 import { IconX } from "./icons";
 
 // asterisco SVG simetrico (8 puntas, centrado en el viewBox) -> gira sobre su propio eje
 // en loop perfecto sin tirones. la animacion vive en .npt-aster (index.html).
-export function AsterMark({ size = 11 }: { size?: number }) {
+export function AsterMark({ size = 11, active = false }: { size?: number; active?: boolean }) {
   return (
-    <span className="npt-aster" style={{ display: "inline-flex", color: palette.textDim }}>
+    // highlighted (color de texto full) cuando su card esta abierta: hover, click-fijado, o abierto
+    <span className="npt-aster" style={{ display: "inline-flex", color: active ? palette.text : palette.textDim }}>
       <svg viewBox="0 0 24 24" width={size} height={size} style={{ display: "block" }} aria-hidden="true">
         <g stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
           <line x1="12" y1="3" x2="12" y2="21" />
@@ -80,11 +81,19 @@ export function InfoStar({ children, size = 11 }: { children: React.ReactNode; s
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const onEnter = () => setOpen(true);
-  const onLeave = () => { if (!locked) setOpen(false); };
+  // cierre por hover: NO cierra si esta fijado, y usa un pequeño puente (120ms) para poder viajar
+  // del asterisco al card (a clickear el hyperlink) sin que se cierre en el hueco. entrar al
+  // asterisco O al card cancela el cierre; salir de ambos lo dispara.
+  const closeT = useRef<number | undefined>(undefined);
+  const cancelClose = () => { if (closeT.current) { clearTimeout(closeT.current); closeT.current = undefined; } };
+  const scheduleClose = () => { if (locked) return; cancelClose(); closeT.current = window.setTimeout(() => setOpen(false), 120); };
+  useEffect(() => () => cancelClose(), []);
+
+  const onEnter = () => { cancelClose(); setOpen(true); };
+  const onLeave = () => scheduleClose();
   // toggle de fijado: si esta fijo lo suelta y cierra; si no, lo fija abierto
-  const toggle = () => { if (locked) { setLocked(false); setOpen(false); } else { setLocked(true); setOpen(true); } };
-  const close = () => { setLocked(false); setOpen(false); };
+  const toggle = () => { cancelClose(); if (locked) { setLocked(false); setOpen(false); } else { setLocked(true); setOpen(true); } };
+  const close = () => { cancelClose(); setLocked(false); setOpen(false); };
 
   return (
     <span
@@ -100,7 +109,7 @@ export function InfoStar({ children, size = 11 }: { children: React.ReactNode; s
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } }}
       style={{ display: "inline-block", verticalAlign: "super", marginLeft: 3, cursor: "pointer", lineHeight: 0 }}
     >
-      <AsterMark size={size} />
+      <AsterMark size={size} active={open} />
       {open && (
         <div
           ref={boxRef}
