@@ -54,6 +54,9 @@
       .npt-aster { animation: npt-spin 3s linear infinite; transform-origin: 50% 50%; }
       /* hyperlink de storytelling (monocromatico): feedback en hover sin salir del sistema B&N */
       .npt-storylink:hover { color: var(--textDim); }
+      /* X de cerrar el popover de info: gris por defecto, roja en hover */
+      .npt-close { color: var(--textDim); transition: color .2s ease; }
+      .npt-close:hover { color: var(--bad); }
       /* accesibilidad: si el usuario pidio menos movimiento, no giramos */
       @media (prefers-reduced-motion: reduce) { .npt-aster { animation: none; } }
     </style>

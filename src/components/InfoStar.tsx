@@ -1,6 +1,7 @@
 import * as React from "react";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 import { palette } from "../theme";
+import { IconX } from "./icons";
 
 // asterisco SVG simetrico (8 puntas, centrado en el viewBox) -> gira sobre su propio eje
 // en loop perfecto sin tirones. la animacion vive en .npt-aster (index.html).
@@ -35,19 +36,16 @@ export function StoryLink({ onClick, children }: { onClick: () => void; children
   );
 }
 
-// asterisco giratorio + popover de storytelling. abre por hover o click; se cierra 2s despues
-// de que el mouse sale de la caja. se reubica solo (flip vertical + clamp horizontal) para no
-// salirse NUNCA del viewport.
+// asterisco giratorio + popover de storytelling.
+// interaccion: HOVER lo muestra y al salir se quita al instante; CLICK en el asterisco lo FIJA
+// (queda abierto aunque saques el hover) y otro click lo cierra; la X del cuadro tambien lo cierra.
+// el cuadro se reubica solo (flip vertical + clamp horizontal) para no salirse NUNCA del viewport.
 export function InfoStar({ children, size = 11 }: { children: React.ReactNode; size?: number }) {
   const [open, setOpen] = useState(false);
+  const [locked, setLocked] = useState(false);   // fijado por click: ignora el hover-out
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const trigRef = useRef<HTMLSpanElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
-  const closeT = useRef<number | undefined>(undefined);
-
-  const cancelClose = () => { if (closeT.current) { clearTimeout(closeT.current); closeT.current = undefined; } };
-  const scheduleClose = () => { cancelClose(); closeT.current = window.setTimeout(() => setOpen(false), 2000); };
-  useEffect(() => () => cancelClose(), []);
 
   // calcula top/left en coords de viewport (position: fixed) sin dejar que se corte.
   const place = () => {
@@ -82,25 +80,32 @@ export function InfoStar({ children, size = 11 }: { children: React.ReactNode; s
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
+  const onEnter = () => setOpen(true);
+  const onLeave = () => { if (!locked) setOpen(false); };
+  // toggle de fijado: si esta fijo lo suelta y cierra; si no, lo fija abierto
+  const toggle = () => { if (locked) { setLocked(false); setOpen(false); } else { setLocked(true); setOpen(true); } };
+  const close = () => { setLocked(false); setOpen(false); };
+
   return (
     <span
       ref={trigRef}
       role="button"
       tabIndex={0}
       aria-label="More info"
-      onMouseEnter={() => { cancelClose(); setOpen(true); }}
-      onMouseLeave={scheduleClose}
-      onFocus={() => { cancelClose(); setOpen(true); }}
-      onBlur={scheduleClose}
-      onClick={(e) => { e.stopPropagation(); cancelClose(); setOpen(true); }}
-      style={{ display: "inline-block", verticalAlign: "super", marginLeft: 3, cursor: "help", lineHeight: 0 }}
+      onMouseEnter={onEnter}
+      onMouseLeave={onLeave}
+      onFocus={onEnter}
+      onBlur={onLeave}
+      onClick={(e) => { e.stopPropagation(); toggle(); }}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } }}
+      style={{ display: "inline-block", verticalAlign: "super", marginLeft: 3, cursor: "pointer", lineHeight: 0 }}
     >
       <AsterMark size={size} />
       {open && (
         <div
           ref={boxRef}
-          onMouseEnter={cancelClose}
-          onMouseLeave={scheduleClose}
+          onMouseEnter={onEnter}
+          onMouseLeave={onLeave}
           onClick={(e) => e.stopPropagation()}
           style={{
             position: "fixed",
@@ -109,9 +114,8 @@ export function InfoStar({ children, size = 11 }: { children: React.ReactNode; s
             visibility: pos ? "visible" : "hidden",
             zIndex: 60,
             width: "min(300px, calc(100vw - 16px))",
-            background: palette.panel,
-            border: `1px solid ${palette.border}`,
-            borderTop: `2px solid ${palette.text}`,
+            background: palette.bg,                       // mismo color que el fondo de la pagina (light y dark)
+            border: `2px solid ${palette.text}`,          // linea gruesa alrededor de TODO el cuadro
             borderRadius: 0,
             padding: "12px 14px",
             fontSize: 15,
@@ -123,7 +127,17 @@ export function InfoStar({ children, size = 11 }: { children: React.ReactNode; s
             cursor: "auto",
           }}
         >
-          {children}
+          {/* X: hover -> roja (.npt-close), click cierra solo esta card */}
+          <button
+            className="npt-close"
+            onClick={(e) => { e.stopPropagation(); close(); }}
+            aria-label="Close"
+            title="Close"
+            style={{ position: "absolute", top: 6, right: 6, background: "transparent", border: "none", cursor: "pointer", padding: 2, lineHeight: 0, display: "inline-flex" }}
+          >
+            <IconX size={13} />
+          </button>
+          <div style={{ paddingRight: 16 }}>{children}</div>
         </div>
       )}
     </span>
