@@ -152,7 +152,7 @@ export default function App() {
   useEffect(() => { if (session) loadPending(); /* eslint-disable-next-line */ }, [refreshTick]);
 
   if (loading) return <Centered>Loading...</Centered>;
-  if (!session) return <Login />;
+  if (!session) return <Login dark={dark} onToggleTheme={() => setDark((d) => !d)} />;
   // standby = registrado pero sin rol asignado todavia: no ve nada
   if (!manager || manager.role === "standby" || !manager.approved) {
     return (
@@ -171,6 +171,14 @@ export default function App() {
 
   const isStaff = manager.role === "manager" || manager.role === "admin";
   const team = teams.find((t) => t.id === teamId) ?? null;
+
+  // navegacion disparada desde las cards del dashboard (los hyperlinks de storytelling)
+  function goTo(dest: { section: "dashboard" | "team" | "access"; tab?: string }) {
+    setSection(dest.section);
+    if (dest.section === "dashboard" && dest.tab) setDashView(dest.tab as "summary" | "breakdown");
+    if (dest.section === "team" && dest.tab) setTeamTab(dest.tab as "employees" | "planned" | "folders");
+    if (dest.section === "access" && dest.tab) setAccessTab(dest.tab as "requests" | "org" | "managers" | "teams" | "unassigned");
+  }
 
   return (
     <div style={{ maxWidth: "min(2100px, 97vw)", margin: "0 auto", padding: "24px 32px" }}>
@@ -233,7 +241,7 @@ export default function App() {
         </>)}
       </div>
 
-      {section === "dashboard" && team && dashView === "summary" && <Overview team={team} refreshKey={refreshTick} />}
+      {section === "dashboard" && team && dashView === "summary" && <Overview team={team} refreshKey={refreshTick} onNavigate={goTo} />}
       {section === "dashboard" && team && dashView === "breakdown" && <Distribution team={team} refreshKey={refreshTick} />}
       {section === "team" && team && teamTab === "employees" && <Employees team={team} refreshKey={refreshTick} isAdmin={manager.role === "admin"} />}
       {section === "team" && team && teamTab === "planned" && <Planned team={team} />}

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@fontsource-variable/outfit": "^5.3.0",
+    "@paper-design/shaders-react": "^0.0.80",
     "@supabase/supabase-js": "^2.45.0",
     "randoma11y": "^1.0.0",
     "react": "^18.3.1",

@@ -8,12 +8,17 @@ import {
   type NptDailyRow, type NptStatus, type PlannedRow, type TeamBudgetRow,
 } from "../lib/npt";
 import { StatusChip } from "./status";
+import { InfoStar, StoryLink } from "./InfoStar";
 import { downloadEml } from "../lib/reminder";
 import { IconMail, IconAlert } from "./icons";
 import { TableSkeleton } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 interface Folder { id: string; name: string; aliases: string[]; }
+
+type NavDest = { section: "dashboard" | "team" | "access"; tab?: string };
+// highlight monocromatico dentro del texto del popover (bold en color de texto full)
+const hi = { color: palette.text, fontWeight: 700 } as React.CSSProperties;
 
 interface Row {
   alias: string;
@@ -26,7 +31,7 @@ interface Row {
 
 const STATUS_RANK: Record<NptStatus, number> = { bad: 0, warn: 1, ok: 2, none: 3 };
 
-export default function Overview({ team, refreshKey }: { team: Team; refreshKey?: number }) {
+export default function Overview({ team, refreshKey, onNavigate }: { team: Team; refreshKey?: number; onNavigate?: (d: NavDest) => void }) {
   const weeks = useMemo(() => recentWeeks(new Date(), 16), []);
   const [weekKey, setWeekKey] = useState(() => weekInfo(new Date()).key);
   const [rows, setRows] = useState<NptDailyRow[]>([]);
@@ -153,12 +158,24 @@ export default function Overview({ team, refreshKey }: { team: Team; refreshKey?
         <div style={{ color: palette.textDim }}>No reported data for {weekLabel(sel)}.</div>
       ) : (
         <>
-          <TeamBudgetCard budget={teamBudget} used={teamNpt} remaining={teamRemaining} status={teamStatus} users={users} />
+          <TeamBudgetCard budget={teamBudget} used={teamNpt} remaining={teamRemaining} status={teamStatus} users={users} onNavigate={onNavigate} />
           <div style={{ display: "flex", gap: 12, marginBottom: 18, flexWrap: "wrap" }}>
-            <Stat label="Investigators reporting" value={String(users.length)} />
-            <Stat label="Team NPT (actual)" value={fmtHms(teamNpt)} />
-            <Stat label="Over planned" value={`${overCount} / ${users.length}`} tone={overCount ? "bad" : "ok"} />
-            <Stat label="Near limit (<=1h)" value={String(warnCount)} tone={warnCount ? "warn" : "ok"} />
+            <Stat label="Employees" value={String(users.length)} story={
+              <>Team members who have uploaded NPT this week. The full roster and status / <strong style={hi}>Connected . Pending . Unlisted</strong> / lives in the Employees panel.
+                <div style={{ marginTop: 8 }}><StoryLink onClick={() => onNavigate?.({ section: "team", tab: "employees" })}>Open the Employees panel</StoryLink></div></>
+            } />
+            <Stat label="Team NPT" value={fmtHms(teamNpt)} story={
+              <>Combined NPT for the whole team this week / <strong style={hi}>Meeting + Training + Project + Personal + System</strong> / sourced directly from STAR Tracker uploads. The weekly ceiling is defined in Planned.
+                <div style={{ marginTop: 8 }}><StoryLink onClick={() => onNavigate?.({ section: "team", tab: "planned" })}>Set the team budget in Planned</StoryLink></div></>
+            } />
+            <Stat label="Over" value={`${overCount} / ${users.length}`} tone={overCount ? "bad" : "ok"} story={
+              <>Employees who have exceeded their <strong style={hi}>individual weekly plan</strong>. Per-person plans are configured in Planned.
+                <div style={{ marginTop: 8 }}><StoryLink onClick={() => onNavigate?.({ section: "team", tab: "planned" })}>Adjust plans in Planned</StoryLink></div></>
+            } />
+            <Stat label="Near limit" value={String(warnCount)} tone={warnCount ? "warn" : "ok"} story={
+              <>Employees with <strong style={hi}>one hour or less</strong> of plan remaining. The per-activity reason behind it sits in Breakdown.
+                <div style={{ marginTop: 8 }}><StoryLink onClick={() => onNavigate?.({ section: "dashboard", tab: "breakdown" })}>Open the Breakdown</StoryLink></div></>
+            } />
           </div>
 
           {groups ? (
@@ -226,8 +243,8 @@ function remainingColor(s: NptStatus): string {
 }
 
 // rollup del TEAM: presupuesto total de la semana vs lo consumido por todos.
-function TeamBudgetCard({ budget, used, remaining, status, users }:
-  { budget: number | null; used: number; remaining: number | null; status: NptStatus; users: { alias: string; nptSeconds: number }[] }) {
+function TeamBudgetCard({ budget, used, remaining, status, users, onNavigate }:
+  { budget: number | null; used: number; remaining: number | null; status: NptStatus; users: { alias: string; nptSeconds: number }[]; onNavigate?: (d: NavDest) => void }) {
   return (
     <div style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: "16px 20px", marginBottom: 18 }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
@@ -241,8 +258,13 @@ function TeamBudgetCard({ budget, used, remaining, status, users }:
       ) : (
         <>
           <div style={{ display: "flex", gap: 28, flexWrap: "wrap", marginBottom: 12 }}>
-            <BudgetStat label="Budget" value={fmtHms(budget)} />
-            <BudgetStat label="Used (all members)" value={fmtHms(used)} />
+            <BudgetStat label="Budget" value={fmtHms(budget)} story={
+              <>The team's <strong style={hi}>total weekly NPT ceiling</strong>, handed down by ops and defined in Planned.
+                <div style={{ marginTop: 8 }}><StoryLink onClick={() => onNavigate?.({ section: "team", tab: "planned" })}>Set it in Planned</StoryLink></div></>
+            } />
+            <BudgetStat label="Used" value={fmtHms(used)} story={
+              <>Combined NPT consumed by <strong style={hi}>all employees</strong> so far this week / it counts against the budget above.</>
+            } />
             <BudgetStat label="Remaining" value={fmtHms(remaining ?? 0)} color={remainingColor(status)} />
             <BudgetStat label="Used %" value={((used / budget) * 100).toFixed(1) + "%"} />
           </div>
@@ -310,10 +332,10 @@ function TeamBudgetBar({ budget, status, users }:
   );
 }
 
-function BudgetStat({ label, value, color }: { label: string; value: string; color?: string }) {
+function BudgetStat({ label, value, color, story }: { label: string; value: string; color?: string; story?: React.ReactNode }) {
   return (
     <div>
-      <div style={{ fontSize: 15, color: palette.textDim, marginBottom: 2 }}>{label}</div>
+      <div style={{ fontSize: 15, color: palette.textDim, marginBottom: 2 }}>{label}{story && <InfoStar>{story}</InfoStar>}</div>
       <div style={{ fontSize: 24, fontWeight: 700, fontVariantNumeric: "tabular-nums", color: color || palette.text }}>{value}</div>
     </div>
   );
@@ -328,11 +350,11 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-function Stat({ label, value, tone }: { label: string; value: string; tone?: "ok" | "warn" | "bad" }) {
+function Stat({ label, value, tone, story }: { label: string; value: string; tone?: "ok" | "warn" | "bad"; story?: React.ReactNode }) {
   const color = tone === "bad" ? palette.bad : tone === "warn" ? palette.warn : tone === "ok" ? palette.ok : palette.text;
   return (
     <div style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: "12px 16px", minWidth: 150 }}>
-      <div style={{ fontSize: 17, color: palette.textDim }}>{label}</div>
+      <div style={{ fontSize: 17, color: palette.textDim }}>{label}{story && <InfoStar>{story}</InfoStar>}</div>
       <div style={{ fontSize: 31, fontWeight: 700, color }}>{value}</div>
     </div>
   );

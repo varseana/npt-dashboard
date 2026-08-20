@@ -48,6 +48,14 @@
         padding: 2px; display: inline-flex; transition: color .2s ease;
       }
       .npt-logout:hover { color: var(--bad); }
+
+      /* asterisco de info: gira sobre su propio eje en loop perfecto (svg simetrico + origen centrado) */
+      @keyframes npt-spin { to { transform: rotate(360deg); } }
+      .npt-aster { animation: npt-spin 3s linear infinite; transform-origin: 50% 50%; }
+      /* hyperlink de storytelling (monocromatico): feedback en hover sin salir del sistema B&N */
+      .npt-storylink:hover { color: var(--textDim); }
+      /* accesibilidad: si el usuario pidio menos movimiento, no giramos */
+      @media (prefers-reduced-motion: reduce) { .npt-aster { animation: none; } }
     </style>
     <script>
       // aplica el tema ANTES del paint para evitar flash (no-FOUC). guardado en localStorage,
