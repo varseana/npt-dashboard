@@ -192,9 +192,6 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
           ) : (
             <UserTable rows={shown} remind={remind} teamBudget={teamBudget} />
           )}
-          <div style={{ color: palette.textDim, fontSize: 16, marginTop: 8 }}>
-            NPT = Meeting + Training + Project + Personal + System. Remaining = Planned - Actual. Times in Hh:mm:ss.
-          </div>
         </>
       )}
     </div>
@@ -202,12 +199,25 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
 }
 
 function UserTable({ rows, remind, teamBudget }: { rows: Row[]; remind: (u: Row) => void; teamBudget: number | null }) {
+  // headers con asterisco FLAT (no gira) donde hace falta explicar; el copy sale del viejo footer.
+  const headers: { label: string; left?: boolean; story?: React.ReactNode }[] = [
+    { label: "#", left: true },
+    { label: "Employee", left: true },
+    { label: "Days" },
+    { label: "Planned", story: <>The employee's <strong style={hi}>weekly NPT target</strong>, set per person in the Planned tab. Shown in Hh:mm:ss.</> },
+    { label: "Actual NPT", story: <>Total NPT this week / <strong style={hi}>Meeting + Training + Project + Personal + System</strong> / sourced from STAR Tracker uploads. Shown in Hh:mm:ss.</> },
+    { label: "% of budget", story: <>This employee's <strong style={hi}>share of the team's total weekly budget</strong>.</> },
+    { label: "Remaining", story: <><strong style={hi}>Remaining = Planned - Actual</strong>. Positive means plan left, negative means over. Shown in Hh:mm:ss.</> },
+    { label: "Status", story: <>On track / <strong style={hi}>Near limit</strong> is one hour or less remaining / <strong style={hi}>Over</strong> is past the plan.</> },
+  ];
   return (
     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19 }}>
       <thead>
         <tr>
-          {["#", "Investigator", "Days", "Planned", "Actual NPT", "% of budget", "Remaining", "Status"].map((h, i) => (
-            <th key={h} style={{ ...th, textAlign: i <= 1 ? "left" : "right" }}>{h}</th>
+          {headers.map((h) => (
+            <th key={h.label} style={{ ...th, textAlign: h.left ? "left" : "right" }}>
+              {h.label}{h.story && <InfoStar spin={false}>{h.story}</InfoStar>}
+            </th>
           ))}
           <th style={{ ...th, textAlign: "right" }}></th>
         </tr>

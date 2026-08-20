@@ -5,10 +5,11 @@ import { IconX } from "./icons";
 
 // asterisco SVG simetrico (8 puntas, centrado en el viewBox) -> gira sobre su propio eje
 // en loop perfecto sin tirones. la animacion vive en .npt-aster (index.html).
-export function AsterMark({ size = 11, active = false }: { size?: number; active?: boolean }) {
+export function AsterMark({ size = 11, active = false, spin = true }: { size?: number; active?: boolean; spin?: boolean }) {
   return (
-    // highlighted (color de texto full) cuando su card esta abierta: hover, click-fijado, o abierto
-    <span className="npt-aster" style={{ display: "inline-flex", color: active ? palette.text : palette.textDim }}>
+    // highlighted (color de texto full) cuando su card esta abierta: hover, click-fijado, o abierto.
+    // spin=false -> asterisco FLAT (no gira), para casos chicos como headers de columna.
+    <span className={spin ? "npt-aster" : undefined} style={{ display: "inline-flex", color: active ? palette.text : palette.textDim }}>
       <svg viewBox="0 0 24 24" width={size} height={size} style={{ display: "block" }} aria-hidden="true">
         <g stroke="currentColor" strokeWidth="2.6" strokeLinecap="round">
           <line x1="12" y1="3" x2="12" y2="21" />
@@ -41,7 +42,7 @@ export function StoryLink({ onClick, children }: { onClick: () => void; children
 // interaccion: HOVER lo muestra y al salir se quita al instante; CLICK en el asterisco lo FIJA
 // (queda abierto aunque saques el hover) y otro click lo cierra; la X del cuadro tambien lo cierra.
 // el cuadro se reubica solo (flip vertical + clamp horizontal) para no salirse NUNCA del viewport.
-export function InfoStar({ children, size = 11 }: { children: React.ReactNode; size?: number }) {
+export function InfoStar({ children, size = 11, spin = true }: { children: React.ReactNode; size?: number; spin?: boolean }) {
   const [open, setOpen] = useState(false);
   const [locked, setLocked] = useState(false);   // fijado por click: ignora el hover-out
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
@@ -109,7 +110,7 @@ export function InfoStar({ children, size = 11 }: { children: React.ReactNode; s
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } }}
       style={{ display: "inline-block", verticalAlign: "super", marginLeft: 3, cursor: "pointer", lineHeight: 0 }}
     >
-      <AsterMark size={size} active={open} />
+      <AsterMark size={size} active={open} spin={spin} />
       {open && (
         <div
           ref={boxRef}
