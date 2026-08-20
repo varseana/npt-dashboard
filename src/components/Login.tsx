@@ -52,7 +52,11 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
       const { error } = await supabase.auth.signInWithPassword({ email: mail, password });
       if (error) setMsg(error.message);
     } else {
-      const { data, error } = await supabase.auth.signUp({ email: mail, password });
+      const { data, error } = await supabase.auth.signUp({
+        email: mail, password,
+        // si Confirm email queda ON, el link vuelve al dashboard actual (no a un Site URL mal seteado)
+        options: { emailRedirectTo: window.location.origin },
+      });
       if (error) {
         setMsg(error.message);
       } else if (!data.session) {
