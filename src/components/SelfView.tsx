@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import {
-  NPT_AUX, computeDay, fmtHms, resolvePlanned, statusFor,
+  NPT_AUX, computeDay, fmtHms, buildPlanOverrides, statusFor,
   weekInfo, weekLabel, recentWeeks, isoDate,
   type NptDailyRow, type PlannedRow,
 } from "../lib/npt";
@@ -24,7 +24,7 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
   const weeks = useMemo(() => recentWeeks(new Date(), 16), []);
   const [weekKey, setWeekKey] = useState(() => weekInfo(new Date()).key);
   const [rows, setRows] = useState<NptDailyRow[]>([]);
-  const [planned, setPlanned] = useState<PlannedRow[]>([]);
+  const [plannedSec, setPlannedSec] = useState<number | null>(null);
   const [everReported, setEverReported] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -42,12 +42,17 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
       ]);
       if (!alive) return;
       setRows((d as NptDailyRow[]) ?? []);
-      setPlanned((p as PlannedRow[]) ?? []);
       setEverReported(((any as unknown[]) ?? []).length > 0);
+      // planned bajo el modelo budget-first: RPC server-side (por RLS el user no ve data del team).
+      // fallback a su propio custom si el RPC todavia no se corrio en Supabase.
+      const { data: pv, error: pe } = await supabase.rpc("my_planned_seconds", { p_week_key: weekKey });
+      if (!alive) return;
+      if (!pe && pv != null) setPlannedSec(pv as number);
+      else setPlannedSec(buildPlanOverrides((p as PlannedRow[]) ?? [], weekKey).get(alias) ?? null);
       setLoading(false);
     })();
     return () => { alive = false; };
-  }, [alias, sel.start, sel.end]);
+  }, [alias, weekKey, sel.start, sel.end]);
 
   // suma por AUX de NPT en la semana + total
   const { perAux, totalNpt } = useMemo(() => {
@@ -61,7 +66,6 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
     return { perAux: per, totalNpt: total };
   }, [rows]);
 
-  const plannedSec = resolvePlanned(planned, alias, weekKey);
   const remaining = plannedSec == null ? null : plannedSec - totalNpt;
   const status = statusFor(plannedSec, totalNpt);
 
@@ -96,7 +100,7 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
           <>The NPT you have logged so far this week / <strong style={hi}>Meeting + Training + Project + Personal + System</strong> / captured automatically by STAR Tracker. Shown in Hh:mm:ss.</>
         } />
         <Stat label="Planned" value={plannedSec == null ? "Not set" : fmtHms(plannedSec)} story={
-          <>The weekly NPT <strong style={hi}>allowance your manager set</strong> for you. If it reads <strong style={hi}>Not set</strong>, it has not been defined for this week yet.</>
+          <>Your weekly NPT target: your <strong style={hi}>custom allowance</strong> if your manager set one, otherwise your <strong style={hi}>fair share</strong> of the team budget. <strong style={hi}>Not set</strong> means there is no team budget yet.</>
         } />
         <Stat label="Remaining" value={remaining == null ? "-" : fmtHms(remaining)}
           extra={<StatusChip status={status} />} story={

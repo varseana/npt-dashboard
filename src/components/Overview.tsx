@@ -3,9 +3,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import {
-  computeDay, fmtHms, resolvePlanned, resolveTeamBudget, statusFor,
+  computeDay, fmtHms, resolveTeamBudget, buildPlanOverrides, resolvePersonPlan, statusFor,
   weekInfo, weekLabel, weekRangeLabel, recentWeeks, isoDate,
-  type NptDailyRow, type NptStatus, type PlannedRow, type TeamBudgetRow,
+  type NptDailyRow, type NptStatus, type PlannedRow, type TeamBudgetRow, type PlanContext,
 } from "../lib/npt";
 import { StatusChip } from "./status";
 import { InfoStar, StoryLink } from "./InfoStar";
@@ -37,6 +37,7 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
   const [rows, setRows] = useState<NptDailyRow[]>([]);
   const [planned, setPlanned] = useState<PlannedRow[]>([]);
   const [budget, setBudget] = useState<TeamBudgetRow[]>([]);
+  const [roster, setRoster] = useState<string[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [groupBy, setGroupBy] = useState(false);
   const [filter, setFilter] = useState("");
@@ -51,12 +52,13 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
     (async () => {
       if (first.current) setLoading(true);
       setErr("");
-      const [{ data: d, error }, { data: p }, { data: b }, { data: f }] = await Promise.all([
+      const [{ data: d, error }, { data: p }, { data: b }, { data: f }, { data: rs }] = await Promise.all([
         supabase.from("npt_daily").select("alias,tenant,work_date,profile,aux_seconds")
           .eq("team_id", team.id).gte("work_date", isoDate(sel.start)).lte("work_date", isoDate(sel.end)),
         supabase.from("npt_planned").select("alias,week_key,planned_seconds").eq("team_id", team.id),
         supabase.from("npt_team_budget").select("week_key,planned_seconds").eq("team_id", team.id),
         supabase.from("manager_folders").select("id,name,aliases").eq("team_id", team.id).order("created_at"),
+        supabase.from("roster").select("alias").eq("team_id", team.id),
       ]);
       if (cancelled) return;
       if (error) setErr(error.message);
@@ -64,6 +66,7 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
       setPlanned((p as PlannedRow[]) ?? []);
       setBudget((b as TeamBudgetRow[]) ?? []);
       setFolders((f as Folder[]) ?? []);
+      setRoster(((rs as { alias: string }[]) ?? []).map((x) => x.alias));
       first.current = false;
       setLoading(false);
     })();
@@ -80,8 +83,12 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
       u.nptSeconds += day.nptSeconds;
     }
     const out = Array.from(byUser.values());
+    // modelo budget-first: target de cada persona = su custom, si no el fair share (budget / headcount).
+    const overrides = buildPlanOverrides(planned, weekKey);
+    const union = new Set<string>([...roster, ...byUser.keys(), ...overrides.keys()]);
+    const ctx: PlanContext = { budgetSeconds: resolveTeamBudget(budget, weekKey), headcount: union.size, overrides };
     for (const u of out) {
-      u.planned = resolvePlanned(planned, u.alias, weekKey);
+      u.planned = resolvePersonPlan(u.alias, ctx);
       u.remaining = u.planned != null ? u.planned - u.nptSeconds : null;
       u.status = statusFor(u.planned, u.nptSeconds);
     }
@@ -90,7 +97,7 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
       b.nptSeconds - a.nptSeconds ||
       a.alias.localeCompare(b.alias));
     return out;
-  }, [rows, planned, weekKey]);
+  }, [rows, planned, budget, roster, weekKey]);
 
   const shown = useMemo(() => {
     const q = filter.trim().toLowerCase();

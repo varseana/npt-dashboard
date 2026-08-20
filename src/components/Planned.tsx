@@ -3,15 +3,21 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import {
-  parseDuration, fmtHms, resolvePlanned,
+  parseDuration, fmtHms, resolveTeamBudget, buildPlanOverrides, fairShareSeconds, resolvePersonPlan,
   weekInfo, weekLabel, recentWeeks,
-  type PlannedRow,
+  type PlannedRow, type PlanContext,
 } from "../lib/npt";
+import { InfoStar } from "./InfoStar";
 import { BlockSkeleton } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 type Scope = "standing" | "week";
+// highlight monocromatico dentro del texto del popover (bold en color de texto full)
+const hi = { color: palette.text, fontWeight: 700 } as React.CSSProperties;
 
+// Modelo BUDGET-FIRST: el manager setea UN budget total; cada persona recibe su fair share
+// (budget / headcount) salvo que tenga un custom. Los customs rebalancean el resto, asi el
+// total siempre = budget. Ver lib/npt.ts (resolvePersonPlan / fairShareSeconds).
 export default function Planned({ team }: { team: Team }) {
   const weeks = useMemo(() => recentWeeks(new Date(), 16), []);
   const [scope, setScope] = useState<Scope>("standing");
@@ -20,7 +26,6 @@ export default function Planned({ team }: { team: Team }) {
   const [budgetRows, setBudgetRows] = useState<{ week_key: string; planned_seconds: number }[]>([]);
   const [aliases, setAliases] = useState<string[]>([]);
   const [budgetInput, setBudgetInput] = useState("");
-  const [teamInput, setTeamInput] = useState("");
   const [personInputs, setPersonInputs] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -30,15 +35,20 @@ export default function Planned({ team }: { team: Team }) {
 
   async function load() {
     setLoading(true);
-    const [{ data: p }, { data: b }, { data: d }] = await Promise.all([
+    const [{ data: p }, { data: b }, { data: d }, { data: r }] = await Promise.all([
       supabase.from("npt_planned").select("alias,week_key,planned_seconds").eq("team_id", team.id),
       supabase.from("npt_team_budget").select("week_key,planned_seconds").eq("team_id", team.id),
       supabase.from("npt_daily").select("alias").eq("team_id", team.id).limit(2000),
+      supabase.from("roster").select("alias").eq("team_id", team.id),
     ]);
-    setRows((p as PlannedRow[]) ?? []);
+    const planned = (p as PlannedRow[]) ?? [];
+    setRows(planned);
     setBudgetRows((b as { week_key: string; planned_seconds: number }[]) ?? []);
+    // headcount = union de roster + quienes reportaron + quienes tienen custom
     const set = new Set<string>();
-    for (const r of (d as { alias: string }[]) ?? []) set.add(r.alias);
+    for (const x of (r as { alias: string }[]) ?? []) set.add(x.alias);
+    for (const x of (d as { alias: string }[]) ?? []) set.add(x.alias);
+    for (const x of planned) if (x.alias) set.add(x.alias);
     setAliases(Array.from(set).sort());
     setLoading(false);
   }
@@ -47,8 +57,6 @@ export default function Planned({ team }: { team: Team }) {
 
   // prefill de los inputs cuando cambia el scope o llega data
   useEffect(() => {
-    const t = rows.find((r) => r.alias === "" && r.week_key === scopeKey);
-    setTeamInput(t ? fmtHms(t.planned_seconds) : "");
     const bud = budgetRows.find((r) => r.week_key === scopeKey);
     setBudgetInput(bud ? fmtHms(bud.planned_seconds) : "");
     const pi: Record<string, string> = {};
@@ -59,10 +67,15 @@ export default function Planned({ team }: { team: Team }) {
     setPersonInputs(pi);
   }, [rows, budgetRows, aliases, scopeKey]);
 
+  const headcount = aliases.length;
+  const budgetSeconds = resolveTeamBudget(budgetRows, scopeKey);
+  const overrides = useMemo(() => buildPlanOverrides(rows, scopeKey), [rows, scopeKey]);
+  const ctx: PlanContext = { budgetSeconds, headcount, overrides };
+  const fair = fairShareSeconds(ctx);
+
   async function upsertOrDelete(alias: string, input: string) {
     const secs = parseDuration(input);
     if (secs == null) {
-      // vacio o invalido: si habia fila para este scope, borrarla (vuelve a heredar)
       const existed = rows.some((r) => r.alias === alias && r.week_key === scopeKey);
       if (existed) {
         const { error } = await supabase.from("npt_planned").delete()
@@ -77,7 +90,6 @@ export default function Planned({ team }: { team: Team }) {
     if (error) throw error;
   }
 
-  // presupuesto TOTAL del team (tabla npt_team_budget, distinta de npt_planned por-persona)
   async function upsertOrDeleteBudget(input: string) {
     const secs = parseDuration(input);
     if (secs == null) {
@@ -98,10 +110,9 @@ export default function Planned({ team }: { team: Team }) {
     setSaving(true); setMsg("");
     try {
       await upsertOrDeleteBudget(budgetInput);
-      await upsertOrDelete("", teamInput);
       for (const a of aliases) await upsertOrDelete(a, personInputs[a] ?? "");
       await load();
-      setMsg("Saved. Team budget and planned applied; Remaining and colors recompute.");
+      setMsg("Saved. Everyone's target and the colors recompute.");
     } catch (e: any) {
       setMsg("Error: " + (e?.message || String(e)));
     }
@@ -110,20 +121,15 @@ export default function Planned({ team }: { team: Team }) {
 
   if (loading) return <BlockSkeleton />;
 
-  const scopeLabel = scope === "standing" ? "standing (all weeks)" : weekLabel(weekInfo(new Date(weekKey + "T12:00:00")));
+  const scopeLabel = scope === "standing" ? "every week" : weekLabel(weekInfo(new Date(weekKey + "T12:00:00")));
 
   return (
     <div>
-      <p style={{ color: palette.textDim, fontSize: 19, lineHeight: 1.6 }}>
-        Planned NPT per week. Format <strong>H:MM</strong> (or H:MM:SS, or decimal hours). Empty =
-        inherits from the level above. Priority: person+week &gt; person+standing &gt; team+week &gt; team+standing.
-      </p>
-
-      <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", margin: "16px 0" }}>
-        <Field label="Scope">
+      <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", margin: "0 0 16px" }}>
+        <Field label="Applies to">
           <select value={scope} onChange={(e) => setScope(e.target.value as Scope)} style={select}>
-            <option value="standing">Standing (reused)</option>
-            <option value="week">Override a single week</option>
+            <option value="standing">Every week</option>
+            <option value="week">Just one week</option>
           </select>
         </Field>
         {scope === "week" && (
@@ -135,41 +141,52 @@ export default function Planned({ team }: { team: Team }) {
         )}
       </div>
 
+      {/* UNICO input principal: el budget total del team */}
       <div style={{ background: palette.panel, border: `2px solid ${palette.text}`, borderRadius: 8, padding: "14px 16px", marginBottom: 16 }}>
-        <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
-          "Team" // weekly NPT budget (total)
-        </div>
-        <div style={{ fontSize: 16, color: palette.textDim, marginBottom: 8 }}>
-          Total NPT the whole team can spend this {scope === "standing" ? "week (every week)" : "specific week"}. All members draw down from it. ({scopeLabel})
+        <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
+          Team weekly budget<InfoStar>{
+            <>The <strong style={hi}>total NPT the whole team can spend</strong> in a week (the number ops hands you). Everyone draws from it. Each person's target is their <strong style={hi}>fair share</strong> = budget / people, unless you give them a custom below. Format <strong style={hi}>H:MM</strong> (e.g. 10:00). Applies to <strong style={hi}>{scopeLabel}</strong>.</>
+          }</InfoStar>
         </div>
         <input value={budgetInput} onChange={(e) => setBudgetInput(e.target.value)} placeholder="H:MM (e.g. 10:00)" style={{ ...input, width: 180 }} />
+        <div style={{ fontSize: 17, color: palette.textDim, marginTop: 8 }}>
+          {budgetSeconds == null
+            ? "No budget set. Set it above to give everyone a target."
+            : <>Fair share per person = <strong style={hi}>{fair != null ? fmtHms(fair) : "-"}</strong> ({fmtHms(budgetSeconds)} / {headcount} {headcount === 1 ? "person" : "people"}{overrides.size ? `, after ${overrides.size} custom` : ""}).</>}
+        </div>
       </div>
 
-      <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "12px 14px", marginBottom: 16 }}>
-        <div style={{ fontSize: 17, color: palette.textDim, marginBottom: 6 }}>Default per person ({team.name}) :: {scopeLabel} <span style={{ opacity: 0.7 }}>(optional individual target, not the team total)</span></div>
-        <input value={teamInput} onChange={(e) => setTeamInput(e.target.value)} placeholder="H:MM (e.g. 3:45)" style={{ ...input, width: 160 }} />
+      <div style={{ fontSize: 17, color: palette.textDim, marginBottom: 8 }}>
+        Per person, {scopeLabel}. Leave blank to use the <strong style={hi}>fair share</strong>; type a value to give someone a custom target (the rest split what is left).
       </div>
-
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19 }}>
         <thead>
           <tr>
-            <th style={{ ...th, textAlign: "left" }}>Investigator</th>
-            <th style={th}>Override (this scope)</th>
-            <th style={th}>Effective</th>
+            <th style={{ ...th, textAlign: "left" }}>Employee</th>
+            <th style={th}>Custom<InfoStar spin={false}>{
+              <>Optional. A <strong style={hi}>custom weekly target</strong> for this person. Blank means they get the fair share. Format H:MM.</>
+            }</InfoStar></th>
+            <th style={th}>Target<InfoStar spin={false}>{
+              <>What this person is measured against this {scope === "standing" ? "week" : "week"}: their <strong style={hi}>custom</strong> if set, otherwise the <strong style={hi}>fair share</strong>.</>
+            }</InfoStar></th>
           </tr>
         </thead>
         <tbody>
           {aliases.length === 0 ? (
-            <tr><td colSpan={3} style={{ ...td, color: palette.textDim }}>No one has reported yet.</td></tr>
+            <tr><td colSpan={3} style={{ ...td, color: palette.textDim }}>No one on this team yet. Add employees or wait for uploads.</td></tr>
           ) : aliases.map((a, i) => {
-            const eff = resolvePlanned(rows, a, scopeKey);
+            const eff = resolvePersonPlan(a, ctx);
+            const isCustom = overrides.has(a);
             return (
               <tr key={a} style={{ background: i % 2 ? palette.panel : palette.panelAlt }}>
                 <td style={{ ...td, textAlign: "left", fontWeight: 600 }}>{a}</td>
                 <td style={{ ...td, textAlign: "right" }}>
-                  <input value={personInputs[a] ?? ""} onChange={(e) => setPersonInputs((p) => ({ ...p, [a]: e.target.value }))} placeholder="inherit" style={{ ...input, width: 120, textAlign: "right" }} />
+                  <input value={personInputs[a] ?? ""} onChange={(e) => setPersonInputs((p) => ({ ...p, [a]: e.target.value }))}
+                    placeholder={fair != null ? fmtHms(fair) : "H:MM"} style={{ ...input, width: 120, textAlign: "right" }} />
                 </td>
-                <td style={{ ...td, textAlign: "right", color: eff != null ? palette.text : palette.textDim }}>{eff != null ? fmtHms(eff) : "no plan"}</td>
+                <td style={{ ...td, textAlign: "right", color: eff != null ? palette.text : palette.textDim, fontWeight: isCustom ? 700 : 400 }}>
+                  {eff != null ? fmtHms(eff) : "no budget"}
+                </td>
               </tr>
             );
           })}
@@ -177,7 +194,7 @@ export default function Planned({ team }: { team: Team }) {
       </table>
 
       <button onClick={save} disabled={saving} style={{ marginTop: 16, background: palette.accent, color: palette.accentText, border: "none", borderRadius: 8, padding: "10px 18px", fontSize: 19, cursor: "pointer", fontWeight: 600 }}>
-        {saving ? "Saving..." : "Save planned"}
+        {saving ? "Saving..." : "Save"}
       </button>
       {msg && <div style={{ marginTop: 12, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 18 }}>{msg}</div>}
     </div>

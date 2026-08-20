@@ -217,6 +217,55 @@ export function resolveTeamBudget(rows: TeamBudgetRow[], weekKey: string): numbe
   return best ? best.planned_seconds : null;
 }
 
+// ---------------------------------------------------------------------------
+// Modelo BUDGET-FIRST + fair share (2026-08-20, decidido con Sean, reemplaza el
+// modelo viejo de "default per person" + budget que podian contradecirse).
+// El manager setea UN solo numero: el budget total del team. El objetivo de cada
+// persona = su fair share = (budget - suma de customs) / (headcount - #customs).
+// Un custom opcional por persona reemplaza su fair share y el resto se reparte el
+// remanente, asi el total SIEMPRE = budget.
+// ---------------------------------------------------------------------------
+export interface PlanContext {
+  budgetSeconds: number | null;      // budget total del team resuelto para la semana
+  headcount: number;                 // cantidad de personas entre las que se reparte
+  overrides: Map<string, number>;    // alias -> custom en segundos (para este scope)
+}
+
+// customs por-persona (persona+semana gana a persona+standing); ignora filas legacy de team (alias === "")
+export function buildPlanOverrides(rows: PlannedRow[], weekKey: string): Map<string, number> {
+  const acc = new Map<string, { wk?: number; st?: number }>();
+  for (const r of rows) {
+    if (!r.alias) continue;
+    const e = acc.get(r.alias) ?? {};
+    if (r.week_key === weekKey) e.wk = r.planned_seconds;
+    else if (r.week_key === "") e.st = r.planned_seconds;
+    acc.set(r.alias, e);
+  }
+  const m = new Map<string, number>();
+  for (const [alias, e] of acc) {
+    const v = e.wk ?? e.st;
+    if (v != null) m.set(alias, v);
+  }
+  return m;
+}
+
+// fair share que le toca a una persona SIN custom. >= 0. null si no hay budget.
+export function fairShareSeconds(ctx: PlanContext): number | null {
+  if (ctx.budgetSeconds == null) return null;
+  let sum = 0;
+  for (const v of ctx.overrides.values()) sum += v;
+  const rest = ctx.headcount - ctx.overrides.size;
+  if (rest <= 0) return 0;
+  return Math.max(0, Math.round((ctx.budgetSeconds - sum) / rest));
+}
+
+// planned de una persona: su custom si lo tiene, si no el fair share. null si no hay budget.
+export function resolvePersonPlan(alias: string, ctx: PlanContext): number | null {
+  if (ctx.budgetSeconds == null) return null;
+  const ov = ctx.overrides.get(alias);
+  return ov != null ? ov : fairShareSeconds(ctx);
+}
+
 export type NptStatus = "ok" | "warn" | "bad" | "none";
 
 // estado segun remaining = planned - actual. amarillo cuando queda <= 1h; rojo si se paso.

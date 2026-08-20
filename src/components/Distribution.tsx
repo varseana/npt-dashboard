@@ -3,9 +3,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import {
-  NPT_AUX, fmtHms, resolvePlanned, statusFor,
+  NPT_AUX, fmtHms, resolveTeamBudget, buildPlanOverrides, resolvePersonPlan, statusFor,
   weekInfo, weekLabel, recentWeeks, isoDate,
-  type NptDailyRow, type NptStatus, type PlannedRow,
+  type NptDailyRow, type NptStatus, type PlannedRow, type TeamBudgetRow, type PlanContext,
 } from "../lib/npt";
 import { StatusChip } from "./status";
 import { InfoStar } from "./InfoStar";
@@ -32,6 +32,8 @@ export default function Distribution({ team, refreshKey }: { team: Team; refresh
   const [weekKey, setWeekKey] = useState(() => weekInfo(new Date()).key);
   const [rows, setRows] = useState<NptDailyRow[]>([]);
   const [planned, setPlanned] = useState<PlannedRow[]>([]);
+  const [budget, setBudget] = useState<TeamBudgetRow[]>([]);
+  const [roster, setRoster] = useState<string[]>([]);
   const [filter, setFilter] = useState("");
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
@@ -44,7 +46,7 @@ export default function Distribution({ team, refreshKey }: { team: Team; refresh
     (async () => {
       if (first.current) setLoading(true);
       setErr("");
-      const [{ data: d, error }, { data: p }] = await Promise.all([
+      const [{ data: d, error }, { data: p }, { data: b }, { data: rs }] = await Promise.all([
         supabase
           .from("npt_daily")
           .select("alias,tenant,work_date,profile,aux_seconds")
@@ -52,11 +54,15 @@ export default function Distribution({ team, refreshKey }: { team: Team; refresh
           .gte("work_date", isoDate(sel.start))
           .lte("work_date", isoDate(sel.end)),
         supabase.from("npt_planned").select("alias,week_key,planned_seconds").eq("team_id", team.id),
+        supabase.from("npt_team_budget").select("week_key,planned_seconds").eq("team_id", team.id),
+        supabase.from("roster").select("alias").eq("team_id", team.id),
       ]);
       if (cancelled) return;
       if (error) setErr(error.message);
       setRows((d as NptDailyRow[]) ?? []);
       setPlanned((p as PlannedRow[]) ?? []);
+      setBudget((b as TeamBudgetRow[]) ?? []);
+      setRoster(((rs as { alias: string }[]) ?? []).map((x) => x.alias));
       first.current = false;
       setLoading(false);
     })();
@@ -80,8 +86,12 @@ export default function Distribution({ team, refreshKey }: { team: Team; refresh
       }
     }
     const out = Array.from(byUser.values());
+    // modelo budget-first: target de cada persona = custom o fair share (budget / headcount)
+    const overrides = buildPlanOverrides(planned, weekKey);
+    const union = new Set<string>([...roster, ...byUser.keys(), ...overrides.keys()]);
+    const ctx: PlanContext = { budgetSeconds: resolveTeamBudget(budget, weekKey), headcount: union.size, overrides };
     for (const u of out) {
-      u.planned = resolvePlanned(planned, u.alias, weekKey);
+      u.planned = resolvePersonPlan(u.alias, ctx);
       u.remaining = u.planned != null ? u.planned - u.nptSeconds : null;
       u.status = statusFor(u.planned, u.nptSeconds);
     }
@@ -90,7 +100,7 @@ export default function Distribution({ team, refreshKey }: { team: Team; refresh
       b.nptSeconds - a.nptSeconds ||
       a.alias.localeCompare(b.alias));
     return out;
-  }, [rows, planned, weekKey]);
+  }, [rows, planned, budget, roster, weekKey]);
 
   const shown = useMemo(() => {
     const q = filter.trim().toLowerCase();
