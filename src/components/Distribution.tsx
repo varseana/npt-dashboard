@@ -8,9 +8,12 @@ import {
   type NptDailyRow, type NptStatus, type PlannedRow,
 } from "../lib/npt";
 import { StatusChip } from "./status";
+import { InfoStar } from "./InfoStar";
 import { TableSkeleton } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
+// highlight monocromatico dentro del texto del popover (bold en color de texto full)
+const hi = { color: palette.text, fontWeight: 700 } as React.CSSProperties;
 
 interface Row {
   alias: string;
@@ -95,7 +98,7 @@ export default function Distribution({ team, refreshKey }: { team: Team; refresh
   }, [matrix, filter]);
 
   function exportCsv() {
-    const head = ["Investigator", ...NPT_AUX, "Planned", "Total NPT", "Remaining", "Status"];
+    const head = ["Employee", ...NPT_AUX, "Planned", "Total NPT", "Remaining", "Status"];
     const lines = [head.map(csv).join(",")];
     for (const u of shown) {
       const cells = [
@@ -141,11 +144,17 @@ export default function Distribution({ team, refreshKey }: { team: Team; refresh
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 18, whiteSpace: "nowrap" }}>
             <thead>
               <tr>
-                <th style={{ ...th, textAlign: "left" }}>Investigator</th>
+                <th style={{ ...th, textAlign: "left" }}>Employee</th>
                 {NPT_AUX.map((c) => (<th key={c} style={th}>{c}</th>))}
-                <th style={th}>Planned</th>
-                <th style={th}>Total NPT</th>
-                <th style={th}>Remaining</th>
+                <th style={th}>Planned<InfoStar spin={false}>{
+                  <>Weekly NPT target for this employee, set in the Planned tab. Shown in Hh:mm:ss.</>
+                }</InfoStar></th>
+                <th style={th}>Total NPT<InfoStar spin={false}>{
+                  <><strong style={hi}>Total NPT = Actual</strong> = the sum of the 5 activity columns / <strong style={hi}>Meeting + Training + Project + Personal + System</strong>. Those columns are the <strong style={hi}>why over target</strong>. Shown in Hh:mm:ss.</>
+                }</InfoStar></th>
+                <th style={th}>Remaining<InfoStar spin={false}>{
+                  <><strong style={hi}>Remaining = Planned - Actual</strong>. Positive means plan left, negative means over. Shown in Hh:mm:ss.</>
+                }</InfoStar></th>
                 <th style={th}>Status</th>
               </tr>
             </thead>
@@ -166,9 +175,6 @@ export default function Distribution({ team, refreshKey }: { team: Team; refresh
           </table>
         </div>
       )}
-      <div style={{ color: palette.textDim, fontSize: 16, marginTop: 8 }}>
-        The 5 columns are the AUX that count as NPT (why over target). Total NPT = Actual = their sum. Remaining = Planned - Actual. Hh:mm:ss.
-      </div>
     </div>
   );
 }

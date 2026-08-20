@@ -2,9 +2,12 @@ import * as React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
+import { InfoStar } from "./InfoStar";
 import { TableSkeleton } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
+// highlight monocromatico dentro del texto del popover (bold en color de texto full)
+const hi = { color: palette.text, fontWeight: 700 } as React.CSSProperties;
 
 // UUID fijo del team Unassigned (igual que el trigger)
 const UNASSIGNED_ID = "00000000-0000-0000-0000-000000000001";
@@ -78,16 +81,13 @@ export default function Employees({ team, refreshKey, isAdmin }: { team: Team; r
     return out;
   }, [roster, data]);
 
-  const pending = people.filter((p) => p.status === "pending").length;
-  const connected = people.filter((p) => p.connected).length;
-
   async function add(aliases: string[]) {
     if (!aliases.length) return;
     setSaving(true); setMsg("");
     const rows = aliases.map((alias) => ({ alias, team_id: team.id }));
     const { error } = await supabase.from("roster").upsert(rows, { onConflict: "alias,team_id", ignoreDuplicates: true });
     if (error) setMsg("Error: " + error.message);
-    else { setMsg(`Added ${aliases.length} to roster.`); setSingle(""); setBulk(""); await load(); }
+    else { setMsg(`Added ${aliases.length} to the team list.`); setSingle(""); setBulk(""); await load(); }
     setSaving(false);
   }
 
@@ -114,9 +114,10 @@ export default function Employees({ team, refreshKey, isAdmin }: { team: Team; r
   return (
     <div>
       <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "14px 16px", marginBottom: 16 }}>
-        <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, marginBottom: 4 }}>Add employees to {team.name}</div>
-        <div style={{ color: palette.textDim, fontSize: 18, marginBottom: 10 }}>
-          Add expected usernames. They show as Pending until the person connects via STAR Tracker and uploads. This does not affect anyone's numbers.
+        <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+          Add employees<InfoStar>{
+            <>Pre-list the people you expect on <strong style={hi}>{team.name}</strong>. Until someone connects through STAR Tracker and uploads, they show as <strong style={hi}>Pending</strong>, so you can spot who has not started yet. It does <strong style={hi}>not</strong> change anyone's numbers.</>
+          }</InfoStar>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
           <input value={single} onChange={(e) => setSingle(e.target.value)} placeholder="username"
@@ -140,11 +141,6 @@ export default function Employees({ team, refreshKey, isAdmin }: { team: Team; r
         {msg && <div style={{ marginTop: 10, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 18 }}>{msg}</div>}
       </div>
 
-      <div style={{ display: "flex", gap: 12, marginBottom: 12, alignItems: "baseline" }}>
-        <div style={{ fontSize: 31, fontWeight: 700 }}>{people.length}</div>
-        <div style={{ color: palette.textDim, fontSize: 18 }}>{connected} connected, {pending} pending</div>
-      </div>
-
       {err && <div style={{ color: palette.bad, marginBottom: 12 }}>{err}</div>}
       {loading ? (
         <TableSkeleton rows={6} cols={5} />
@@ -155,7 +151,7 @@ export default function Employees({ team, refreshKey, isAdmin }: { team: Team; r
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19 }}>
             <thead>
               <tr>
-                {["#", "Investigator", "Status", "Days reported", "Last report", ""].map((h, i) => (
+                {["#", "Employee", "Status", "Days reported", "Last report", ""].map((h, i) => (
                   <th key={h || "act"} style={{ ...th, textAlign: i === 1 ? "left" : i >= 3 ? "right" : "left" }}>{h}</th>
                 ))}
               </tr>
@@ -171,8 +167,8 @@ export default function Employees({ team, refreshKey, isAdmin }: { team: Team; r
                   <td style={{ ...td, textAlign: "right" }}>
                     <span style={{ display: "inline-flex", gap: 8, justifyContent: "flex-end" }}>
                       {p.expected
-                        ? <button onClick={() => removeFromRoster(p.alias)} disabled={saving} className="npt-btn-remove" title="Remove from roster">Remove</button>
-                        : <button onClick={() => add([p.alias])} disabled={saving} style={btnGhost} title="Add to roster">Add to roster</button>}
+                        ? <button onClick={() => removeFromRoster(p.alias)} disabled={saving} className="npt-btn-remove" title="Remove from the team list">Remove</button>
+                        : <button onClick={() => add([p.alias])} disabled={saving} style={btnGhost} title="Add to the expected team list">Add to team</button>}
                       {isAdmin && p.connected && team.id !== UNASSIGNED_ID && (
                         <button onClick={() => moveToUnassigned(p.alias)} disabled={saving} className="npt-btn-remove"
                           title="Move this person out of this team into Unassigned (moves their NPT too)">Move to Unassigned</button>
