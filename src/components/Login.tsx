@@ -67,12 +67,16 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
     setBusy(false);
   }
 
-  const nptStory = <>NPT = <strong style={hi}>Non-Productive Time</strong>.</>;
+  const nptStory = (
+    <>NPT = <strong style={hi}>Non-Productive Time</strong>. Data viewable depends on your role. Having trouble signing in? Contact{" "}
+      <a href="https://phonetool.amazon.com/users/varseana" target="_blank" rel="noopener noreferrer" className="npt-storylink"
+        style={{ fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 3, color: palette.text }}>@varseana</a>.</>
+  );
 
   return (
     <div style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, overflow: "hidden" }}>
       <SwirlBackground dark={dark} />
-      <form onSubmit={submit} style={{ position: "relative", zIndex: 1, width: 340, background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 14, padding: 24 }}>
+      <form onSubmit={submit} style={{ position: "relative", zIndex: 1, width: 340, background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 0, padding: 24 }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
           <h1 style={{ margin: "0 0 4px", fontSize: 31, color: palette.text }}>STAR NPT Dashboard</h1>
           {/* toggle de tema DENTRO de la carta, icono plano sin chrome */}
@@ -84,9 +88,7 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
         </div>
         <p style={{ margin: "0 0 20px", fontSize: 18, color: palette.textDim, lineHeight: 1.5 }}>
           {mode === "in" ? (
-            <>Tracking your weekly NPT<InfoStar spin={false}>{nptStory}</InfoStar>. Data viewable depends on your role. Having trouble signing in? Contact{" "}
-              <a href="https://phonetool.amazon.com/users/varseana" target="_blank" rel="noopener noreferrer" className="npt-storylink"
-                style={{ fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 3, color: palette.text }}>@varseana</a>.</>
+            <>Tracking your weekly NPT<InfoStar spin={false}>{nptStory}</InfoStar>.</>
           ) : (
             <>Request access with your work email. An admin approves it.</>
           )}
@@ -109,7 +111,7 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
           Remember me
         </label>
         <button style={submit_} disabled={busy} type="submit">
-          {busy ? "Please wait..." : mode === "in" ? "Sign in" : "Create account"}
+          {busy ? "Please wait..." : mode === "in" ? "\"Sign in\"" : "\"Create account\""}
         </button>
         {msg && <div style={{ marginTop: 12, color: palette.bad, fontSize: 18 }}>{msg}</div>}
         {ok && <div style={{ marginTop: 12, color: palette.ok, fontSize: 18 }}>{ok}</div>}
@@ -137,5 +139,5 @@ const submit_: React.CSSProperties = {
 };
 const linkBtn: React.CSSProperties = {
   background: "none", border: "none", color: palette.accent, cursor: "pointer",
-  fontSize: 18, fontWeight: 600, padding: 0, textTransform: "uppercase", letterSpacing: "0.04em",
+  fontSize: 18, fontWeight: 600, padding: 0,
 };
