@@ -176,7 +176,7 @@ export default function Planned({ team }: { team: Team }) {
         </tbody>
       </table>
 
-      <button onClick={save} disabled={saving} style={{ marginTop: 16, background: palette.accent, color: "#fff", border: "none", borderRadius: 8, padding: "10px 18px", fontSize: 19, cursor: "pointer", fontWeight: 600 }}>
+      <button onClick={save} disabled={saving} style={{ marginTop: 16, background: palette.accent, color: palette.accentText, border: "none", borderRadius: 8, padding: "10px 18px", fontSize: 19, cursor: "pointer", fontWeight: 600 }}>
         {saving ? "Saving..." : "Save planned"}
       </button>
       {msg && <div style={{ marginTop: 12, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 18 }}>{msg}</div>}

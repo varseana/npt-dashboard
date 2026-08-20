@@ -155,7 +155,7 @@ const input: React.CSSProperties = {
   borderRadius: 8, padding: "8px 10px", fontSize: 19, boxSizing: "border-box",
 };
 const btn: React.CSSProperties = {
-  background: palette.accent, color: "#fff", border: "none", borderRadius: 8,
+  background: palette.accent, color: palette.accentText, border: "none", borderRadius: 8,
   padding: "8px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600,
 };
 const btnGhost: React.CSSProperties = {

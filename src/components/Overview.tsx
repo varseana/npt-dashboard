@@ -300,7 +300,7 @@ function TeamBudgetBar({ budget, status, users }:
             transition: "background .2s", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
           }}>
           {revealed && (
-            <span style={{ fontSize: 13, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", padding: "0 6px" }}>
+            <span style={{ fontSize: 13, color: palette.accentText, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", padding: "0 6px" }}>
               {s.label}
             </span>
           )}

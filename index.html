@@ -8,21 +8,25 @@
     <title>STAR NPT Dashboard</title>
     <style>
       /* ===== paleta como CSS variables: light (default) y dark (html.dark) ===== */
+      /* LIGHT: off-white + highlights totalmente negros (botones negros, texto blanco) */
       :root {
         --bg: #f7f7f5; --panel: #ffffff; --panelAlt: #efeeec; --border: #e2e1de;
         --text: #111111; --textDim: #767676; --accent: #111111; --accentSoft: #111111;
         --deep: #000000; --over: #111111; --under: #9a9a9a;
+        --accent-text: #ffffff;   /* texto sobre botones accent */
         --ok: #1a7f37; --okBg: #e6f4ea; --warn: #9a6700; --warnBg: #fdf3d8; --bad: #b42318; --badBg: #fbeae8;
         --clock: #111111;
         --skel1: #e9e8e5; --skel2: #f4f3f1;
       }
+      /* DARK: espejo -> fondo casi-negro + highlights totalmente blancos (botones blancos, texto negro) */
       html.dark {
-        --bg: #0f1113; --panel: #181b1e; --panelAlt: #21252a; --border: #2c3238;
-        --text: #e8e8e6; --textDim: #9aa1a8; --accent: #3a4046; --accentSoft: #e8e8e6;
-        --deep: #ffffff; --over: #e8e8e6; --under: #6b7278;
+        --bg: #0d0d0d; --panel: #171717; --panelAlt: #202020; --border: #2b2b2b;
+        --text: #f4f4f2; --textDim: #9a9a9a; --accent: #ffffff; --accentSoft: #f4f4f2;
+        --deep: #ffffff; --over: #f4f4f2; --under: #6f6f6f;
+        --accent-text: #0d0d0d;   /* texto negro sobre botones blancos */
         --ok: #3fb950; --okBg: #12261a; --warn: #d4a72c; --warnBg: #2b2410; --bad: #f85149; --badBg: #35191a;
         --clock: #39ff14;   /* verde casio fosforescente */
-        --skel1: #22272c; --skel2: #2b3138;
+        --skel1: #1c1c1c; --skel2: #262626;
       }
       html, body { margin: 0; background: var(--bg); color: var(--text); }
       /* transicion suave y profesional al cambiar de tema (colores/bordes, no layout) */

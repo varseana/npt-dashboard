@@ -9,6 +9,7 @@ export const palette = {
   textDim: "var(--textDim)",
   accent: "var(--accent)",
   accentSoft: "var(--accentSoft)",
+  accentText: "var(--accent-text)",   // texto sobre botones accent (blanco en light, negro en dark)
   deep: "var(--deep)",
   over: "var(--over)",
   under: "var(--under)",

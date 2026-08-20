@@ -192,4 +192,4 @@ const th: React.CSSProperties = { textAlign: "right", padding: "9px 12px", color
 const td: React.CSSProperties = { textAlign: "right", padding: "8px 12px", borderBottom: `1px solid ${palette.border}` };
 const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 19 };
 const select: React.CSSProperties = { ...input, minWidth: 260 };
-const csvBtn: React.CSSProperties = { marginLeft: "auto", background: palette.text, color: "#fff", border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600 };
+const csvBtn: React.CSSProperties = { marginLeft: "auto", background: palette.text, color: palette.accentText, border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600 };

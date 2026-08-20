@@ -171,4 +171,4 @@ const th: React.CSSProperties = { textAlign: "right", padding: "8px 10px", color
 const td: React.CSSProperties = { textAlign: "right", padding: "8px 10px", borderBottom: `1px solid ${palette.border}` };
 const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 19 };
 const select: React.CSSProperties = { ...input, minWidth: 260 };
-const btn: React.CSSProperties = { background: palette.accent, color: "#fff", border: "none", borderRadius: 8, padding: "8px 12px", fontSize: 18, cursor: "pointer", fontWeight: 600 };
+const btn: React.CSSProperties = { background: palette.accent, color: palette.accentText, border: "none", borderRadius: 8, padding: "8px 12px", fontSize: 18, cursor: "pointer", fontWeight: 600 };

@@ -80,7 +80,7 @@ const input: React.CSSProperties = {
   border: `1px solid ${palette.border}`, borderRadius: 8, padding: "9px 10px", fontSize: 19,
 };
 const submit_: React.CSSProperties = {
-  width: "100%", marginTop: 18, background: palette.accent, color: "#fff", border: "none",
+  width: "100%", marginTop: 18, background: palette.accent, color: palette.accentText, border: "none",
   borderRadius: 8, padding: "10px", fontSize: 19, cursor: "pointer", fontWeight: 600,
 };
 const linkBtn: React.CSSProperties = {

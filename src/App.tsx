@@ -299,7 +299,7 @@ function TabBtn({ active, onClick, badge, children }:
         position: "relative",
         background: active ? palette.accent : palette.panel,
         borderColor: active ? palette.accent : palette.border,
-        color: active ? "#fff" : palette.text,
+        color: active ? palette.accentText : palette.text,
       }}
     >
       {children}

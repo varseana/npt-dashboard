@@ -263,7 +263,7 @@ const cell: React.CSSProperties = {
   borderRadius: 8, padding: "7px 8px", fontSize: 18, width: "100%", boxSizing: "border-box",
 };
 const btn: React.CSSProperties = {
-  background: palette.accent, color: "#fff", border: "none", borderRadius: 8,
+  background: palette.accent, color: palette.accentText, border: "none", borderRadius: 8,
   padding: "7px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600,
 };
 const btnGhost: React.CSSProperties = {
