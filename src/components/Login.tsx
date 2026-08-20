@@ -67,15 +67,7 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
     setBusy(false);
   }
 
-  const nptStory = (
-    <>NPT = <strong style={hi}>Non-Productive Time</strong> / Meeting + Training + Project + Personal + System / everything that is not Available or Offline.</>
-  );
-  const accessStory = (
-    <>What you see depends on your role. <strong style={hi}>User</strong> sees only their own NPT, <strong style={hi}>manager</strong> sees their team, <strong style={hi}>admin</strong> sees everything. New accounts start in <strong style={hi}>standby</strong> until an admin assigns a role.</>
-  );
-  const rememberStory = (
-    <>Saves your <strong style={hi}>email</strong> on this device to prefill it next time, and lets your browser offer to store the password. Avoid on <strong style={hi}>shared computers</strong>.</>
-  );
+  const nptStory = <>NPT = <strong style={hi}>Non-Productive Time</strong>.</>;
 
   return (
     <div style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, overflow: "hidden" }}>
@@ -92,9 +84,11 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
         </div>
         <p style={{ margin: "0 0 20px", fontSize: 18, color: palette.textDim, lineHeight: 1.5 }}>
           {mode === "in" ? (
-            <>Track your weekly NPT<InfoStar spin={false}>{nptStory}</InfoStar>. What you can see depends on your access<InfoStar spin={false}>{accessStory}</InfoStar>.</>
+            <>Tracking your weekly NPT<InfoStar spin={false}>{nptStory}</InfoStar>. Data viewable depends on your role. Having trouble signing in? Contact{" "}
+              <a href="https://phonetool.amazon.com/users/varseana" target="_blank" rel="noopener noreferrer" className="npt-storylink"
+                style={{ fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 3, color: palette.text }}>@varseana</a>.</>
           ) : (
-            <>Request access<InfoStar spin={false}>{accessStory}</InfoStar> with your work email. An admin approves it.</>
+            <>Request access with your work email. An admin approves it.</>
           )}
         </p>
         <label style={label}>Email</label>
@@ -110,9 +104,9 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
             {showPw ? <IconEyeOff size={18} /> : <IconEye size={18} />}
           </button>
         </div>
-        <label style={{ display: "flex", alignItems: "center", gap: 8, margin: "14px 0 0", fontSize: 17, color: palette.textDim, cursor: "pointer" }}>
+        <label style={{ display: "flex", alignItems: "center", gap: 8, margin: "14px 0 0", fontSize: 16, color: palette.textDim, cursor: "pointer", textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>
           <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
-          Remember me<InfoStar spin={false}>{rememberStory}</InfoStar>
+          Remember me
         </label>
         <button style={submit_} disabled={busy} type="submit">
           {busy ? "Please wait..." : mode === "in" ? "Sign in" : "Create account"}
@@ -139,8 +133,9 @@ const input: React.CSSProperties = {
 const submit_: React.CSSProperties = {
   width: "100%", marginTop: 18, background: palette.accent, color: palette.accentText, border: "none",
   borderRadius: 8, padding: "10px", fontSize: 19, cursor: "pointer", fontWeight: 600,
+  textTransform: "uppercase", letterSpacing: "0.06em",
 };
 const linkBtn: React.CSSProperties = {
   background: "none", border: "none", color: palette.accent, cursor: "pointer",
-  fontSize: 18, fontWeight: 600, padding: 0,
+  fontSize: 18, fontWeight: 600, padding: 0, textTransform: "uppercase", letterSpacing: "0.04em",
 };
