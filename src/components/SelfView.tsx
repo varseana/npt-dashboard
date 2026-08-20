@@ -8,7 +8,11 @@ import {
   type NptDailyRow, type PlannedRow,
 } from "../lib/npt";
 import { StatusChip } from "./status";
+import { InfoStar } from "./InfoStar";
 import { BlockSkeleton } from "./skeleton";
+
+// highlight monocromatico dentro del texto del popover (bold en color de texto full)
+const hi = { color: palette.text, fontWeight: 700 } as React.CSSProperties;
 
 // vista del rol 'user': su propio NPT de la semana vs lo que le asigno su manager.
 // el alias sale del override (si el admin lo puso) o del email local-part.
@@ -88,14 +92,24 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
       </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 20 }}>
-        <Stat label="Your NPT this week" value={fmtHms(totalNpt)} />
-        <Stat label="Planned by your manager" value={plannedSec == null ? "Not set" : fmtHms(plannedSec)} />
+        <Stat label="Used" value={fmtHms(totalNpt)} story={
+          <>The NPT you have logged so far this week / <strong style={hi}>Meeting + Training + Project + Personal + System</strong> / captured automatically by STAR Tracker. Shown in Hh:mm:ss.</>
+        } />
+        <Stat label="Planned" value={plannedSec == null ? "Not set" : fmtHms(plannedSec)} story={
+          <>The weekly NPT <strong style={hi}>allowance your manager set</strong> for you. If it reads <strong style={hi}>Not set</strong>, it has not been defined for this week yet.</>
+        } />
         <Stat label="Remaining" value={remaining == null ? "-" : fmtHms(remaining)}
-          extra={<StatusChip status={status} />} />
+          extra={<StatusChip status={status} />} story={
+          <><strong style={hi}>Remaining = Planned - Used</strong>. Positive means you still have allowance / negative means you are over. The chip flags On track . Near limit . Over.</>
+        } />
       </div>
 
       <div style={card}>
-        <div className="npt-title" style={{ fontWeight: 700, marginBottom: 10, fontSize: 28 }}>Breakdown (what counts as NPT)</div>
+        <div className="npt-title" style={{ fontWeight: 700, marginBottom: 10, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+          Breakdown<InfoStar>{
+            <>How your weekly NPT splits across the activities that count / <strong style={hi}>Meeting, Training, Project, Personal, System</strong>. Everything else / Available, Offline, breaks / does not count as NPT.</>
+          }</InfoStar>
+        </div>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19 }}>
           <tbody>
             {NPT_AUX.map((a) => (
@@ -120,10 +134,12 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
   );
 }
 
-function Stat({ label, value, extra }: { label: string; value: string; extra?: React.ReactNode }) {
+function Stat({ label, value, extra, story }: { label: string; value: string; extra?: React.ReactNode; story?: React.ReactNode }) {
   return (
     <div style={{ ...card, padding: "16px 18px" }}>
-      <div style={{ color: palette.textDim, fontSize: 17, marginBottom: 6 }}>{label}</div>
+      <div style={{ color: palette.textDim, fontSize: 17, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>
+        {label}{story && <InfoStar>{story}</InfoStar>}
+      </div>
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
         <span style={{ fontSize: 31, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{value}</span>
         {extra}
