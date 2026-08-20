@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
-import { supabase } from "./lib/supabase";
+import { supabase, emailConfirmed } from "./lib/supabase";
 import { palette } from "./theme";
 import Login from "./components/Login";
 import Overview from "./components/Overview";
@@ -16,7 +16,7 @@ import Managers from "./components/Managers";
 import Teams from "./components/Teams";
 import Unassigned from "./components/Unassigned";
 import SelfView from "./components/SelfView";
-import { IconLogout, IconMoon, IconSun } from "./components/icons";
+import { IconLogout, IconMoon, IconSun, IconX } from "./components/icons";
 import Mascot from "./components/Mascot";
 
 interface ManagerRow {
@@ -48,6 +48,14 @@ export default function App() {
   const [askLogout, setAskLogout] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
   const [pendingReq, setPendingReq] = useState(0);   // access requests pendientes (badge en Access)
+  const [showConfirmed, setShowConfirmed] = useState(emailConfirmed);   // banner al aterrizar del link de confirmacion
+
+  // el banner de "email confirmed" se auto-oculta a los 6s (igual se puede cerrar con la X)
+  useEffect(() => {
+    if (!showConfirmed) return;
+    const t = setTimeout(() => setShowConfirmed(false), 6000);
+    return () => clearTimeout(t);
+  }, [showConfirmed]);
   // dark mode: el estado inicial ya lo fijo el script anti-flash de index.html (clase 'dark')
   const [dark, setDark] = useState(() =>
     typeof document !== "undefined" && document.documentElement.classList.contains("dark"));
@@ -157,6 +165,7 @@ export default function App() {
   if (!manager || manager.role === "standby" || !manager.approved) {
     return (
       <Centered>
+        {showConfirmed && <ConfirmedBanner onClose={() => setShowConfirmed(false)} />}
         <div style={{ textAlign: "center", maxWidth: 440 }}>
           <h2 style={{ color: palette.accentSoft }}>Account in standby</h2>
           <p style={{ color: palette.textDim }}>
@@ -182,6 +191,7 @@ export default function App() {
 
   return (
     <div style={{ maxWidth: "min(2100px, 97vw)", margin: "0 auto", padding: "24px 32px" }}>
+      {showConfirmed && <ConfirmedBanner onClose={() => setShowConfirmed(false)} />}
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div>
           <h1 style={{ margin: 0, fontSize: 42, color: palette.text }}>STAR NPT Dashboard</h1>
@@ -285,6 +295,22 @@ function ConfirmModal({ title, body, confirmLabel, onCancel, onConfirm }:
           <button onClick={onConfirm} style={{ ...btn, background: palette.bad, color: "#fff", border: "none" }}>{confirmLabel}</button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// banner que se muestra al aterrizar desde el link de confirmacion de email (Site URL apunta al
+// dashboard). supabase-js ya establecio la sesion leyendo el token de la URL.
+function ConfirmedBanner({ onClose }: { onClose: () => void }) {
+  return (
+    <div style={{ position: "fixed", top: 14, left: "50%", transform: "translateX(-50%)", zIndex: 80,
+      background: palette.panel, border: `2px solid ${palette.text}`, borderRadius: 0, padding: "10px 14px",
+      display: "flex", alignItems: "center", gap: 12, maxWidth: "92vw" }}>
+      <span style={{ fontSize: 18, color: palette.text }}>Email confirmed. You are signed in.</span>
+      <button className="npt-close" onClick={onClose} aria-label="Dismiss" title="Dismiss"
+        style={{ background: "transparent", border: "none", cursor: "pointer", padding: 2, display: "inline-flex", lineHeight: 0 }}>
+        <IconX size={14} />
+      </button>
     </div>
   );
 }
