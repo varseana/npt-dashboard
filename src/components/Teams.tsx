@@ -3,9 +3,12 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { TableSkeleton } from "./skeleton";
+import { InfoStar } from "./InfoStar";
 
 interface Team { id: string; name: string; npt_target_pct: number }
 interface Code { code: string; team_id: string; active: boolean }
+// highlight monocromatico dentro del texto del popover (bold en color de texto full)
+const hi = { color: palette.text, fontWeight: 700 } as React.CSSProperties;
 
 // panel de admin: crear/editar teams y sus codigos de enrollment sin tocar SQL.
 // El borrado de teams no se expone (arrastra codigos y choca con el FK de npt_daily).
@@ -17,7 +20,6 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
 
   // form de team nuevo
   const [newName, setNewName] = useState("");
-  const [newTarget, setNewTarget] = useState("10");
   const [newCode, setNewCode] = useState("");
   // inputs de codigo nuevo por team
   const [codeInputs, setCodeInputs] = useState<Record<string, string>>({});
@@ -40,9 +42,10 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
     setMsg("");
     const name = newName.trim();
     if (!name) return;
-    const pct = Number(newTarget);
+    // npt_target_pct queda como default fijo (10); ya no se expone (el "target" real del team es su
+    // budget, que setea el manager en Team -> Planned; el modelo budget-first reemplazo el % de target).
     const { data, error } = await supabase.from("teams")
-      .insert({ name, npt_target_pct: isFinite(pct) ? pct : 10 })
+      .insert({ name, npt_target_pct: 10 })
       .select("id").single();
     if (error) { setMsg("Error: " + error.message); return; }
     const code = newCode.trim().toUpperCase();
@@ -50,7 +53,7 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
       const { error: e2 } = await supabase.from("enrollments").insert({ code, team_id: (data as { id: string }).id });
       if (e2) setMsg("Team created, but code failed: " + e2.message);
     }
-    setNewName(""); setNewTarget("10"); setNewCode("");
+    setNewName(""); setNewCode("");
     await load(false);
   }
 
@@ -85,21 +88,17 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
       {msg && <div style={{ marginBottom: 12, color: msg.startsWith("Error") ? palette.bad : palette.warn, fontSize: 18 }}>{msg}</div>}
 
       <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "14px 16px", marginBottom: 20 }}>
-        <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, marginBottom: 10 }}>New team</div>
+        <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, marginBottom: 10 }}>
+          New team<InfoStar spin={false}>{
+            <>Create a team and, optionally, its <strong style={hi}>enrollment code</strong> (what employees type in STAR Tracker to join it). The team's weekly NPT target is its <strong style={hi}>budget</strong>, set by its manager in Team {"->"} Planned.</>
+          }</InfoStar>
+        </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Team name"
             style={{ ...input, width: 200 }} />
-          <label style={{ fontSize: 18, color: palette.textDim, display: "flex", alignItems: "center", gap: 6 }}>
-            Target NPT %
-            <input value={newTarget} onChange={(e) => setNewTarget(e.target.value)} type="number" min={0} max={100}
-              style={{ ...input, width: 70 }} />
-          </label>
           <input value={newCode} onChange={(e) => setNewCode(e.target.value)} placeholder="Enrollment code (optional)"
             style={{ ...input, width: 200, textTransform: "uppercase" }} />
           <button onClick={createTeam} disabled={!newName.trim()} style={btn}>Create team</button>
-        </div>
-        <div style={{ color: palette.textDim, fontSize: 17, marginTop: 8 }}>
-          The enrollment code is what investigators type in STAR Tracker to join this team.
         </div>
       </div>
 
@@ -113,15 +112,11 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
                 <input defaultValue={t.name}
                   onBlur={(e) => { const v = e.target.value.trim(); if (v && v !== t.name) saveTeam(t, { name: v }); }}
                   style={{ ...input, fontWeight: 600, width: 220 }} title="Rename team (saves on blur)" />
-                <label style={{ fontSize: 18, color: palette.textDim, display: "flex", alignItems: "center", gap: 6 }}>
-                  Target %
-                  <input type="number" min={0} max={100} defaultValue={t.npt_target_pct}
-                    onBlur={(e) => { const v = Number(e.target.value); if (isFinite(v) && v !== t.npt_target_pct) saveTeam(t, { npt_target_pct: v }); }}
-                    style={{ ...input, width: 70 }} />
-                </label>
               </div>
               <div style={{ padding: "10px 14px", borderTop: `1px solid ${palette.border}`, background: palette.bg }}>
-                <div style={{ fontSize: 17, color: palette.textDim, marginBottom: 8, fontWeight: 600 }}>Enrollment codes</div>
+                <div style={{ fontSize: 17, color: palette.textDim, marginBottom: 8, fontWeight: 600 }}>Enrollment codes<InfoStar spin={false}>{
+                  <>Codes employees type in STAR Tracker to join this team. <strong style={hi}>Deactivate</strong> one to stop new joins without touching data already uploaded.</>
+                }</InfoStar></div>
                 {tCodes.length === 0 && <div style={{ fontSize: 18, color: palette.textDim, marginBottom: 8 }}>No codes yet.</div>}
                 {tCodes.map((c) => (
                   <div key={c.code} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }}>

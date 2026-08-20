@@ -234,7 +234,7 @@ export default function App() {
         </>)}
         {section === "access" && (<>
           <SubBtn active={accessTab === "requests"} onClick={() => setAccessTab("requests")}>Requests</SubBtn>
-          {manager.role === "admin" && <SubBtn active={accessTab === "managers"} onClick={() => setAccessTab("managers")}>Managers</SubBtn>}
+          {manager.role === "admin" && <SubBtn active={accessTab === "managers"} onClick={() => setAccessTab("managers")}>Users</SubBtn>}
           {manager.role === "admin" && <SubBtn active={accessTab === "teams"} onClick={() => setAccessTab("teams")}>Teams</SubBtn>}
           {manager.role === "admin" && <SubBtn active={accessTab === "unassigned"} onClick={() => setAccessTab("unassigned")}>Unassigned</SubBtn>}
           {manager.role === "admin" && <SubBtn active={accessTab === "org"} onClick={() => setAccessTab("org")}>Org</SubBtn>}

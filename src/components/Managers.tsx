@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { TableSkeleton } from "./skeleton";
+import { InfoStar } from "./InfoStar";
 import { IconAlert } from "./icons";
 
 type Role = "standby" | "user" | "manager" | "admin";
@@ -24,6 +25,22 @@ const ROLE_HELP: Record<Role, string> = {
   admin: "Sees everything and manages accounts.",
 };
 
+// sub-tabs por rol: separan a la gente para que 200+ personas no colisionen en una sola lista
+const ROLE_ORDER: Role[] = ["standby", "user", "manager", "admin"];
+const ROLE_TAB_LABEL: Record<Role, string> = { standby: "Standby", user: "Users", manager: "Managers", admin: "Admins" };
+const ROLE_TITLE: Record<Role, string> = {
+  standby: '"Standby" // no access',
+  user: '"Users"',
+  manager: '"Managers"',
+  admin: '"Admins"',
+};
+const ROLE_HINT: Record<Role, string> = {
+  standby: "Signed up and waiting for you to assign a role. They see nothing until then.",
+  user: "See only their own NPT versus their plan.",
+  manager: "See their whole team.",
+  admin: "See everything and manage every account.",
+};
+
 // alias de Paragon derivado: override manual, o el local-part del email (en Amazon coinciden)
 function aliasOf(r: MgrRow): string {
   return (r.alias?.trim() || r.email.split("@")[0] || "").toLowerCase();
@@ -40,7 +57,7 @@ export default function Managers({ teams, myUserId, refreshKey }:
   const [confirmAdmin, setConfirmAdmin] = useState<MgrRow | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<MgrRow | null>(null);
   const [query, setQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"alpha" | "role">("alpha");
+  const [roleTab, setRoleTab] = useState<Role>("standby");
 
   async function load(showSpinner = false) {
     if (showSpinner) setLoading(true);
@@ -81,28 +98,27 @@ export default function Managers({ teams, myUserId, refreshKey }:
     if (error) { setMsg("Error deleting: " + error.message); load(false); }
   }
 
-  const standby = useMemo(() => rows.filter((r) => r.role === "standby"), [rows]);
-  const active = useMemo(() => rows.filter((r) => r.role !== "standby"), [rows]);
+  // agrupa por rol para las sub-tabs (una lista por rol; no se mezclan)
+  const byRole = useMemo(() => {
+    const m: Record<Role, MgrRow[]> = { standby: [], user: [], manager: [], admin: [] };
+    for (const r of rows) m[r.role].push(r);
+    return m;
+  }, [rows]);
 
-  // filtro (buscador por email/alias) + orden (alfabetico o por rol: admin>manager>user>standby)
-  const ROLE_RANK: Record<Role, number> = { admin: 0, manager: 1, user: 2, standby: 3 };
+  // filtro (buscador por email/alias) + orden alfabetico
   const arrange = useMemo(() => {
     const q = query.trim().toLowerCase();
     return (list: MgrRow[]) => {
       const filtered = q ? list.filter((r) => r.email.toLowerCase().includes(q) || aliasOf(r).includes(q)) : list;
-      return [...filtered].sort((a, b) =>
-        sortBy === "role"
-          ? (ROLE_RANK[a.role] - ROLE_RANK[b.role]) || a.email.localeCompare(b.email)
-          : a.email.localeCompare(b.email));
+      return [...filtered].sort((a, b) => a.email.localeCompare(b.email));
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, sortBy]);
+  }, [query]);
 
   if (loading) return <div><TableSkeleton rows={4} /></div>;
 
-  const aStandby = arrange(standby);
-  const aActive = arrange(active);
+  const list = arrange(byRole[roleTab]);
   const searching = query.trim().length > 0;
+  const warnStandby = byRole.standby.length > 0;
 
   const rowProps = (r: MgrRow) => ({
     r, teams, isMe: r.user_id === myUserId, matched: knownAliases.has(aliasOf(r)),
@@ -115,30 +131,43 @@ export default function Managers({ teams, myUserId, refreshKey }:
     <div>
       {msg && <div style={{ marginBottom: 12, color: palette.bad, fontSize: 18 }}>{msg}</div>}
 
-      <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 18, flexWrap: "wrap" }}>
+      <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 14, flexWrap: "wrap" }}>
         <input value={query} onChange={(e) => setQuery(e.target.value)}
           placeholder="Search by email or username" style={searchInput} />
-        <label style={{ fontSize: 16, color: palette.textDim, display: "flex", alignItems: "center", gap: 6 }}>
-          Sort
-          <select value={sortBy} onChange={(e) => setSortBy(e.target.value as "alpha" | "role")} style={sortSelect}>
-            <option value="alpha">Alphabetical</option>
-            <option value="role">By role</option>
-          </select>
-        </label>
       </div>
 
-      <Section title={`"Standby" // no access (${aStandby.length})`}
-        hint="These people signed up and are waiting for you to assign a role." highlight={aStandby.length > 0}>
-        {aStandby.length === 0
-          ? <Empty>{searching ? "No matches in standby." : "Nobody is in standby."}</Empty>
-          : aStandby.map((r) => <PersonRow key={r.user_id} {...rowProps(r)} />)}
-      </Section>
+      {/* sub-tabs por rol: cada rol su propia lista, para que 200+ personas no se mezclen */}
+      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+        {ROLE_ORDER.map((role) => {
+          const n = byRole[role].length;
+          const on = roleTab === role;
+          const warn = role === "standby" && n > 0;
+          return (
+            <button key={role} onClick={() => setRoleTab(role)} style={{
+              background: on ? palette.accent : palette.panel,
+              color: on ? palette.accentText : palette.text,
+              border: `1px solid ${on ? palette.accent : warn ? "color-mix(in srgb, var(--warn) 50%, transparent)" : palette.border}`,
+              borderRadius: 8, padding: "7px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600,
+              display: "inline-flex", alignItems: "center", gap: 8,
+            }}>
+              {ROLE_TAB_LABEL[role]}
+              <span style={{ fontSize: 15, opacity: 0.85, color: on ? palette.accentText : palette.textDim }}>{n}</span>
+              {warn && !on && <span style={{ color: palette.warn, display: "inline-flex" }}><IconAlert size={13} /></span>}
+            </button>
+          );
+        })}
+      </div>
 
-      <Section title={`"Active" (${aActive.length})`} hint="People with a role and access to the dashboard.">
-        {aActive.length === 0
-          ? <Empty>{searching ? "No matches." : "No active accounts yet."}</Empty>
-          : aActive.map((r) => <PersonRow key={r.user_id} {...rowProps(r)} />)}
-      </Section>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 8 }}>
+        <span className="npt-title" style={{ fontWeight: 700, fontSize: 26, textTransform: "uppercase", letterSpacing: "0.06em" }}>{ROLE_TITLE[roleTab]}</span>
+        <InfoStar spin={false}>{ROLE_HINT[roleTab]}</InfoStar>
+      </div>
+
+      <div style={{ border: `1px solid ${roleTab === "standby" && warnStandby ? "color-mix(in srgb, var(--warn) 40%, transparent)" : palette.border}`, borderRadius: 8, overflow: "hidden", background: roleTab === "standby" && warnStandby ? palette.warnBg : palette.panel }}>
+        {list.length === 0
+          ? <Empty>{searching ? "No matches." : `No ${ROLE_TAB_LABEL[roleTab].toLowerCase()} yet.`}</Empty>
+          : list.map((r) => <PersonRow key={r.user_id} {...rowProps(r)} />)}
+      </div>
 
       {confirmAdmin && (
         <Confirm title="Grant admin?"
@@ -216,24 +245,6 @@ function MatchChip({ matched }: { matched: boolean }) {
     : <span style={{ fontSize: 16, fontWeight: 600, padding: "2px 8px", borderRadius: 6, color: palette.textDim, background: palette.panelAlt, whiteSpace: "nowrap" }}>no data</span>;
 }
 
-function Section({ title, hint, highlight, children }:
-  { title: string; hint?: string; highlight?: boolean; children: React.ReactNode }) {
-  return (
-    <div style={{ marginBottom: 20 }}>
-      <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-        {highlight && <span style={{ color: palette.warn, display: "inline-flex" }}><IconAlert size={15} /></span>}
-        {/* header estilo Off-White: mayusculas industriales + tracking; las comillas van en el title */}
-        <span className="npt-title" style={{ fontWeight: 700, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.06em" }}>{title}</span>
-      </div>
-      {hint && <div style={{ color: palette.textDim, fontSize: 18, marginBottom: 8 }}>{hint}</div>}
-      <div style={{ border: `1px solid ${highlight ? "color-mix(in srgb, var(--warn) 40%, transparent)" : palette.border}`, borderRadius: 8,
-        overflow: "hidden", background: highlight ? palette.warnBg : palette.panel }}>
-        {children}
-      </div>
-    </div>
-  );
-}
-
 function Empty({ children }: { children: React.ReactNode }) {
   return <div style={{ padding: "12px 14px", color: palette.textDim, fontSize: 18 }}>{children}</div>;
 }
@@ -274,8 +285,4 @@ const searchInput: React.CSSProperties = {
   flex: "1 1 240px", minWidth: 200, background: palette.panel, color: palette.text,
   border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 12px", fontSize: 16,
   boxSizing: "border-box",
-};
-const sortSelect: React.CSSProperties = {
-  background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
-  borderRadius: 8, padding: "8px 10px", fontSize: 16, cursor: "pointer",
 };
