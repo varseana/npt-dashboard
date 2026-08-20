@@ -7,7 +7,7 @@ export default function SwirlBackground({ dark }: { dark: boolean }) {
   const colorBack = dark ? "#000000" : "#ffffff";
   const colorFront = dark ? "#ffffff" : "#000000";
   return (
-    <div style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "hidden" }} aria-hidden="true">
+    <div style={{ position: "absolute", inset: 0, zIndex: 0, overflow: "hidden", opacity: 0.1 }} aria-hidden="true">
       <Dithering
         style={{ width: "100%", height: "100%" }}
         colorBack={colorBack}

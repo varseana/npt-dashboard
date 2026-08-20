@@ -33,6 +33,10 @@ export default function Planned({ team }: { team: Team }) {
 
   const scopeKey = scope === "standing" ? "" : weekKey;
 
+  // normaliza el input a Hh:mm:ss al salir del campo (ej: "2" -> "2:00:00"), asi queda claro que un
+  // numero suelto = horas. deja el texto igual si esta vacio o es invalido.
+  const normalize = (v: string) => { const s = parseDuration(v); return s == null ? v : fmtHms(s); };
+
   async function load() {
     setLoading(true);
     const [{ data: p }, { data: b }, { data: d }, { data: r }] = await Promise.all([
@@ -143,31 +147,34 @@ export default function Planned({ team }: { team: Team }) {
 
       {/* UNICO input principal: el budget total del team */}
       <div style={{ background: palette.panel, border: `2px solid ${palette.text}`, borderRadius: 8, padding: "14px 16px", marginBottom: 16 }}>
-        <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 6 }}>
-          Team weekly budget<InfoStar>{
-            <>The <strong style={hi}>total NPT the whole team can spend</strong> in a week (the number ops hands you). Everyone draws from it. Each person's target is their <strong style={hi}>fair share</strong> = budget / people, unless you give them a custom below. Format <strong style={hi}>H:MM</strong> (e.g. 10:00). Applies to <strong style={hi}>{scopeLabel}</strong>.</>
-          }</InfoStar>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
+          <div className="npt-title" style={{ fontWeight: 700, fontSize: 28 }}>
+            Team weekly budget<InfoStar>{
+              <>The <strong style={hi}>total NPT the whole team can spend</strong> in a week (the number ops hands you). Everyone draws from it. Each person's target is their <strong style={hi}>fair share</strong> unless you give them a custom below. Type hours like <strong style={hi}>10</strong> (= 10:00:00) or H:MM. Applies to <strong style={hi}>{scopeLabel}</strong>.</>
+            }</InfoStar>
+          </div>
+          {budgetSeconds != null && fair != null && (
+            <div style={{ fontSize: 18, color: palette.textDim, whiteSpace: "nowrap" }}>
+              Fair share <strong style={{ color: palette.text }}>{fmtHms(fair)}</strong>
+              <InfoStar spin={false}>{
+                <>What each person without a custom gets: <strong style={hi}>{fmtHms(budgetSeconds)}</strong> / {headcount} {headcount === 1 ? "person" : "people"}{overrides.size ? <>, after <strong style={hi}>{overrides.size}</strong> custom</> : null}.</>
+              }</InfoStar>
+            </div>
+          )}
         </div>
-        <input value={budgetInput} onChange={(e) => setBudgetInput(e.target.value)} placeholder="H:MM (e.g. 10:00)" style={{ ...input, width: 180 }} />
-        <div style={{ fontSize: 17, color: palette.textDim, marginTop: 8 }}>
-          {budgetSeconds == null
-            ? "No budget set. Set it above to give everyone a target."
-            : <>Fair share per person = <strong style={hi}>{fair != null ? fmtHms(fair) : "-"}</strong> ({fmtHms(budgetSeconds)} / {headcount} {headcount === 1 ? "person" : "people"}{overrides.size ? `, after ${overrides.size} custom` : ""}).</>}
-        </div>
+        <input value={budgetInput} onChange={(e) => setBudgetInput(e.target.value)} onBlur={() => setBudgetInput(normalize(budgetInput))} placeholder="H:MM (e.g. 10:00)" style={{ ...input, width: 180 }} />
+        {budgetSeconds == null && <div style={{ fontSize: 17, color: palette.textDim, marginTop: 8 }}>No budget set. Set it above to give everyone a target.</div>}
       </div>
 
-      <div style={{ fontSize: 17, color: palette.textDim, marginBottom: 8 }}>
-        Per person, {scopeLabel}. Leave blank to use the <strong style={hi}>fair share</strong>; type a value to give someone a custom target (the rest split what is left).
-      </div>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19 }}>
         <thead>
           <tr>
             <th style={{ ...th, textAlign: "left" }}>Employee</th>
             <th style={th}>Custom<InfoStar spin={false}>{
-              <>Optional. A <strong style={hi}>custom weekly target</strong> for this person. Blank means they get the fair share. Format H:MM.</>
+              <>Optional <strong style={hi}>custom target</strong> for this person, {scopeLabel}. Leave blank to use the fair share; when you set customs, the rest split what is left. Type hours like <strong style={hi}>2</strong> (= 2:00:00) or H:MM.</>
             }</InfoStar></th>
             <th style={th}>Target<InfoStar spin={false}>{
-              <>What this person is measured against this {scope === "standing" ? "week" : "week"}: their <strong style={hi}>custom</strong> if set, otherwise the <strong style={hi}>fair share</strong>.</>
+              <>What this person is measured against: their <strong style={hi}>custom</strong> if set, otherwise the <strong style={hi}>fair share</strong>.</>
             }</InfoStar></th>
           </tr>
         </thead>
@@ -182,6 +189,7 @@ export default function Planned({ team }: { team: Team }) {
                 <td style={{ ...td, textAlign: "left", fontWeight: 600 }}>{a}</td>
                 <td style={{ ...td, textAlign: "right" }}>
                   <input value={personInputs[a] ?? ""} onChange={(e) => setPersonInputs((p) => ({ ...p, [a]: e.target.value }))}
+                    onBlur={() => setPersonInputs((p) => ({ ...p, [a]: normalize(p[a] ?? "") }))}
                     placeholder={fair != null ? fmtHms(fair) : "H:MM"} style={{ ...input, width: 120, textAlign: "right" }} />
                 </td>
                 <td style={{ ...td, textAlign: "right", color: eff != null ? palette.text : palette.textDim, fontWeight: isCustom ? 700 : 400 }}>

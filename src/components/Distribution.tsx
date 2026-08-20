@@ -154,17 +154,13 @@ export default function Distribution({ team, refreshKey }: { team: Team; refresh
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 18, whiteSpace: "nowrap" }}>
             <thead>
               <tr>
-                <th style={{ ...th, textAlign: "left" }}>Employee</th>
+                <th style={{ ...th, textAlign: "left" }}>Employee<InfoStar spin={false}>{
+                  <>How to read this table / <strong style={hi}>Planned</strong> is the weekly target. <strong style={hi}>Total NPT = Actual</strong> = the sum of the 5 activity columns (Meeting + Training + Project + Personal + System), the <strong style={hi}>why over target</strong>. <strong style={hi}>Remaining = Planned - Actual</strong>. All times Hh:mm:ss.</>
+                }</InfoStar></th>
                 {NPT_AUX.map((c) => (<th key={c} style={th}>{c}</th>))}
-                <th style={th}>Planned<InfoStar spin={false}>{
-                  <>Weekly NPT target for this employee, set in the Planned tab. Shown in Hh:mm:ss.</>
-                }</InfoStar></th>
-                <th style={th}>Total NPT<InfoStar spin={false}>{
-                  <><strong style={hi}>Total NPT = Actual</strong> = the sum of the 5 activity columns / <strong style={hi}>Meeting + Training + Project + Personal + System</strong>. Those columns are the <strong style={hi}>why over target</strong>. Shown in Hh:mm:ss.</>
-                }</InfoStar></th>
-                <th style={th}>Remaining<InfoStar spin={false}>{
-                  <><strong style={hi}>Remaining = Planned - Actual</strong>. Positive means plan left, negative means over. Shown in Hh:mm:ss.</>
-                }</InfoStar></th>
+                <th style={th}>Planned</th>
+                <th style={th}>Total NPT</th>
+                <th style={th}>Remaining</th>
                 <th style={th}>Status</th>
               </tr>
             </thead>

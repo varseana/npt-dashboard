@@ -114,7 +114,7 @@ export default function Employees({ team, refreshKey, isAdmin }: { team: Team; r
   return (
     <div>
       <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "14px 16px", marginBottom: 16 }}>
-        <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, marginBottom: 10, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+        <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, marginBottom: 10 }}>
           Add employees<InfoStar>{
             <>Pre-list the people you expect on <strong style={hi}>{team.name}</strong>. Until someone connects through STAR Tracker and uploads, they show as <strong style={hi}>Pending</strong>, so you can spot who has not started yet. It does <strong style={hi}>not</strong> change anyone's numbers.</>
           }</InfoStar>
