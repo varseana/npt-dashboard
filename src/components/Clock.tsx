@@ -66,7 +66,7 @@ export default function Clock() {
   return (
     <div className="nptclk-wrap">
       <style>{CSS}</style>
-      <div className="nptclk-lcd" style={{ color: palette.text }} title={`Timezone: ${zoneLabel}`}>
+      <div className="nptclk-lcd" style={{ color: palette.clock }} title={`Timezone: ${zoneLabel}`}>
         <DigitPair value={h} label="h" />
         <span className="nptclk-colon">:</span>
         <DigitPair value={m} label="m" />

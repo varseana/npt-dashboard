@@ -41,3 +41,23 @@ export function IconX({ size = 16, style }: P) {
     </svg>
   );
 }
+
+// luna solida (se muestra en modo claro: click -> oscuro)
+export function IconMoon({ size = 16, style }: P) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: "block", ...style }} aria-hidden="true">
+      <path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+// sol solido (se muestra en modo oscuro: click -> claro)
+export function IconSun({ size = 16, style }: P) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: "block", ...style }} aria-hidden="true">
+      <circle cx="12" cy="12" r="4.6" fill="currentColor" />
+      <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M19.4 4.6l-2.1 2.1M6.7 17.3l-2.1 2.1"
+        fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}

@@ -136,7 +136,7 @@ export default function Planned({ team }: { team: Team }) {
       </div>
 
       <div style={{ background: palette.panel, border: `2px solid ${palette.text}`, borderRadius: 8, padding: "14px 16px", marginBottom: 16 }}>
-        <div className="npt-title" style={{ fontWeight: 700, fontSize: 21, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+        <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
           "Team" // weekly NPT budget (total)
         </div>
         <div style={{ fontSize: 16, color: palette.textDim, marginBottom: 8 }}>

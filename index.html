@@ -7,44 +7,55 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>STAR NPT Dashboard</title>
     <style>
-      html, body { margin: 0; background: #f7f7f5; }
-
-      /* display font (Bargent Disco Demo) para titulos y subtitulos; el cuerpo sigue en Outfit.
-         OJO: esta Demo es letters-only (a-z, A-Z); numeros y simbolos (/ " ( ) ? %) caen a Outfit. */
-      @font-face {
-        font-family: 'Bargent Disco';
-        src: url('/bargent-disco.otf') format('opentype');
-        font-display: swap;
+      /* ===== paleta como CSS variables: light (default) y dark (html.dark) ===== */
+      :root {
+        --bg: #f7f7f5; --panel: #ffffff; --panelAlt: #efeeec; --border: #e2e1de;
+        --text: #111111; --textDim: #767676; --accent: #111111; --accentSoft: #111111;
+        --deep: #000000; --over: #111111; --under: #9a9a9a;
+        --ok: #1a7f37; --okBg: #e6f4ea; --warn: #9a6700; --warnBg: #fdf3d8; --bad: #b42318; --badBg: #fbeae8;
+        --clock: #111111;
+        --skel1: #e9e8e5; --skel2: #f4f3f1;
       }
-      /* puntillismo "calado": texto solido gris con puntos transparentes calados (mask),
-         sobre la fuente Bargent. Aplica a todos los titulos. */
-      h1, h2, h3,
-      .npt-title {
-        font-family: 'Bargent Disco', 'Outfit Variable', 'Segoe UI', system-ui, sans-serif;
-        letter-spacing: 0.01em;
-        color: #5c5c5c;
-        -webkit-text-fill-color: #5c5c5c;
-        -webkit-mask-image: radial-gradient(circle, transparent 1.2px, #000 1.8px);
-        mask-image: radial-gradient(circle, transparent 1.2px, #000 1.8px);
-        -webkit-mask-size: 4px 4px;
-        mask-size: 4px 4px;
+      html.dark {
+        --bg: #0f1113; --panel: #181b1e; --panelAlt: #21252a; --border: #2c3238;
+        --text: #e8e8e6; --textDim: #9aa1a8; --accent: #3a4046; --accentSoft: #e8e8e6;
+        --deep: #ffffff; --over: #e8e8e6; --under: #6b7278;
+        --ok: #3fb950; --okBg: #12261a; --warn: #d4a72c; --warnBg: #2b2410; --bad: #f85149; --badBg: #35191a;
+        --clock: #39ff14;   /* verde casio fosforescente */
+        --skel1: #22272c; --skel2: #2b3138;
+      }
+      html, body { margin: 0; background: var(--bg); color: var(--text); }
+      /* transicion suave y profesional al cambiar de tema (colores/bordes, no layout) */
+      *, *::before, *::after {
+        transition: background-color .28s ease, color .28s ease, border-color .28s ease, box-shadow .28s ease;
       }
 
       /* botones destructivos: hover con transicion suave */
       .npt-btn-remove {
-        background: #ffffff; color: #b42318; border: 1px solid #b4231855;
+        background: var(--panel); color: var(--bad); border: 1px solid color-mix(in srgb, var(--bad) 33%, transparent);
         border-radius: 8px; padding: 6px 10px; font-size: 17px; cursor: pointer; font-weight: 600;
         transition: background .2s ease, color .2s ease, border-color .2s ease;
       }
-      .npt-btn-remove:hover:not(:disabled) { background: #b42318; color: #ffffff; border-color: #b42318; }
+      .npt-btn-remove:hover:not(:disabled) { background: var(--bad); color: #ffffff; border-color: var(--bad); }
       .npt-btn-remove:disabled { opacity: .5; cursor: default; }
 
       .npt-logout {
-        background: transparent; border: none; color: #767676; cursor: pointer;
+        background: transparent; border: none; color: var(--textDim); cursor: pointer;
         padding: 2px; display: inline-flex; transition: color .2s ease;
       }
-      .npt-logout:hover { color: #b42318; }
+      .npt-logout:hover { color: var(--bad); }
     </style>
+    <script>
+      // aplica el tema ANTES del paint para evitar flash (no-FOUC). guardado en localStorage,
+      // default = preferencia del sistema.
+      (function () {
+        try {
+          var v = localStorage.getItem("nptTheme");
+          var dark = v ? v === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+          if (dark) document.documentElement.classList.add("dark");
+        } catch (e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

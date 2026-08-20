@@ -20,7 +20,7 @@ export function StatusChip({ status }: { status: NptStatus }) {
       borderRadius: 6,
       color: s.fg,
       background: s.bg,
-      border: `1px solid ${s.fg}33`,
+      border: `1px solid color-mix(in srgb, ${s.fg} 28%, transparent)`,
     }}>{s.label}</span>
   );
 }

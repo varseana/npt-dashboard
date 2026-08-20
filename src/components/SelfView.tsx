@@ -95,7 +95,7 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
       </div>
 
       <div style={card}>
-        <div className="npt-title" style={{ fontWeight: 700, marginBottom: 10, fontSize: 23 }}>Breakdown (what counts as NPT)</div>
+        <div className="npt-title" style={{ fontWeight: 700, marginBottom: 10, fontSize: 28 }}>Breakdown (what counts as NPT)</div>
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19 }}>
           <tbody>
             {NPT_AUX.map((a) => (

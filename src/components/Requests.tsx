@@ -121,13 +121,13 @@ function StatusPill({ status }: { status: AccessRequest["status"] }) {
     approved: { fg: palette.ok, bg: palette.okBg, label: "Approved" },
     denied: { fg: palette.bad, bg: palette.badBg, label: "Denied" },
   }[status];
-  return <span style={{ fontSize: 17, fontWeight: 600, padding: "2px 10px", borderRadius: 6, color: map.fg, background: map.bg, border: `1px solid ${map.fg}33` }}>{map.label}</span>;
+  return <span style={{ fontSize: 17, fontWeight: 600, padding: "2px 10px", borderRadius: 6, color: map.fg, background: map.bg, border: `1px solid color-mix(in srgb, ${map.fg} 28%, transparent)` }}>{map.label}</span>;
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 18 }}>
-      <div className="npt-title" style={{ fontWeight: 700, fontSize: 23, marginBottom: 8 }}>{title}</div>
+      <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, marginBottom: 8 }}>{title}</div>
       <div style={{ border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden" }}>{children}</div>
     </div>
   );

@@ -2,7 +2,7 @@ import * as React from "react";
 
 // skeleton shimmer (en vez de "Loading..." de texto). CSS puro, sin libs.
 const CSS = `
-.npt-sk { background: linear-gradient(90deg, #e9e8e5 25%, #f4f3f1 37%, #e9e8e5 63%);
+.npt-sk { background: linear-gradient(90deg, var(--skel1) 25%, var(--skel2) 37%, var(--skel1) 63%);
   background-size: 400% 100%; animation: npt-sk 1.4s ease infinite; border-radius: 6px; }
 @keyframes npt-sk { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
 @media (prefers-reduced-motion: reduce) { .npt-sk { animation: none; } }
@@ -21,7 +21,7 @@ export function TableSkeleton({ rows = 6, cols = 5 }: { rows?: number; cols?: nu
         {Array.from({ length: cols }).map((_, i) => <Bar key={i} w={i === 1 ? 160 : 90} h={12} />)}
       </div>
       {Array.from({ length: rows }).map((_, r) => (
-        <div key={r} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: "1px solid #eceae7" }}>
+        <div key={r} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: "1px solid var(--border)" }}>
           {Array.from({ length: cols }).map((_, i) => <Bar key={i} w={i === 1 ? 160 : 90} h={14} />)}
         </div>
       ))}

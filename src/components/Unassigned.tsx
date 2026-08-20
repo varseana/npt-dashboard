@@ -53,7 +53,7 @@ export default function Unassigned({ teams, refreshKey }: { teams: Team[]; refre
 
   return (
     <div style={{ maxWidth: 900 }}>
-      <div className="npt-title" style={{ fontWeight: 700, fontSize: 23, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
+      <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
         "Unassigned" // no manager ({rows.length})
       </div>
       <div style={{ color: palette.textDim, fontSize: 18, marginBottom: 16 }}>

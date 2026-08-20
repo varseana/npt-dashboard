@@ -1,23 +1,25 @@
-// paleta minimalista blanco y negro. sin emojis, sin em-dash en la UI.
+// paleta via CSS variables: los valores light/dark viven en index.html (:root y html.dark).
+// asi todo el palette.X inline re-tematiza al togglear la clase 'dark' (dark mode).
 export const palette = {
-  bg: "#f7f7f5",       // off-white (evita el blanco puro puro)
-  panel: "#ffffff",
-  panelAlt: "#efeeec",
-  border: "#e2e1de",
-  text: "#111111",
-  textDim: "#767676",
-  accent: "#111111",
-  accentSoft: "#111111",
-  deep: "#000000",
-  over: "#111111",    // sobre target: negro (enfasis)
-  under: "#9a9a9a",   // on target: gris
-  // status semaforo (unico color permitido, solo para el estado de NPT):
-  ok: "#1a7f37",      // verde: dentro de planned
-  okBg: "#e6f4ea",
-  warn: "#9a6700",    // amarillo/ambar: le queda <= 1h de remaining
-  warnBg: "#fdf3d8",
-  bad: "#b42318",     // rojo: se paso del planned
-  badBg: "#fbeae8",
+  bg: "var(--bg)",
+  panel: "var(--panel)",
+  panelAlt: "var(--panelAlt)",
+  border: "var(--border)",
+  text: "var(--text)",
+  textDim: "var(--textDim)",
+  accent: "var(--accent)",
+  accentSoft: "var(--accentSoft)",
+  deep: "var(--deep)",
+  over: "var(--over)",
+  under: "var(--under)",
+  // status semaforo (verde/amarillo/rojo) + sus fondos tenues
+  ok: "var(--ok)",
+  okBg: "var(--okBg)",
+  warn: "var(--warn)",
+  warnBg: "var(--warnBg)",
+  bad: "var(--bad)",
+  badBg: "var(--badBg)",
+  clock: "var(--clock)",   // color del LCD del reloj (verde casio fosforescente en dark)
 };
 
 // geometric sans (Outfit Variable, OFL, self-hosteada via @fontsource-variable/outfit en main.tsx).

@@ -16,7 +16,7 @@ import Managers from "./components/Managers";
 import Teams from "./components/Teams";
 import Unassigned from "./components/Unassigned";
 import SelfView from "./components/SelfView";
-import { IconLogout } from "./components/icons";
+import { IconLogout, IconMoon, IconSun } from "./components/icons";
 import Mascot from "./components/Mascot";
 
 interface ManagerRow {
@@ -48,6 +48,14 @@ export default function App() {
   const [askLogout, setAskLogout] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
   const [pendingReq, setPendingReq] = useState(0);   // access requests pendientes (badge en Access)
+  // dark mode: el estado inicial ya lo fijo el script anti-flash de index.html (clase 'dark')
+  const [dark, setDark] = useState(() =>
+    typeof document !== "undefined" && document.documentElement.classList.contains("dark"));
+
+  useEffect(() => {
+    document.documentElement.classList.toggle("dark", dark);
+    try { localStorage.setItem("nptTheme", dark ? "dark" : "light"); } catch { /* noop */ }
+  }, [dark]);
 
   // conteo de access_requests pendientes (RLS: admin ve todas, manager solo las suyas)
   async function loadPending() {
@@ -168,7 +176,7 @@ export default function App() {
     <div style={{ maxWidth: "min(2100px, 97vw)", margin: "0 auto", padding: "24px 32px" }}>
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 34, color: palette.text }}>STAR NPT Dashboard</h1>
+          <h1 style={{ margin: 0, fontSize: 42, color: palette.text }}>STAR NPT Dashboard</h1>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ color: palette.textDim, fontSize: 18 }}>{manager.email} ({manager.role})</span>
             <button onClick={() => setAskLogout(true)} title="Log out" aria-label="Log out" className="npt-logout">
@@ -176,7 +184,16 @@ export default function App() {
             </button>
           </div>
         </div>
-        <Clock />
+        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
+          {/* toggle de tema: icono plano, sin chrome de boton (como el selector de tz del reloj) */}
+          <button onClick={() => setDark((d) => !d)}
+            title={dark ? "Switch to light mode" : "Switch to dark mode"} aria-label="Toggle theme"
+            style={{ background: "transparent", border: "none", padding: 2, cursor: "pointer",
+              color: palette.textDim, display: "inline-flex", alignItems: "center" }}>
+            {dark ? <IconSun size={19} /> : <IconMoon size={19} />}
+          </button>
+          <Clock />
+        </div>
       </header>
 
       {manager.role === "user" && <SelfView email={manager.email} aliasOverride={manager.alias} />}

@@ -114,7 +114,7 @@ export default function Employees({ team, refreshKey, isAdmin }: { team: Team; r
   return (
     <div>
       <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "14px 16px", marginBottom: 16 }}>
-        <div className="npt-title" style={{ fontWeight: 700, marginBottom: 4 }}>Add employees to {team.name}</div>
+        <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, marginBottom: 4 }}>Add employees to {team.name}</div>
         <div style={{ color: palette.textDim, fontSize: 18, marginBottom: 10 }}>
           Add expected usernames. They show as Pending until the person connects via STAR Tracker and uploads. This does not affect anyone's numbers.
         </div>
@@ -196,7 +196,7 @@ function ConnChip({ status }: { status: ConnStatus }) {
     unlisted: { label: "Unlisted", fg: palette.textDim, bg: palette.panelAlt },
   };
   const s = map[status];
-  return <span style={{ display: "inline-block", fontSize: 17, fontWeight: 600, padding: "2px 10px", borderRadius: 6, color: s.fg, background: s.bg, border: `1px solid ${s.fg}33` }}>{s.label}</span>;
+  return <span style={{ display: "inline-block", fontSize: 17, fontWeight: 600, padding: "2px 10px", borderRadius: 6, color: s.fg, background: s.bg, border: `1px solid color-mix(in srgb, ${s.fg} 28%, transparent)` }}>{s.label}</span>;
 }
 
 const th: React.CSSProperties = { textAlign: "left", padding: "9px 12px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };

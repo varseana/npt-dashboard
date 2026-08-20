@@ -80,7 +80,7 @@ const CSS = `
 .mascot-wrap:active .mascot-blob { transform: scale(.92); }
 .mascot-eye {
   position: absolute; top: 34%; width: 9px; height: 9px;
-  background: #fff; border-radius: 50%;
+  background: var(--bg); border-radius: 50%;
   transition: transform .1s ease;
 }
 .mascot-eye.blink { transform: scaleY(.1); }
