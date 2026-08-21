@@ -194,8 +194,11 @@ export default function App() {
       {showConfirmed && <ConfirmedBanner onClose={() => setShowConfirmed(false)} />}
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: 42, color: palette.text }}>STAR NPT Dashboard</h1>
-          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            <h1 style={{ margin: 0, fontSize: 42, color: palette.text, lineHeight: 1 }}>STAR NPT Dashboard</h1>
+            <Mascot inline />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
             <span style={{ color: palette.textDim, fontSize: 18 }}>{manager.email} ({manager.role})</span>
             <button onClick={() => setAskLogout(true)} title="Log out" aria-label="Log out" className="npt-logout">
               <IconLogout size={15} />
@@ -276,7 +279,6 @@ export default function App() {
         />
       )}
 
-      <Mascot />
     </div>
   );
 }

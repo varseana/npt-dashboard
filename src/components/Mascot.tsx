@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react";
 
 const ANIMS = ["hop", "wiggle", "gaze"];
 
-export default function Mascot() {
+export default function Mascot({ inline = false }: { inline?: boolean }) {
   const [anim, setAnim] = useState("");
   const [blink, setBlink] = useState(false);
   const wrapRef = useRef<HTMLDivElement | null>(null);
@@ -93,7 +93,7 @@ export default function Mascot() {
   }
 
   return (
-    <div className="orb-wrap" ref={wrapRef} onClick={onClick} role="button" aria-label="mascota" title="hola">
+    <div className={`orb-wrap ${inline ? "inline" : ""}`} ref={wrapRef} onClick={onClick} role="button" aria-label="mascota" title="hola">
       <style>{CSS}</style>
       <div className="orb-float">
         <div className={`orb-react ${anim}`}>
@@ -117,6 +117,11 @@ const CSS = `
   position: fixed; right: 22px; bottom: 22px; z-index: 40;
   width: 64px; height: 64px; cursor: pointer; user-select: none;
   -webkit-tap-highlight-color: transparent;
+}
+/* inline: junto al titulo, sin fijar. tamano fijo -> el bob no empuja el layout */
+.orb-wrap.inline {
+  position: static; right: auto; bottom: auto; z-index: auto;
+  width: 46px; height: 46px; display: inline-block; vertical-align: middle; flex: 0 0 auto;
 }
 .orb-float { width: 100%; height: 100%; animation: orb-float 4.2s ease-in-out infinite; }
 .orb-react { width: 100%; height: 100%; transform-origin: 50% 50%; }
