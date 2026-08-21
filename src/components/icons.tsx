@@ -1,6 +1,8 @@
 // iconos SOLID (rellenos), inline, sin dependencias. Estilo flat B&N que combina con el
-// blob/favicon; NO son los outline de Lucide. Rellenan con currentColor; los detalles
-// (pliegue del sobre, signo de alerta) van en blanco knockout, pensados para botones claros.
+// blob/favicon; NO son los outline de Lucide. La forma rellena con currentColor; los detalles
+// (pliegue del sobre, signo de alerta) van en KNOCKOUT del color del panel (var(--panel)) para
+// que se vean bien en light Y dark: si fuera #fff fijo, en dark la forma es casi-blanca y el
+// detalle blanco desaparece (se ve un cuadrado/triangulo solido).
 import * as React from "react";
 
 type P = { size?: number; style?: React.CSSProperties };
@@ -9,7 +11,7 @@ export function IconMail({ size = 16, style }: P) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: "block", ...style }} aria-hidden="true">
       <rect x="2" y="5" width="20" height="14" rx="3.5" fill="currentColor" />
-      <path d="M4 8l8 5 8-5" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 8l8 5 8-5" fill="none" stroke="var(--panel)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -18,8 +20,8 @@ export function IconAlert({ size = 16, style }: P) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: "block", ...style }} aria-hidden="true">
       <path d="M12 3l9.5 16.5H2.5L12 3Z" fill="currentColor" />
-      <line x1="12" y1="9.5" x2="12" y2="14" stroke="#fff" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="12" cy="16.8" r="1.1" fill="#fff" />
+      <line x1="12" y1="9.5" x2="12" y2="14" stroke="var(--panel)" strokeWidth="2" strokeLinecap="round" />
+      <circle cx="12" cy="16.8" r="1.1" fill="var(--panel)" />
     </svg>
   );
 }

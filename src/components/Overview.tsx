@@ -9,7 +9,7 @@ import {
 } from "../lib/npt";
 import { StatusChip } from "./status";
 import { InfoStar, StoryLink } from "./InfoStar";
-import { downloadEml } from "../lib/reminder";
+import { downloadEml, downloadTeamEml } from "../lib/reminder";
 import { IconMail, IconAlert } from "./icons";
 import { TableSkeleton } from "./skeleton";
 
@@ -121,6 +121,23 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
     });
   }
 
+  // correo de visibilidad a TODO el team: un .eml neutro por persona (alias@amazon.com) con el
+  // NPT compartido del equipo (cuanto queda), sin numeros individuales. incluye link al dashboard.
+  const teamRecipients = useMemo(
+    () => Array.from(new Set<string>([...roster, ...users.map((u) => u.alias)])),
+    [roster, users],
+  );
+  function emailTeam() {
+    if (teamBudget == null || !teamRecipients.length) return;
+    const dashboardUrl = window.location.origin;
+    for (const alias of teamRecipients) {
+      downloadTeamEml({
+        alias, weekNum: sel.week, weekRange: weekRangeLabel(sel),
+        budget: teamBudget, used: teamNpt, remaining: teamRemaining ?? 0, dashboardUrl,
+      });
+    }
+  }
+
   // agrupacion visual por carpeta (no afecta numeros)
   const groups = useMemo(() => {
     if (!groupBy || !folders.length) return null;
@@ -165,7 +182,7 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
         <div style={{ color: palette.textDim }}>No reported data for {weekLabel(sel)}.</div>
       ) : (
         <>
-          <TeamBudgetCard budget={teamBudget} used={teamNpt} remaining={teamRemaining} status={teamStatus} users={users} onNavigate={onNavigate} />
+          <TeamBudgetCard budget={teamBudget} used={teamNpt} remaining={teamRemaining} status={teamStatus} users={users} onNavigate={onNavigate} onEmailTeam={emailTeam} emailCount={teamRecipients.length} />
           <div style={{ display: "flex", gap: 12, marginBottom: 18, flexWrap: "wrap" }}>
             <Stat label="Employees" value={String(users.length)} story={
               <>Team members who have uploaded NPT this week. The full roster and status / <strong style={hi}>Connected . Pending . Unlisted</strong> / lives in the Employees panel.
@@ -260,13 +277,20 @@ function remainingColor(s: NptStatus): string {
 }
 
 // rollup del TEAM: presupuesto total de la semana vs lo consumido por todos.
-function TeamBudgetCard({ budget, used, remaining, status, users, onNavigate }:
-  { budget: number | null; used: number; remaining: number | null; status: NptStatus; users: { alias: string; nptSeconds: number }[]; onNavigate?: (d: NavDest) => void }) {
+function TeamBudgetCard({ budget, used, remaining, status, users, onNavigate, onEmailTeam, emailCount }:
+  { budget: number | null; used: number; remaining: number | null; status: NptStatus; users: { alias: string; nptSeconds: number }[]; onNavigate?: (d: NavDest) => void; onEmailTeam?: () => void; emailCount?: number }) {
   return (
     <div style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: "16px 20px", marginBottom: 18 }}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
         <span className="npt-title" style={{ fontWeight: 700, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.06em" }}>"Team" // weekly NPT budget</span>
         {budget != null && <StatusChip status={status} />}
+        {budget != null && onEmailTeam && (
+          <button onClick={onEmailTeam} disabled={!emailCount}
+            title="Generate one neutral .eml per team member with the team's remaining NPT for the week"
+            style={{ ...emlBtn, marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 6 }}>
+            <IconMail size={14} /> Email team{emailCount ? ` (${emailCount})` : ""}
+          </button>
+        )}
       </div>
       {budget == null ? (
         <div style={{ color: palette.textDim, fontSize: 18 }}>
