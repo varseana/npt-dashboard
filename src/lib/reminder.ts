@@ -37,9 +37,10 @@ function emlHtml(to: string, subject: string, inner: string): string {
     "X-Unsent: 1",
     "MIME-Version: 1.0",
     "Content-Type: text/html; charset=utf-8",
-    "",
   ];
-  return headers.join("\r\n") + htmlDoc(inner);
+  // los headers y el cuerpo se separan con UNA LINEA EN BLANCO (\r\n\r\n). sin esto, el cuerpo
+  // se toma como continuacion de los headers y Outlook muestra el correo VACIO.
+  return headers.join("\r\n") + "\r\n\r\n" + htmlDoc(inner);
 }
 
 function download(content: string, filename: string): void {
