@@ -129,13 +129,11 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
   );
   function emailTeam() {
     if (teamBudget == null || !teamRecipients.length) return;
-    const dashboardUrl = window.location.origin;
-    for (const alias of teamRecipients) {
-      downloadTeamEml({
-        alias, weekNum: sel.week, weekRange: weekRangeLabel(sel),
-        budget: teamBudget, used: teamNpt, remaining: teamRemaining ?? 0, dashboardUrl,
-      });
-    }
+    downloadTeamEml({
+      aliases: teamRecipients, weekNum: sel.week, weekRange: weekRangeLabel(sel),
+      budget: teamBudget, used: teamNpt, remaining: teamRemaining ?? 0,
+      dashboardUrl: window.location.origin,
+    });
   }
 
   // agrupacion visual por carpeta (no afecta numeros)

@@ -64,12 +64,12 @@ export function downloadEml(d: ReminderData): void {
 }
 
 // ---- correo de visibilidad para TODO el equipo ----
-// un .eml separado por persona (To: alias@amazon.com), todos con el MISMO mensaje neutro y
-// corporativo sobre el NPT del EQUIPO (presupuesto compartido, cuanto queda). No lleva numeros
-// individuales, asi nadie queda expuesto ("sin tirar a nadie bajo el tren"). Incluye el link al
-// dashboard para que quien ya tenga cuenta y permiso revise su propio detalle.
+// UN solo .eml con varios destinatarios (To: alias1@amazon.com, alias2@amazon.com, ...), mensaje
+// neutro y corporativo sobre el NPT del EQUIPO (presupuesto compartido, cuanto queda). No lleva
+// numeros individuales, asi nadie queda expuesto ("sin tirar a nadie bajo el tren"). Incluye el
+// link al dashboard para que quien ya tenga cuenta y permiso revise su propio detalle.
 export interface TeamReminderData {
-  alias: string;         // destinatario
+  aliases: string[];     // destinatarios (van todos en el To:)
   weekNum: number;
   weekRange: string;     // ej. "Dom 17 Ago - Sab 23 Ago"
   budget: number;        // presupuesto total del team (seg)
@@ -87,7 +87,7 @@ function teamBody(d: TeamReminderData): string {
     ? "Como el presupuesto es compartido por todo el equipo, agradecemos limitar el NPT no esencial durante lo que queda de la semana para volver a encuadrarnos."
     : "Como el presupuesto es compartido por todo el equipo, les pedimos tener en cuenta el margen restante al planificar NPT no esencial en los proximos dias, para que entre todos no lo excedamos.";
   return [
-    `Hola ${d.alias},`,
+    `Hola equipo,`,
     "",
     `Comparto un resumen del NPT del equipo para esta semana (Week ${d.weekNum}, ${d.weekRange}), para visibilidad de todos:`,
     "",
@@ -105,8 +105,9 @@ function teamBody(d: TeamReminderData): string {
 }
 
 export function buildTeamEml(d: TeamReminderData): string {
+  const to = d.aliases.map((a) => `${a}@amazon.com`).join(", ");
   const headers = [
-    `To: ${d.alias}@amazon.com`,
+    `To: ${to}`,
     `Subject: NPT del equipo - Week ${d.weekNum}`,
     "X-Unsent: 1",
     "Content-Type: text/plain; charset=utf-8",
@@ -121,7 +122,7 @@ export function downloadTeamEml(d: TeamReminderData): void {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `npt-team_${d.alias}_week${d.weekNum}.eml`;
+  a.download = `npt-team_week${d.weekNum}.eml`;
   a.click();
   URL.revokeObjectURL(url);
 }
