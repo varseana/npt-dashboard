@@ -67,6 +67,36 @@ export function IconEyeOff({ size = 16, style }: P) {
   );
 }
 
+// lupa (outline, currentColor -> se adapta a light y dark). va dentro del input de busqueda.
+export function IconSearch({ size = 16, style }: P) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={2.2} strokeLinecap="round" style={{ display: "block", ...style }} aria-hidden="true">
+      <circle cx="11" cy="11" r="7" />
+      <line x1="16.5" y1="16.5" x2="21" y2="21" />
+    </svg>
+  );
+}
+
+// folder solido (currentColor). usado como toggle de "group by folder".
+export function IconFolder({ size = 16, style }: P) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" style={{ display: "block", ...style }} aria-hidden="true">
+      <path d="M3 6.5C3 5.67 3.67 5 4.5 5h4.1l2 2H19.5c.83 0 1.5.67 1.5 1.5v9c0 .83-.67 1.5-1.5 1.5h-15C3.67 19 3 18.33 3 17.5V6.5Z" fill="currentColor" />
+    </svg>
+  );
+}
+
+// check (outline, currentColor). usado como badge de "activo" sobre el folder.
+export function IconCheck({ size = 16, style }: P) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", ...style }} aria-hidden="true">
+      <path d="M5 12.5l4.5 4.5L19 6.5" />
+    </svg>
+  );
+}
+
 // luna solida (se muestra en modo claro: click -> oscuro)
 export function IconMoon({ size = 16, style }: P) {
   return (

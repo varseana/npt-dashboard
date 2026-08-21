@@ -11,7 +11,7 @@ import { StatusChip } from "./status";
 import { InfoStar, StoryLink } from "./InfoStar";
 import { downloadEml, downloadTeamEml } from "../lib/reminder";
 import WeekCountdown from "./WeekCountdown";
-import { IconMail, IconAlert } from "./icons";
+import { IconMail, IconAlert, IconSearch, IconFolder, IconCheck } from "./icons";
 import { TableSkeleton } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
@@ -159,19 +159,18 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
             {weeks.map((w) => (<option key={w.key} value={w.key}>{weekLabel(w)}</option>))}
           </select>
         </Field>
-        <Field label="Filter user">
-          <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="username" style={input} />
-        </Field>
-        {folders.length > 0 && (
-          <label style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 18, cursor: "pointer", paddingBottom: 8 }}>
-            <input type="checkbox" checked={groupBy} onChange={(e) => setGroupBy(e.target.checked)} />
-            Group by folder
-          </label>
-        )}
-        <button onClick={() => flagged.forEach(remind)} disabled={!flagged.length}
-          title="Generate one .eml per person in yellow or red" style={{ ...emlBtn, marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 6 }}>
-          <IconAlert size={14} /> Email flagged ({flagged.length})
-        </button>
+        <div style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+          <span style={{ position: "absolute", left: 10, display: "inline-flex", color: palette.textDim, pointerEvents: "none" }}>
+            <IconSearch size={17} />
+          </span>
+          <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="username" aria-label="Filter by username"
+            style={{ ...input, paddingLeft: 34 }} />
+        </div>
+        <div style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", paddingBottom: 6 }}>
+          <EmailAction icon={<IconAlert size={19} />} count={flagged.length} label="Email flagged"
+            onClick={() => flagged.forEach(remind)}
+            info={<>Generates one reminder <strong style={hi}>.eml per person in yellow or red</strong> (near limit or over plan), each with their own weekly NPT summary. Opens as drafts in Outlook for you to review and send.</>} />
+        </div>
       </div>
 
       {err && <div style={{ color: palette.bad, marginBottom: 12 }}>{err}</div>}
@@ -183,7 +182,9 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
         <>
           <TeamBudgetCard budget={teamBudget} used={teamNpt} remaining={teamRemaining} status={teamStatus} users={users} onNavigate={onNavigate} onEmailTeam={emailTeam} emailCount={teamRecipients.length} />
           <div style={{ display: "flex", gap: 12, marginBottom: 18, flexWrap: "wrap" }}>
-            <Stat label="Employees" value={String(users.length)} story={
+            <Stat label="Employees" value={String(users.length)}
+              topRight={folders.length > 0 ? <FolderToggle active={groupBy} onToggle={() => setGroupBy((v) => !v)} /> : undefined}
+              story={
               <>Team members who have uploaded NPT this week. The full roster and status / <strong style={hi}>Connected . Pending . Unlisted</strong> / lives in the Employees panel.
                 <div style={{ marginTop: 8 }}><StoryLink onClick={() => onNavigate?.({ section: "team", tab: "employees" })}>Open the Employees panel</StoryLink></div></>
             } />
@@ -284,11 +285,11 @@ function TeamBudgetCard({ budget, used, remaining, status, users, onNavigate, on
         <span className="npt-title" style={{ fontWeight: 700, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.06em" }}>"Team" // weekly NPT budget</span>
         {budget != null && <StatusChip status={status} />}
         {budget != null && onEmailTeam && (
-          <button onClick={onEmailTeam} disabled={!emailCount}
-            title="Generate one neutral .eml per team member with the team's remaining NPT for the week"
-            style={{ ...emlBtn, marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 6 }}>
-            <IconMail size={14} /> Email team{emailCount ? ` (${emailCount})` : ""}
-          </button>
+          <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center" }}>
+            <EmailAction icon={<IconMail size={19} />} count={emailCount ?? 0} label="Email team"
+              onClick={onEmailTeam}
+              info={<>Generates a single neutral <strong style={hi}>.eml to the whole team</strong> with the team's shared NPT budget and how much is left this week. No individual figures. Includes a link to the personal dashboard.</>} />
+          </span>
         )}
       </div>
       {budget == null ? (
@@ -390,13 +391,48 @@ function Field({ label, children }: { label: React.ReactNode; children: React.Re
   );
 }
 
-function Stat({ label, value, tone, story }: { label: string; value: string; tone?: "ok" | "warn" | "bad"; story?: React.ReactNode }) {
+function Stat({ label, value, tone, story, topRight }: { label: string; value: string; tone?: "ok" | "warn" | "bad"; story?: React.ReactNode; topRight?: React.ReactNode }) {
   const color = tone === "bad" ? palette.bad : tone === "warn" ? palette.warn : tone === "ok" ? palette.ok : palette.text;
   return (
     <div style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: "12px 16px", minWidth: 150 }}>
       <div style={{ fontSize: 17, color: palette.textDim }}>{label}{story && <InfoStar>{story}</InfoStar>}</div>
-      <div style={{ fontSize: 31, fontWeight: 700, color }}>{value}</div>
+      {/* numero full-izquierda, toggle (si hay) full-derecha, en la misma linea */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+        <div style={{ fontSize: 31, fontWeight: 700, color }}>{value}</div>
+        {topRight}
+      </div>
     </div>
+  );
+}
+
+// icono de accion sin chrome de boton (borderless) + contador chico + asterisco giratorio (InfoStar)
+// cuyo hover explica que hace. mismo patron que el resto del dashboard.
+function EmailAction({ icon, count, label, onClick, info }:
+  { icon: React.ReactNode; count: number; label: string; onClick: () => void; info: React.ReactNode }) {
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+      <button onClick={onClick} disabled={!count} aria-label={label} title={label} style={iconBtn}>{icon}</button>
+      {count > 0 && <span style={{ fontSize: 15, color: palette.textDim, fontVariantNumeric: "tabular-nums" }}>{count}</span>}
+      <InfoStar>{info}</InfoStar>
+    </span>
+  );
+}
+
+// toggle de "group by folder": icono de folder sin caja de checkbox. activo = folder en contraste
+// full + check en la esquina superior derecha; inactivo = folder tenue y sin check.
+function FolderToggle({ active, onToggle }: { active: boolean; onToggle: () => void }) {
+  return (
+    <button onClick={onToggle} aria-pressed={active}
+      title={active ? "Grouping by folder (on)" : "Group by folder (off)"}
+      style={{ ...iconBtn, position: "relative", color: active ? palette.text : palette.textDim }}>
+      <IconFolder size={24} />
+      {active && (
+        <span style={{ position: "absolute", top: -4, right: -4, background: palette.bg, borderRadius: "50%",
+          padding: 1, display: "inline-flex", color: palette.text }}>
+          <IconCheck size={12} />
+        </span>
+      )}
+    </button>
   );
 }
 
@@ -405,3 +441,5 @@ const td: React.CSSProperties = { padding: "8px 10px", borderBottom: `1px solid 
 const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 19 };
 const select: React.CSSProperties = { ...input, minWidth: 260 };
 const emlBtn: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "5px 10px", fontSize: 17, cursor: "pointer", fontWeight: 600 };
+// boton sin chrome: transparente, sin borde, solo el icono. hereda color de texto (currentColor).
+const iconBtn: React.CSSProperties = { background: "transparent", border: "none", padding: 2, cursor: "pointer", color: palette.text, display: "inline-flex", alignItems: "center", lineHeight: 0 };
