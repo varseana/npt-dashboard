@@ -138,7 +138,7 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
   return (
     <div>
       <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", marginBottom: 16 }}>
-        <Field label="Week">
+        <Field label={<span style={{ display: "inline-flex", gap: 6, alignItems: "baseline", flexWrap: "wrap" }}>Week <WeekCountdown start={sel.start} /></span>}>
           <select value={weekKey} onChange={(e) => setWeekKey(e.target.value)} style={select}>
             {weeks.map((w) => (<option key={w.key} value={w.key}>{weekLabel(w)}</option>))}
           </select>
@@ -358,12 +358,50 @@ function BudgetStat({ label, value, color, story }: { label: string; value: stri
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
     <div>
       <div style={{ fontSize: 16, color: palette.textDim, marginBottom: 4 }}>{label}</div>
       {children}
     </div>
+  );
+}
+
+// contador LIVE junto al titulo "Week": tiempo restante hasta que termine la semana
+// (sabado medianoche, o sea domingo 00:00). solo se muestra si la semana elegida es la
+// que esta en curso; para semanas pasadas/futuras no aplica y no renderiza nada.
+function WeekCountdown({ start }: { start: Date }) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const startMs = start.getTime();
+  const end = useMemo(() => {
+    const e = new Date(start);
+    e.setDate(e.getDate() + 7);
+    e.setHours(0, 0, 0, 0);
+    return e.getTime();
+  }, [startMs]);
+
+  if (now < startMs || now >= end) return null; // solo la semana en curso
+
+  const total = Math.floor((end - now) / 1000);
+  const d = Math.floor(total / 86400);
+  const h = Math.floor((total % 86400) / 3600);
+  const m = Math.floor((total % 3600) / 60);
+  const s = total % 60;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const clock = d > 0 ? `${d}d ${pad(h)}:${pad(m)}:${pad(s)}` : `${pad(h)}:${pad(m)}:${pad(s)}`;
+
+  return (
+    <span
+      title="Time left until this week ends (Saturday midnight)"
+      style={{ color: palette.text, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}
+    >
+      {"·"} ends in {clock}
+    </span>
   );
 }
 
