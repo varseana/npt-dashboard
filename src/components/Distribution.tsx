@@ -10,6 +10,7 @@ import {
 import { StatusChip } from "./status";
 import { InfoStar } from "./InfoStar";
 import { TableSkeleton } from "./skeleton";
+import WeekCountdown from "./WeekCountdown";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 // highlight monocromatico dentro del texto del popover (bold en color de texto full)
@@ -133,7 +134,7 @@ export default function Distribution({ team, refreshKey }: { team: Team; refresh
   return (
     <div>
       <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", marginBottom: 16 }}>
-        <Field label="Week">
+        <Field label={<span style={{ display: "inline-flex", gap: 6, alignItems: "baseline", flexWrap: "wrap" }}>Week <WeekCountdown start={sel.start} /></span>}>
           <select value={weekKey} onChange={(e) => setWeekKey(e.target.value)} style={select}>
             {weeks.map((w) => (<option key={w.key} value={w.key}>{weekLabel(w)}</option>))}
           </select>
@@ -191,7 +192,7 @@ function remainingColor(s: NptStatus): string {
 
 function csv(s: string) { return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
   return (
     <div>
       <div style={{ fontSize: 16, color: palette.textDim, marginBottom: 4 }}>{label}</div>
