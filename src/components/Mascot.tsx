@@ -42,7 +42,7 @@ export default function Mascot() {
       const cx = r.left + r.width / 2;
       const cy = r.top + r.height * 0.42;
       const ang = Math.atan2(e.clientY - cy, e.clientX - cx);
-      const dist = Math.min(2, Math.hypot(e.clientX - cx, e.clientY - cy) / 100);
+      const dist = Math.min(4.5, Math.hypot(e.clientX - cx, e.clientY - cy) / 55);
       setEyes(Math.cos(ang) * dist, Math.sin(ang) * dist);
     }
     window.addEventListener("mousemove", onMove, { passive: true });
@@ -67,7 +67,7 @@ export default function Mascot() {
   // mira alrededor en un cuadrado suave, despues devuelve el control al cursor
   function gaze() {
     gazingRef.current = true;
-    const pts = [[1.6, -1.2], [1.6, 1.2], [-1.6, 1.2], [-1.6, -1.2], [0, 0]];
+    const pts = [[3.5, -2.6], [3.5, 2.6], [-3.5, 2.6], [-3.5, -2.6], [0, 0]];
     pts.forEach((p, i) => {
       setTimeout(() => {
         setEyes(p[0], p[1]);
