@@ -239,11 +239,11 @@ function UserTable({ rows, remind, teamBudget }: { rows: Row[]; remind: (u: Row)
       <thead>
         <tr>
           {headers.map((h) => (
-            <th key={h.label} style={{ ...th, textAlign: h.left ? "left" : "right" }}>
+            <th key={h.label} style={{ ...th, textAlign: h.left ? "left" : "center" }}>
               {h.label}{h.story && <InfoStar spin={false}>{h.story}</InfoStar>}
             </th>
           ))}
-          <th style={{ ...th, textAlign: "right" }}></th>
+          <th style={{ ...th, textAlign: "center" }}></th>
         </tr>
       </thead>
       <tbody>
@@ -251,15 +251,15 @@ function UserTable({ rows, remind, teamBudget }: { rows: Row[]; remind: (u: Row)
           <tr key={u.alias} style={{ background: i % 2 ? palette.panel : palette.panelAlt }}>
             <td style={{ ...td, color: palette.textDim }}>{i + 1}</td>
             <td style={{ ...td, fontWeight: 600 }}>{u.alias}</td>
-            <td style={{ ...td, textAlign: "right" }}>{u.daysReported}</td>
-            <td style={{ ...td, textAlign: "right", color: palette.textDim }}>{u.planned != null ? fmtHms(u.planned) : "-"}</td>
-            <td style={{ ...td, textAlign: "right", fontWeight: 600 }}>{fmtHms(u.nptSeconds)}</td>
-            <td style={{ ...td, textAlign: "right", color: palette.textDim }}>
+            <td style={{ ...td, textAlign: "center" }}>{u.daysReported}</td>
+            <td style={{ ...td, textAlign: "center", color: palette.textDim }}>{u.planned != null ? fmtHms(u.planned) : "-"}</td>
+            <td style={{ ...td, textAlign: "center", fontWeight: 600 }}>{fmtHms(u.nptSeconds)}</td>
+            <td style={{ ...td, textAlign: "center", color: palette.textDim }}>
               {teamBudget ? (u.nptSeconds / teamBudget * 100).toFixed(1) + "%" : "-"}
             </td>
-            <td style={{ ...td, textAlign: "right", color: remainingColor(u.status) }}>{u.remaining != null ? fmtHms(u.remaining) : "-"}</td>
-            <td style={{ ...td, textAlign: "right" }}><StatusChip status={u.status} /></td>
-            <td style={{ ...td, textAlign: "right" }}>
+            <td style={{ ...td, textAlign: "center", color: remainingColor(u.status) }}>{u.remaining != null ? fmtHms(u.remaining) : "-"}</td>
+            <td style={{ ...td, textAlign: "center" }}><StatusChip status={u.status} /></td>
+            <td style={{ ...td, textAlign: "center" }}>
               <button onClick={() => remind(u)} disabled={u.status === "none"} title="Send reminder .eml" aria-label="Send reminder email"
                 style={{ ...emlBtn, padding: "5px 7px", display: "inline-flex", alignItems: "center" }}>
                 <IconMail size={15} />
@@ -281,9 +281,14 @@ function TeamBudgetCard({ budget, used, remaining, status, users, onNavigate, on
   { budget: number | null; used: number; remaining: number | null; status: NptStatus; users: { alias: string; nptSeconds: number }[]; onNavigate?: (d: NavDest) => void; onEmailTeam?: () => void; emailCount?: number }) {
   return (
     <div style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: "16px 20px", marginBottom: 18 }}>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
         <span className="npt-title" style={{ fontWeight: 700, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.06em" }}>"Team" // weekly NPT budget</span>
-        {budget != null && <StatusChip status={status} />}
+        {budget != null && (
+          <>
+            <span className="npt-title" style={{ fontWeight: 700, fontSize: 28, letterSpacing: "0.06em", color: palette.textDim }}>//</span>
+            <span style={{ textTransform: "uppercase" }}><StatusChip status={status} /></span>
+          </>
+        )}
         {budget != null && onEmailTeam && (
           <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center" }}>
             <EmailAction icon={<IconMail size={19} />} count={emailCount ?? 0} label="Email team"
