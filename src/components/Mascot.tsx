@@ -18,6 +18,11 @@ type NavDest = { section: "dashboard" | "team" | "access"; tab?: string };
 
 // resaltado monocromatico (bold full-contrast) para palabras clave dentro del consejo.
 const hiTxt: React.CSSProperties = { color: palette.text, fontWeight: 700 };
+// boton de texto tipo link (Back/Next) del bocadillo.
+const pgBtn: React.CSSProperties = {
+  background: "transparent", border: "none", padding: 0, cursor: "pointer",
+  fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 3, color: palette.text, fontSize: 13,
+};
 
 // icono inline resaltado (full-contrast) para intercalar en el texto del consejo, en vez de la palabra.
 function Ico({ children }: { children: React.ReactNode }) {
@@ -29,6 +34,7 @@ export default function Mascot({ inline = false, onNavigate }: { inline?: boolea
   const [blink, setBlink] = useState(false);
   const [tip, setTip] = useState(0);
   const [bubble, setBubble] = useState(false);
+  const [paused, setPaused] = useState(false);   // el timer murio (Back/Next); se reinicia al cerrar
   const closeRef = useRef<number | undefined>(undefined);
 
   // hyperlink que navega (si hay onNavigate) o texto en negrita si no. cierra el bocadillo al navegar.
@@ -101,11 +107,12 @@ export default function Mascot({ inline = false, onNavigate }: { inline?: boolea
     return () => { stopped = true; if (schedRef.current) clearTimeout(schedRef.current); };
   }, []);
 
-  // el consejo rota solo cada ~9s (se siente vivo aunque no hagas hover)
-  useEffect(() => {
-    const id = setInterval(() => setTip((t) => (t + 1) % tips.length), 9000);
-    return () => clearInterval(id);
-  }, [tips.length]);
+  // el consejo avanza solo cuando la barra de progreso termina (onAnimationEnd, ver render). el timer
+  // MUERE si el usuario da Back/Next (paused=true). al cerrar el bocadillo se reinicia (paused=false).
+  useEffect(() => { if (!bubble) setPaused(false); }, [bubble]);
+
+  // navegacion manual de tips: mata el timer (paused) para no pelear con el auto-avance.
+  const goTip = (delta: number) => { setPaused(true); setTip((t) => (t + delta + tips.length) % tips.length); };
 
   // bocadillo: abre en hover del orbe o del propio bocadillo; cierra con un pequeño delay al salir
   // (asi podes viajar del orbe al bocadillo para clickear un link sin que se cierre en el hueco).
@@ -148,14 +155,25 @@ export default function Mascot({ inline = false, onNavigate }: { inline?: boolea
   return (
     <div className={`orb-wrap ${inline ? "inline" : ""}`} ref={wrapRef} onClick={onClick}
       onMouseEnter={openBubble} onMouseLeave={closeBubble}
-      role="button" aria-label="Mascot tips" title="Tips">
+      role="button" aria-label="Mascot tips">
       <style>{CSS}</style>
       {bubble && (
         <div className="orb-bubble" onClick={(e) => e.stopPropagation()} onMouseEnter={openBubble} onMouseLeave={closeBubble}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 6 }}>
+          {/* barra de 4px que avanza L->R = tiempo hasta el proximo tip. al terminar, avanza. si el
+              usuario dio Back/Next (paused) queda fija en 0 y NO avanza sola. */}
+          <div className="orb-prog">
+            {!paused && (
+              <div key={tip} className="orb-prog-fill" onAnimationEnd={() => setTip((t) => (t + 1) % tips.length)} />
+            )}
+          </div>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", margin: "8px 0 6px" }}>
             <span style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: palette.textDim, fontWeight: 700 }}>Tip {tip + 1} / {tips.length}</span>
-            <button type="button" className="npt-storylink" onClick={(e) => { e.stopPropagation(); setTip((t) => (t + 1) % tips.length); }}
-              style={{ background: "transparent", border: "none", padding: 0, cursor: "pointer", fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 3, color: palette.text, fontSize: 13 }}>Next</button>
+            <span style={{ display: "inline-flex", gap: 14 }}>
+              <button type="button" className="npt-storylink" style={pgBtn}
+                onClick={(e) => { e.stopPropagation(); goTip(-1); }}>Back</button>
+              <button type="button" className="npt-storylink" style={pgBtn}
+                onClick={(e) => { e.stopPropagation(); goTip(1); }}>Next</button>
+            </span>
           </div>
           <div style={{ lineHeight: 1.5 }}>{tips[tip]}</div>
         </div>
@@ -199,6 +217,11 @@ const CSS = `
 }
 /* si el orbe fijo (no inline) tuviera bocadillo, lo abre hacia arriba-izquierda */
 .orb-wrap:not(.inline) .orb-bubble { top: auto; bottom: 100%; left: auto; right: 0; margin: 0 0 10px; }
+
+/* barra de progreso (4px) = tiempo hasta el proximo tip. track sutil + fill negro que crece L->R */
+.orb-prog { height: 4px; width: 100%; background: var(--border); overflow: hidden; }
+.orb-prog-fill { height: 100%; width: 0%; background: var(--text); animation: orb-progress 9s linear forwards; }
+@keyframes orb-progress { from { width: 0%; } to { width: 100%; } }
 .orb-float { width: 100%; height: 100%; animation: orb-float 4.2s ease-in-out infinite; }
 .orb-react { width: 100%; height: 100%; transform-origin: 50% 50%; }
 .orb-react svg { display: block; width: 100%; height: 100%; overflow: visible; transition: transform .4s cubic-bezier(.34,1.4,.6,1); }
