@@ -197,13 +197,13 @@ export default function Employees({ team, refreshKey, isAdmin }: { team: Team; r
                     <span style={{ display: "inline-flex", gap: 22, justifyContent: "flex-end", alignItems: "center" }}>
                       {p.expected
                         ? <button onClick={() => removeFromRoster(p.alias)} disabled={saving} className="npt-ico-act npt-ico-danger"
-                            aria-label={`Remove ${p.alias} from roster`} title="Remove from your roster (keeps their NPT)"><IconX size={17} /></button>
+                            aria-label={`Remove ${p.alias} from roster`} title="Remove (keeps their NPT)"><IconX size={17} /></button>
                         : <button onClick={() => add([p.alias])} disabled={saving} className="npt-ico-act"
-                            aria-label={`Confirm ${p.alias} is on your team`} title="Confirm this person is on your team (adds them to your roster)"><IconCheck size={18} /></button>}
+                            aria-label={`Confirm ${p.alias} is on your team`} title="Confirm this person is on your team"><IconCheck size={18} /></button>}
                       {isAdmin && p.connected && team.id !== UNASSIGNED_ID && (
                         <button onClick={() => moveToUnassigned(p.alias)} disabled={saving} className="npt-ico-act npt-ico-danger"
                           aria-label={`Move ${p.alias} to Unassigned`}
-                          title="Move this person out of this team into Unassigned (moves their NPT too)"><IconMoveOut size={18} /></button>
+                          title="Move to Unassigned (moves their NPT too)"><IconMoveOut size={18} /></button>
                       )}
                     </span>
                   </td>

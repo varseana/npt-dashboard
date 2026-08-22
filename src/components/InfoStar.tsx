@@ -59,7 +59,7 @@ export function InfoStar({ children, size = 11, spin = true, pages }:
     const trig = trigRef.current?.getBoundingClientRect();
     if (!trig) return;
     const box = boxRef.current;
-    const w = box?.offsetWidth ?? 300;
+    const w = box?.offsetWidth ?? 340;
     const h = box?.offsetHeight ?? 120;
     const m = 8; // margen contra el borde de la ventana
     let left = trig.left;
@@ -100,6 +100,10 @@ export function InfoStar({ children, size = 11, spin = true, pages }:
   // toggle de fijado: si esta fijo lo suelta y cierra; si no, lo fija abierto
   const toggle = () => { cancelClose(); if (locked) { setLocked(false); setOpen(false); } else { setLocked(true); setOpen(true); } };
   const close = () => { cancelClose(); setLocked(false); setOpen(false); };
+  // paginar (Back/Next) FIJA la card: al cambiar de pagina el contenido cambia de tamano y el mouse
+  // puede quedar fuera del cuadro; sin fijarlo, el hover-out lo cerraria justo al navegar. Interactuar
+  // con la paginacion = intencion de leerla, asi que se bloquea abierta (como el click en el asterisco).
+  const paginate = (to: number) => { cancelClose(); setLocked(true); setPage(to); };
 
   return (
     <span
@@ -128,7 +132,7 @@ export function InfoStar({ children, size = 11, spin = true, pages }:
             left: pos?.left ?? -9999,
             visibility: pos ? "visible" : "hidden",
             zIndex: 60,
-            width: "min(300px, calc(100vw - 16px))",
+            width: "min(340px, calc(100vw - 16px))",
             background: palette.bg,                       // mismo color que el fondo de la pagina (light y dark)
             border: `2px solid ${palette.text}`,          // linea gruesa alrededor de TODO el cuadro
             borderRadius: 0,
@@ -160,11 +164,11 @@ export function InfoStar({ children, size = 11, spin = true, pages }:
               <span style={{ display: "flex", gap: 14 }}>
                 {page > 0 && (
                   <button type="button" className="npt-storylink" style={pgBtn}
-                    onClick={(e) => { e.stopPropagation(); setPage((p) => Math.max(0, p - 1)); }}>Back</button>
+                    onClick={(e) => { e.stopPropagation(); paginate(page - 1); }}>Back</button>
                 )}
                 {page < pages.length - 1 && (
                   <button type="button" className="npt-storylink" style={pgBtn}
-                    onClick={(e) => { e.stopPropagation(); setPage((p) => Math.min(pages.length - 1, p + 1)); }}>Next</button>
+                    onClick={(e) => { e.stopPropagation(); paginate(page + 1); }}>Next</button>
                 )}
               </span>
             </div>
