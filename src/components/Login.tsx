@@ -109,13 +109,13 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
         </div>
       ) : (
       <form onSubmit={submit} style={{ position: "relative", zIndex: 1, width: 340, background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 0, padding: 24 }}>
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
-            <h1 style={{ margin: "0 0 4px", fontSize: 31, color: palette.text }}>STAR NPT Dashboard</h1>
-            {/* mascota a la derecha del titulo (decorativa, sin tips en el login) */}
-            <Mascot inline showTips={false} size={36} />
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, minWidth: 0 }}>
+            <h1 style={{ margin: 0, fontSize: 31, color: palette.text, lineHeight: 1.1 }}>STAR NPT Dashboard</h1>
+            {/* mascota pegada al titulo, del alto de los dos renglones (decorativa, sin tips en el login) */}
+            <Mascot inline showTips={false} size={64} />
           </div>
-          {/* toggle de tema DENTRO de la carta, icono plano sin chrome */}
+          {/* toggle de tema en la esquina sup-der de la carta (alineado al top) */}
           <button type="button" onClick={onToggleTheme}
             title={dark ? "Switch to light mode" : "Switch to dark mode"} aria-label="Toggle theme"
             style={{ background: "transparent", border: "none", padding: 2, cursor: "pointer", color: palette.textDim, display: "inline-flex", alignItems: "center", flex: "0 0 auto" }}>
