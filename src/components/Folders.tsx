@@ -1,9 +1,10 @@
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { InfoStar } from "./InfoStar";
 import { BlockSkeleton } from "./skeleton";
+import { IconX } from "./icons";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 interface Folder { id: string; name: string; aliases: string[]; }
@@ -11,6 +12,15 @@ interface AdminFolder { id: string; name: string; aliases: string[]; owner: stri
 interface ManagerLite { user_id: string; email: string; role: string; approved: boolean; }
 // highlight monocromatico dentro del texto del popover (bold en color de texto full)
 const hi = { color: palette.text, fontWeight: 700 } as React.CSSProperties;
+
+// codigo de request_member_access -> mensaje legible
+const REQ_MSG: Record<string, string> = {
+  not_found: "No user found with that username. Check the spelling.",
+  already: "You already have access to that person.",
+  pending: "You already have a pending request for that person.",
+  sent_manager: "Not on your team. Access request sent to their manager.",
+  sent_admin: "Not on your team and has no manager yet. Request sent to the admin.",
+};
 
 export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdmin?: boolean; myUserId?: string }) {
   const [folders, setFolders] = useState<Folder[]>([]);
@@ -37,7 +47,6 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
     setKnown(Array.from(set).sort());
 
     if (isAdmin) {
-      // RLS folders_admin_read deja al admin leer TODOS los folders; managers para etiquetar por email
       const [{ data: af }, { data: mg }] = await Promise.all([
         supabase.from("manager_folders").select("id,name,aliases,owner"),
         supabase.from("managers").select("user_id,email,role,approved"),
@@ -66,13 +75,26 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
     else await load();
   }
 
-  async function toggleMember(folder: Folder, alias: string) {
-    const has = folder.aliases.includes(alias);
-    const next = has ? folder.aliases.filter((a) => a !== alias) : [...folder.aliases, alias];
-    // optimista
+  // agrega/quita a un miembro del TEAM en el array del folder (optimista)
+  async function setFolderAliases(folder: Folder, next: string[]) {
     setFolders((prev) => prev.map((f) => (f.id === folder.id ? { ...f, aliases: next } : f)));
     const { error } = await supabase.from("manager_folders").update({ aliases: next }).eq("id", folder.id);
     if (error) { setMsg("Error: " + error.message); await load(); }
+  }
+  function removeMember(folder: Folder, alias: string) {
+    setFolderAliases(folder, folder.aliases.filter((a) => a !== alias));
+  }
+  function addTeamMember(folder: Folder, alias: string) {
+    if (folder.aliases.includes(alias)) return;
+    setFolderAliases(folder, [...folder.aliases, alias]);
+  }
+  // alias que NO es del team: pide acceso a su manager (server-side resuelve destino y evita typos)
+  async function requestExternal(alias: string) {
+    setMsg("");
+    const { data, error } = await supabase.rpc("request_member_access", { p_alias: alias });
+    if (error) { setMsg("Error: " + error.message); return; }
+    const code = (data as string) ?? "";
+    setMsg(REQ_MSG[code] ?? "Request processed.");
   }
 
   function toggleExpand(uid: string) {
@@ -91,12 +113,12 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
 
   return (
     <div>
-      <div style={{ display: "flex", gap: 8, alignItems: "center", margin: "0 0 16px" }}>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", margin: "0 0 16px", flexWrap: "wrap" }}>
         <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Folder name (e.g. Project X)"
           onKeyDown={(e) => { if (e.key === "Enter") create(); }} style={{ ...input, width: 280 }} />
         <button onClick={create} disabled={!newName.trim()} style={btn}>Create folder</button>
         <InfoStar spin={false}>{
-          <>Private folders to organize <strong style={hi}>your own view</strong> by project. They are <strong style={hi}>yours only</strong> and <strong style={hi}>do not affect any numbers</strong>: they just group employees in Overview when you turn on <strong style={hi}>Group by folder</strong>.</>
+          <>Private folders to organize <strong style={hi}>your own view</strong> by project. They are <strong style={hi}>yours only</strong> and <strong style={hi}>do not affect any numbers</strong>: they just group employees in Overview when you turn on <strong style={hi}>Group by folder</strong>. Adding someone from <strong style={hi}>another team</strong> sends an access request to their manager.</>
         }</InfoStar>
       </div>
 
@@ -104,26 +126,18 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
 
       {folders.length === 0 ? (
         <div style={{ color: palette.textDim }}>No folders yet. Create one above.</div>
-      ) : folders.map((f) => (
-        <div key={f.id} style={{ border: `1px solid ${palette.border}`, borderRadius: 8, padding: "12px 14px", marginBottom: 12 }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
-            <div style={{ fontWeight: 700 }}>{f.name} <span style={{ color: palette.textDim, fontWeight: 400, fontSize: 18 }}>({f.aliases.length})</span></div>
-            <button onClick={() => remove(f.id)} className="npt-btn-remove">Delete folder</button>
-          </div>
-          {known.length === 0 ? (
-            <div style={{ color: palette.textDim, fontSize: 18 }}>No one in the team yet (add people in Employees).</div>
-          ) : (
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 6 }}>
-              {known.map((a) => (
-                <label key={a} style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 19, cursor: "pointer" }}>
-                  <input type="checkbox" checked={f.aliases.includes(a)} onChange={() => toggleMember(f, a)} />
-                  <span>{a}</span>
-                </label>
-              ))}
-            </div>
-          )}
+      ) : (
+        // grid: 3 columnas fijas, vertical infinito
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 14 }}>
+          {folders.map((f) => (
+            <FolderCard key={f.id} folder={f} teamAliases={known}
+              onRemoveMember={(a) => removeMember(f, a)}
+              onAddTeamMember={(a) => addTeamMember(f, a)}
+              onRequestExternal={requestExternal}
+              onDelete={() => remove(f.id)} />
+          ))}
         </div>
-      ))}
+      )}
 
       {isAdmin && (
         <div style={{ marginTop: 28 }}>
@@ -159,6 +173,103 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+// ---- una carta de folder: nombre, chips de miembros actuales, y "Add member" con autocomplete ----
+function FolderCard({ folder, teamAliases, onRemoveMember, onAddTeamMember, onRequestExternal, onDelete }: {
+  folder: Folder;
+  teamAliases: string[];
+  onRemoveMember: (alias: string) => void;
+  onAddTeamMember: (alias: string) => void;
+  onRequestExternal: (alias: string) => void;
+  onDelete: () => void;
+}) {
+  const [q, setQ] = useState("");
+  const [sugg, setSugg] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
+  const boxRef = useRef<HTMLDivElement>(null);
+
+  // autocomplete: busca usernames de la org (RPC), quita los ya presentes en este folder
+  useEffect(() => {
+    const v = q.trim();
+    if (!v) { setSugg([]); return; }
+    let cancelled = false;
+    const id = window.setTimeout(async () => {
+      const { data } = await supabase.rpc("search_aliases", { p_prefix: v });
+      if (cancelled) return;
+      const rows = ((data as { alias: string }[]) ?? []).map((r) => r.alias);
+      setSugg(rows.filter((a) => !folder.aliases.includes(a)).slice(0, 10));
+    }, 160);
+    return () => { cancelled = true; clearTimeout(id); };
+  }, [q, folder.aliases]);
+
+  // cierra el dropdown al clickear afuera
+  useEffect(() => {
+    function onDoc(e: MouseEvent) { if (boxRef.current && !boxRef.current.contains(e.target as Node)) setOpen(false); }
+    document.addEventListener("mousedown", onDoc);
+    return () => document.removeEventListener("mousedown", onDoc);
+  }, []);
+
+  function pick(alias: string) {
+    const a = alias.trim();
+    if (!a) return;
+    setQ(""); setSugg([]); setOpen(false);
+    if (folder.aliases.includes(a)) return;
+    if (teamAliases.includes(a)) onAddTeamMember(a);   // del team: se agrega directo
+    else onRequestExternal(a);                          // de otro team: dispara el request
+  }
+
+  return (
+    <div style={{ border: `1px solid ${palette.border}`, borderRadius: 10, padding: "12px 14px", background: palette.panel, display: "flex", flexDirection: "column" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+        <div style={{ fontWeight: 700, fontSize: 20 }}>{folder.name} <span style={{ color: palette.textDim, fontWeight: 400, fontSize: 16 }}>({folder.aliases.length})</span></div>
+        <button onClick={onDelete} className="npt-btn-remove" style={{ fontSize: 14, padding: "4px 8px" }}>Delete</button>
+      </div>
+
+      {/* miembros actuales como chips removibles */}
+      {folder.aliases.length === 0 ? (
+        <div style={{ color: palette.textDim, fontSize: 16, marginBottom: 10 }}>No members yet.</div>
+      ) : (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+          {folder.aliases.map((a) => (
+            <span key={a} style={{ display: "inline-flex", alignItems: "center", gap: 5, background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 999, padding: "3px 6px 3px 10px", fontSize: 15 }}>
+              {a}
+              <button onClick={() => onRemoveMember(a)} aria-label={`Remove ${a}`} title="Remove"
+                style={{ background: "transparent", border: "none", cursor: "pointer", padding: 0, display: "inline-flex", color: palette.textDim, lineHeight: 0 }}>
+                <IconX size={12} />
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* add member con autocomplete */}
+      <div ref={boxRef} style={{ position: "relative", marginTop: "auto" }}>
+        <input
+          value={q}
+          onChange={(e) => { setQ(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={(e) => { if (e.key === "Enter") pick(sugg[0] ?? q); }}
+          placeholder="Add member (username)"
+          style={{ ...input, width: "100%", boxSizing: "border-box", fontSize: 16, padding: "6px 9px" }}
+        />
+        {open && sugg.length > 0 && (
+          <div style={{ position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4, background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden", zIndex: 20, maxHeight: 240, overflowY: "auto" }}>
+            {sugg.map((a) => {
+              const onTeam = teamAliases.includes(a);
+              return (
+                <button key={a} onClick={() => pick(a)}
+                  style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "100%", textAlign: "left", background: "transparent", border: "none", borderBottom: `1px solid ${palette.border}`, cursor: "pointer", padding: "7px 10px", color: palette.text, fontSize: 15 }}>
+                  <span>{a}</span>
+                  {!onTeam && <span style={{ color: palette.textDim, fontSize: 12 }}>other team</span>}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

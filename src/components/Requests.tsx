@@ -12,6 +12,7 @@ interface AccessRequest {
   requester: string;
   alias: string;
   status: "pending" | "approved" | "denied";
+  target_manager: string | null;
   created_at: string;
   decided_at: string | null;
 }
@@ -30,7 +31,7 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
     setLoading(true);
     const { data } = await supabase
       .from("access_requests")
-      .select("id,requester,alias,status,created_at,decided_at")
+      .select("id,requester,alias,status,target_manager,created_at,decided_at")
       .order("created_at", { ascending: false });
     setReqs((data as AccessRequest[]) ?? []);
     if (isAdmin) {
@@ -75,8 +76,22 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
     else await load();
   }
 
+  // pedidos dirigidos A MI (soy el manager dueno de esa persona): apruebo/deniego via RPC
+  async function approveToMe(req: AccessRequest) {
+    setMsg("");
+    const { error } = await supabase.rpc("approve_member_access", { p_request_id: req.id });
+    if (error) setMsg("Error: " + error.message); else await load();
+  }
+  async function denyToMe(req: AccessRequest) {
+    setMsg("");
+    const { error } = await supabase.rpc("deny_member_access", { p_request_id: req.id });
+    if (error) setMsg("Error: " + error.message); else await load();
+  }
+
   const mine = reqs.filter((r) => r.requester === myUserId);
   const pending = reqs.filter((r) => r.status === "pending");
+  // dirigidos a mi y pendientes (para managers; el admin usa la cola global de abajo)
+  const toMe = reqs.filter((r) => r.target_manager === myUserId && r.status === "pending");
 
   return (
     <div>
@@ -109,6 +124,20 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
           </div>
         </div>
       </div>
+
+      {!isAdmin && role === "manager" && (
+        <Section title={`Requests to me (${toMe.length})`}>
+          {loading ? <Dim>Loading...</Dim> : toMe.length === 0 ? <Dim>No incoming requests. When another manager asks to see one of your team members, it shows up here.</Dim> : toMe.map((r) => (
+            <Row key={r.id}>
+              <span>A manager wants access to <strong>{r.alias}</strong> (on your team)</span>
+              <span style={{ display: "flex", gap: 8 }}>
+                <button onClick={() => approveToMe(r)} style={btn}>Approve</button>
+                <button onClick={() => denyToMe(r)} style={btnGhost}>Deny</button>
+              </span>
+            </Row>
+          ))}
+        </Section>
+      )}
 
       {isAdmin && (
         <Section title={`Pending requests (${pending.length})`}>
