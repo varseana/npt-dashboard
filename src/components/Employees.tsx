@@ -178,7 +178,7 @@ export default function Employees({ team, refreshKey, isAdmin }: { team: Team; r
             <thead>
               <tr>
                 {["#", "Employee", "Status", "Days reported", "Last report", "Actions"].map((h, i, arr) => (
-                  <th key={h} style={{ ...th, textAlign: i === 1 ? "left" : i >= 3 ? "right" : "left" }}>
+                  <th key={h} style={{ ...th, textAlign: i <= 1 ? "left" : "center" }}>
                     {h}
                     {i === arr.length - 1 && <InfoStar spin pages={ACTIONS_LEGEND} />}
                   </th>
@@ -190,11 +190,11 @@ export default function Employees({ team, refreshKey, isAdmin }: { team: Team; r
                 <tr key={p.alias} style={{ background: i % 2 ? palette.panelAlt : palette.panel }}>
                   <td style={{ ...td, color: palette.textDim }}>{i + 1}</td>
                   <td style={{ ...td, fontWeight: 600 }}>{p.alias}</td>
-                  <td style={td}><ConnChip status={p.status} /></td>
-                  <td style={{ ...td, textAlign: "right" }}>{p.days || "-"}</td>
-                  <td style={{ ...td, textAlign: "right" }}>{p.last ?? "-"}</td>
-                  <td style={{ ...td, textAlign: "right" }}>
-                    <span style={{ display: "inline-flex", gap: 22, justifyContent: "flex-end", alignItems: "center" }}>
+                  <td style={{ ...td, textAlign: "center" }}><ConnChip status={p.status} /></td>
+                  <td style={{ ...td, textAlign: "center" }}>{p.days || "-"}</td>
+                  <td style={{ ...td, textAlign: "center" }}>{p.last ?? "-"}</td>
+                  <td style={{ ...td, textAlign: "center" }}>
+                    <span style={{ display: "inline-flex", gap: 22, justifyContent: "center", alignItems: "center" }}>
                       {p.expected
                         ? <button onClick={() => removeFromRoster(p.alias)} disabled={saving} className="npt-ico-act npt-ico-danger"
                             aria-label={`Remove ${p.alias} from roster`} title="Remove (keeps their NPT)"><IconX size={17} /></button>

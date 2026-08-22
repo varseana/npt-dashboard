@@ -20,6 +20,9 @@ export const palette = {
   warnBg: "var(--warnBg)",
   bad: "var(--bad)",
   badBg: "var(--badBg)",
+  // azul Bauhaus: token disponible (aun sin uso en la UI). ej: estado "info" o acento puntual.
+  blue: "var(--blue)",
+  blueBg: "var(--blueBg)",
   clock: "var(--clock)",   // color del LCD del reloj (verde casio fosforescente en dark)
 };
 

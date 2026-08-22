@@ -123,7 +123,7 @@ export default function Org() {
                     <th style={th}>Planned</th>
                     <th style={th}>Remaining</th>
                     <th style={th}>Status</th>
-                    <th style={{ ...th, textAlign: "right" }}></th>
+                    <th style={{ ...th, textAlign: "center" }}></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -139,7 +139,7 @@ export default function Org() {
                         <td style={{ ...td, color: palette.textDim }}>{pl != null ? fmtHms(pl) : "-"}</td>
                         <td style={{ ...td, color: remainColor(status) }}>{remaining != null ? fmtHms(remaining) : "-"}</td>
                         <td style={td}><StatusChip status={status} /></td>
-                        <td style={{ ...td, textAlign: "right" }}>
+                        <td style={{ ...td, textAlign: "center" }}>
                           <button onClick={() => removeMember(mgr.user_id, m.alias)} className="npt-btn-remove">Remove</button>
                         </td>
                       </tr>
@@ -170,8 +170,8 @@ function remainColor(s: NptStatus): string {
   return s === "bad" ? palette.bad : s === "warn" ? palette.warn : s === "ok" ? palette.ok : palette.textDim;
 }
 
-const th: React.CSSProperties = { textAlign: "right", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
-const td: React.CSSProperties = { textAlign: "right", padding: "8px 10px", borderBottom: `1px solid ${palette.border}` };
+const th: React.CSSProperties = { textAlign: "center", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
+const td: React.CSSProperties = { textAlign: "center", padding: "8px 10px", borderBottom: `1px solid ${palette.border}` };
 const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 19 };
 const select: React.CSSProperties = { ...input, minWidth: 260 };
 const btn: React.CSSProperties = { background: palette.accent, color: palette.accentText, border: "none", borderRadius: 8, padding: "8px 12px", fontSize: 18, cursor: "pointer", fontWeight: 600 };

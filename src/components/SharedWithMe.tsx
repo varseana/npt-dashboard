@@ -108,20 +108,20 @@ export default function SharedWithMe({ myUserId }: { myUserId: string }) {
             <thead>
               <tr>
                 <th style={th}>Employee</th>
-                <th style={th}>Days</th>
-                {NPT_AUX.map((b) => <th key={b} style={{ ...th, textAlign: "right" }}>{b}</th>)}
-                <th style={{ ...th, textAlign: "right" }}>NPT</th>
-                <th style={th}></th>
+                <th style={{ ...th, textAlign: "center" }}>Days</th>
+                {NPT_AUX.map((b) => <th key={b} style={{ ...th, textAlign: "center" }}>{b}</th>)}
+                <th style={{ ...th, textAlign: "center" }}>NPT</th>
+                <th style={{ ...th, textAlign: "center" }}></th>
               </tr>
             </thead>
             <tbody>
               {people.map((p) => (
                 <tr key={p.alias}>
                   <td style={td}><strong>{p.alias}</strong></td>
-                  <td style={td}>{p.days}</td>
-                  {NPT_AUX.map((b) => <td key={b} style={{ ...td, textAlign: "right", fontVariantNumeric: "tabular-nums", color: p.buckets[b] ? palette.text : palette.textDim }}>{fmtHms(p.buckets[b] ?? 0)}</td>)}
-                  <td style={{ ...td, textAlign: "right", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{fmtHms(p.total)}</td>
-                  <td style={{ ...td, textAlign: "right" }}>
+                  <td style={{ ...td, textAlign: "center" }}>{p.days}</td>
+                  {NPT_AUX.map((b) => <td key={b} style={{ ...td, textAlign: "center", fontVariantNumeric: "tabular-nums", color: p.buckets[b] ? palette.text : palette.textDim }}>{fmtHms(p.buckets[b] ?? 0)}</td>)}
+                  <td style={{ ...td, textAlign: "center", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{fmtHms(p.total)}</td>
+                  <td style={{ ...td, textAlign: "center" }}>
                     <button onClick={() => revoke(p.alias)} className="npt-btn-remove" style={{ fontSize: 14, padding: "4px 8px" }}>Revoke</button>
                   </td>
                 </tr>

@@ -119,12 +119,12 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
             {NPT_AUX.map((a) => (
               <tr key={a} style={{ borderBottom: `1px solid ${palette.border}` }}>
                 <td style={{ padding: "8px 4px", color: palette.textDim }}>{a}</td>
-                <td style={{ padding: "8px 4px", textAlign: "right", fontVariantNumeric: "tabular-nums" }}>{fmtHms(perAux[a])}</td>
+                <td style={{ padding: "8px 4px", textAlign: "center", fontVariantNumeric: "tabular-nums" }}>{fmtHms(perAux[a])}</td>
               </tr>
             ))}
             <tr>
               <td style={{ padding: "10px 4px", fontWeight: 700 }}>Total NPT</td>
-              <td style={{ padding: "10px 4px", textAlign: "right", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{fmtHms(totalNpt)}</td>
+              <td style={{ padding: "10px 4px", textAlign: "center", fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{fmtHms(totalNpt)}</td>
             </tr>
           </tbody>
         </table>

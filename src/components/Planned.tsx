@@ -199,12 +199,12 @@ export default function Planned({ team }: { team: Team }) {
             return (
               <tr key={a} style={{ background: i % 2 ? palette.panel : palette.panelAlt }}>
                 <td style={{ ...td, textAlign: "left", fontWeight: 600 }}>{a}</td>
-                <td style={{ ...td, textAlign: "right" }}>
+                <td style={{ ...td, textAlign: "center" }}>
                   <input value={personInputs[a] ?? ""} onChange={(e) => setPersonInputs((p) => ({ ...p, [a]: e.target.value }))}
                     onBlur={() => setPersonInputs((p) => ({ ...p, [a]: normalize(p[a] ?? "") }))}
-                    placeholder={fair != null ? fmtHms(fair) : "H:MM"} style={{ ...input, width: 120, textAlign: "right" }} />
+                    placeholder={fair != null ? fmtHms(fair) : "H:MM"} style={{ ...input, width: 120, textAlign: "center" }} />
                 </td>
-                <td style={{ ...td, textAlign: "right", color: eff != null ? palette.text : palette.textDim, fontWeight: isCustom ? 700 : 400 }}>
+                <td style={{ ...td, textAlign: "center", color: eff != null ? palette.text : palette.textDim, fontWeight: isCustom ? 700 : 400 }}>
                   {eff != null ? fmtHms(eff) : "no budget"}
                 </td>
               </tr>
@@ -230,7 +230,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-const th: React.CSSProperties = { textAlign: "right", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
+const th: React.CSSProperties = { textAlign: "center", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
 const td: React.CSSProperties = { padding: "8px 10px", borderBottom: `1px solid ${palette.border}` };
 const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 19 };
 const select: React.CSSProperties = { ...input };
