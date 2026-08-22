@@ -6,6 +6,7 @@ import { palette } from "./theme";
 import Login from "./components/Login";
 import Overview from "./components/Overview";
 import Distribution from "./components/Distribution";
+import SharedWithMe from "./components/SharedWithMe";
 import Employees from "./components/Employees";
 import Planned from "./components/Planned";
 import Folders from "./components/Folders";
@@ -42,7 +43,7 @@ export default function App() {
   const [teamId, setTeamId] = useState<string>("");
   // nav de 2 niveles (progressive disclosure): 3 secciones arriba, sub-nav adentro
   const [section, setSection] = useState<"dashboard" | "team" | "access">("dashboard");
-  const [dashView, setDashView] = useState<"summary" | "breakdown">("summary");
+  const [dashView, setDashView] = useState<"summary" | "breakdown" | "shared">("summary");
   const [teamTab, setTeamTab] = useState<"employees" | "planned" | "folders">("employees");
   const [accessTab, setAccessTab] = useState<"requests" | "org" | "managers" | "teams" | "unassigned">("requests");
   const [askLogout, setAskLogout] = useState(false);
@@ -239,6 +240,7 @@ export default function App() {
         {section === "dashboard" && (<>
           <SubBtn active={dashView === "summary"} onClick={() => setDashView("summary")}>Summary</SubBtn>
           <SubBtn active={dashView === "breakdown"} onClick={() => setDashView("breakdown")}>Breakdown</SubBtn>
+          <SubBtn active={dashView === "shared"} onClick={() => setDashView("shared")}>Shared with me</SubBtn>
         </>)}
         {section === "team" && (<>
           <SubBtn active={teamTab === "employees"} onClick={() => setTeamTab("employees")}>Employees</SubBtn>
@@ -256,6 +258,7 @@ export default function App() {
 
       {section === "dashboard" && team && dashView === "summary" && <Overview team={team} refreshKey={refreshTick} onNavigate={goTo} />}
       {section === "dashboard" && team && dashView === "breakdown" && <Distribution team={team} refreshKey={refreshTick} />}
+      {section === "dashboard" && dashView === "shared" && <SharedWithMe myUserId={manager.user_id} />}
       {section === "team" && team && teamTab === "employees" && <Employees team={team} refreshKey={refreshTick} isAdmin={manager.role === "admin"} />}
       {section === "team" && team && teamTab === "planned" && <Planned team={team} />}
       {section === "team" && team && teamTab === "folders" && <Folders team={team} isAdmin={manager.role === "admin"} myUserId={manager.user_id} />}
