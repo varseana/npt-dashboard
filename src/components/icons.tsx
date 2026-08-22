@@ -89,6 +89,19 @@ export function IconPlus({ size = 16, style }: P) {
   );
 }
 
+// "mover fuera" (outline): flecha saliendo de una bandeja abierta. Distinto del IconLogout (puerta)
+// para no confundir con el boton de cerrar sesion. Usado en "Move to Unassigned".
+export function IconMoveOut({ size = 16, style }: P) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", ...style }} aria-hidden="true">
+      <path d="M12 3v11" />
+      <path d="M8 7l4-4 4 4" />
+      <path d="M5 13v6h14v-6" />
+    </svg>
+  );
+}
+
 // folder solido (currentColor). usado como toggle de "group by folder".
 export function IconFolder({ size = 16, style }: P) {
   return (

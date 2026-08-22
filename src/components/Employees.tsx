@@ -5,6 +5,7 @@ import { palette } from "../theme";
 import { InfoStar } from "./InfoStar";
 import { TableSkeleton } from "./skeleton";
 import { AddInput } from "./Inputs";
+import { IconCheck, IconX, IconMoveOut } from "./icons";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 // highlight monocromatico dentro del texto del popover (bold en color de texto full)
@@ -25,6 +26,28 @@ interface Person {
 }
 
 const RANK: Record<ConnStatus, number> = { pending: 0, unlisted: 1, connected: 2 };
+
+// fila de la leyenda del popover: icono a la izquierda (ancho fijo, alinea los labels) + explicacion.
+function LegendRow({ icon, title, children }: { icon: React.ReactNode; title: string; children: React.ReactNode }) {
+  return (
+    <div style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 10 }}>
+      <span style={{ flex: "0 0 22px", display: "inline-flex", justifyContent: "center", color: palette.text, marginTop: 2 }}>{icon}</span>
+      <span><strong style={hi}>{title}</strong> {children}</span>
+    </div>
+  );
+}
+// leyenda de la columna "Actions" (popover del asterisco giratorio), paginada 1/2.
+const ACTIONS_LEGEND: React.ReactNode[] = [
+  <>
+    <div style={{ fontWeight: 700, color: palette.text, marginBottom: 8 }}>What each action does</div>
+    <LegendRow icon={<IconCheck size={16} />} title="Confirm">this person already reports under your team; adds them to your roster so they count as expected (Unlisted becomes Connected).</LegendRow>
+    <LegendRow icon={<IconX size={15} />} title="Remove">takes them off your expected roster. It does not touch their NPT.</LegendRow>
+  </>,
+  <>
+    <LegendRow icon={<IconMoveOut size={16} />} title="Move to Unassigned"><strong style={hi}>Admin only.</strong> Moves this person and their NPT history out of the team, into Access {"> "}Unassigned.</LegendRow>
+    <div style={{ fontSize: 13, color: palette.textDim, marginTop: 4 }}>Only the icons that apply to a row are shown.</div>
+  </>,
+];
 
 function parseAliases(raw: string): string[] {
   return Array.from(new Set(
@@ -154,8 +177,11 @@ export default function Employees({ team, refreshKey, isAdmin }: { team: Team; r
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19 }}>
             <thead>
               <tr>
-                {["#", "Employee", "Status", "Days reported", "Last report", ""].map((h, i) => (
-                  <th key={h || "act"} style={{ ...th, textAlign: i === 1 ? "left" : i >= 3 ? "right" : "left" }}>{h}</th>
+                {["#", "Employee", "Status", "Days reported", "Last report", "Actions"].map((h, i, arr) => (
+                  <th key={h} style={{ ...th, textAlign: i === 1 ? "left" : i >= 3 ? "right" : "left" }}>
+                    {h}
+                    {i === arr.length - 1 && <InfoStar spin pages={ACTIONS_LEGEND} />}
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -168,13 +194,16 @@ export default function Employees({ team, refreshKey, isAdmin }: { team: Team; r
                   <td style={{ ...td, textAlign: "right" }}>{p.days || "-"}</td>
                   <td style={{ ...td, textAlign: "right" }}>{p.last ?? "-"}</td>
                   <td style={{ ...td, textAlign: "right" }}>
-                    <span style={{ display: "inline-flex", gap: 8, justifyContent: "flex-end" }}>
+                    <span style={{ display: "inline-flex", gap: 22, justifyContent: "flex-end", alignItems: "center" }}>
                       {p.expected
-                        ? <button onClick={() => removeFromRoster(p.alias)} disabled={saving} className="npt-btn-remove" title="Remove from the team list">Remove</button>
-                        : <button onClick={() => add([p.alias])} disabled={saving} style={btnGhost} title="Add to the expected team list">Add to team</button>}
+                        ? <button onClick={() => removeFromRoster(p.alias)} disabled={saving} className="npt-ico-act npt-ico-danger"
+                            aria-label={`Remove ${p.alias} from roster`} title="Remove from your roster (keeps their NPT)"><IconX size={17} /></button>
+                        : <button onClick={() => add([p.alias])} disabled={saving} className="npt-ico-act"
+                            aria-label={`Confirm ${p.alias} is on your team`} title="Confirm this person is on your team (adds them to your roster)"><IconCheck size={18} /></button>}
                       {isAdmin && p.connected && team.id !== UNASSIGNED_ID && (
-                        <button onClick={() => moveToUnassigned(p.alias)} disabled={saving} className="npt-btn-remove"
-                          title="Move this person out of this team into Unassigned (moves their NPT too)">Move to Unassigned</button>
+                        <button onClick={() => moveToUnassigned(p.alias)} disabled={saving} className="npt-ico-act npt-ico-danger"
+                          aria-label={`Move ${p.alias} to Unassigned`}
+                          title="Move this person out of this team into Unassigned (moves their NPT too)"><IconMoveOut size={18} /></button>
                       )}
                     </span>
                   </td>

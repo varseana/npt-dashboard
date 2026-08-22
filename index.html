@@ -60,6 +60,12 @@
       /* ojo de revelar contrasena: gris por defecto, contraste full en hover */
       .npt-eye { color: var(--textDim); transition: color .2s ease; }
       .npt-eye:hover { color: var(--text); }
+      /* iconos de accion sin borde (columna Actions): gris por defecto, contraste en hover. */
+      .npt-ico-act { background: transparent; border: none; cursor: pointer; padding: 2px; display: inline-flex; color: var(--textDim); transition: color .2s ease; }
+      .npt-ico-act:hover:not(:disabled) { color: var(--text); }
+      /* variante destructiva (remove / move out): hover rojo. */
+      .npt-ico-danger:hover:not(:disabled) { color: var(--bad); }
+      .npt-ico-act:disabled { opacity: .4; cursor: default; }
       /* oculta el ojo/limpiar NATIVO del navegador (Edge/IE) para no tener doble ojo; dejamos el nuestro */
       input::-ms-reveal, input::-ms-clear { display: none; }
       /* accesibilidad: si el usuario pidio menos movimiento, no giramos */
