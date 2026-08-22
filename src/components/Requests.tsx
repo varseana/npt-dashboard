@@ -80,19 +80,34 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
 
   return (
     <div>
-      <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "14px 16px", marginBottom: 18 }}>
-        <div className="npt-title" style={{ fontWeight: 700, fontSize: 22, marginBottom: 10 }}>
-          Request access<InfoStar pages={[
-            <>Ask to view another employee's NPT, e.g. someone who is <strong style={hi}>also on your project</strong>. Type their username and send it.</>,
-            <>An <strong style={hi}>admin approves or denies</strong> it. Once approved, that person shows up in your team views.</>,
-          ]} />
+      {/* usa el ancho: izquierda pedir acceso, derecha mis requests (colapsa a 1 col en pantallas chicas) */}
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 18, alignItems: "start", marginBottom: 18 }}>
+        <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "14px 16px" }}>
+          <div className="npt-title" style={{ fontWeight: 700, fontSize: 22, marginBottom: 10 }}>
+            Request access<InfoStar pages={[
+              <>Ask to view another employee's NPT, e.g. someone who is <strong style={hi}>also on your project</strong>. Type their username and send it.</>,
+              <>An <strong style={hi}>admin approves or denies</strong> it. Once approved, that person shows up in your team views.</>,
+            ]} />
+          </div>
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input value={alias} onChange={(e) => setAlias(e.target.value)} placeholder="username"
+              onKeyDown={(e) => { if (e.key === "Enter") submit(); }} style={{ ...input, flex: 1, minWidth: 0 }} />
+            <button onClick={submit} disabled={!alias.trim()} style={btn}>Send request</button>
+          </div>
+          {msg && <div style={{ marginTop: 10, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 18 }}>{msg}</div>}
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <input value={alias} onChange={(e) => setAlias(e.target.value)} placeholder="username"
-            onKeyDown={(e) => { if (e.key === "Enter") submit(); }} style={{ ...input, width: 220 }} />
-          <button onClick={submit} disabled={!alias.trim()} style={btn}>Send request</button>
+
+        <div>
+          <div className="npt-title" style={{ fontWeight: 700, fontSize: 22, marginBottom: 10 }}>My requests</div>
+          <div style={{ border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden" }}>
+            {loading ? <Dim>Loading...</Dim> : mine.length === 0 ? <Dim>No requests yet.</Dim> : mine.map((r) => (
+              <Row key={r.id}>
+                <span><strong>{r.alias}</strong></span>
+                <StatusPill status={r.status} />
+              </Row>
+            ))}
+          </div>
         </div>
-        {msg && <div style={{ marginTop: 10, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 18 }}>{msg}</div>}
       </div>
 
       {isAdmin && (
@@ -108,15 +123,6 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
           ))}
         </Section>
       )}
-
-      <Section title="My requests">
-        {loading ? <Dim>Loading...</Dim> : mine.length === 0 ? <Dim>No requests yet.</Dim> : mine.map((r) => (
-          <Row key={r.id}>
-            <span><strong>{r.alias}</strong></span>
-            <StatusPill status={r.status} />
-          </Row>
-        ))}
-      </Section>
     </div>
   );
 }
