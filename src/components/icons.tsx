@@ -128,6 +128,19 @@ export function IconCompress({ size = 16, style }: P) {
   );
 }
 
+// tacho de basura (outline, currentColor). usado en el boton de eliminar cuenta (hover -> rojo).
+export function IconTrash({ size = 16, style }: P) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", ...style }} aria-hidden="true">
+      <path d="M4 7h16" />
+      <path d="M9 7V4h6v3" />
+      <path d="M6 7l1 13h10l1-13" />
+      <path d="M10 11v6M14 11v6" />
+    </svg>
+  );
+}
+
 // folder solido (currentColor). usado como toggle de "group by folder".
 export function IconFolder({ size = 16, style }: P) {
   return (

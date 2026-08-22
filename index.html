@@ -14,10 +14,10 @@
         --text: #111111; --textDim: #767676; --accent: #111111; --accentSoft: #111111;
         --deep: #000000; --over: #111111; --under: #9a9a9a;
         --accent-text: #ffffff;   /* texto sobre botones accent */
-        /* paleta Bauhaus (rojo/amarillo/azul/verde). hex exactos donde leen bien sobre el fondo claro;
-           el amarillo puro ECC412 es ilegible como TEXTO sobre off-white, asi que en light se usa un
-           dorado mas oscuro y el ECC412 exacto vive en dark. azul = token nuevo, disponible aunque no se use aun. */
-        --ok: #1c7f46; --okBg: #e4f1e9; --warn: #8a6d00; --warnBg: #fbf1cc; --bad: #b0232b; --badBg: #f7e2e4;
+        /* paleta Bauhaus (rojo/amarillo/azul/verde) con hex EXACTOS de Sean. Nota: el amarillo ECC412
+           como TEXTO sobre off-white tiene contraste bajo (Sean lo prefiere asi vs el dorado que se veia
+           "cafe"). azul = token nuevo, disponible aunque no se use aun. */
+        --ok: #1c7f46; --okBg: #e4f1e9; --warn: #ecc412; --warnBg: #fbf1cc; --bad: #b0232b; --badBg: #f7e2e4;
         --blue: #0d5c9d; --blueBg: #e3ecf4;
         --clock: #111111;
         --skel1: #e9e8e5; --skel2: #f4f3f1;
@@ -32,7 +32,7 @@
            se aclaran respecto al hex de light para tener contraste sobre negro (mismos matices Bauhaus). */
         --ok: #35b368; --okBg: #12261a; --warn: #ecc412; --warnBg: #2b2410; --bad: #e5484d; --badBg: #35191a;
         --blue: #4a9eda; --blueBg: #10263a;
-        --clock: #39ff14;   /* verde casio fosforescente */
+        --clock: #4a9eda;   /* azul Bauhaus para el LCD del reloj en dark (antes verde casio) */
         --skel1: #1c1c1c; --skel2: #262626;
       }
       html, body { margin: 0; background: var(--bg); color: var(--text); }

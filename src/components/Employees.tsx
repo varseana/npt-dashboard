@@ -218,13 +218,15 @@ export default function Employees({ team, refreshKey, isAdmin }: { team: Team; r
 }
 
 function ConnChip({ status }: { status: ConnStatus }) {
-  const map: Record<ConnStatus, { label: string; fg: string; bg: string }> = {
-    connected: { label: "Connected", fg: palette.ok, bg: palette.okBg },
-    pending: { label: "Pending", fg: palette.warn, bg: palette.warnBg },
-    unlisted: { label: "Unlisted", fg: palette.textDim, bg: palette.panelAlt },
+  // solo texto de color, sin pill (mismo lenguaje que StatusChip). Connected verde / Pending amarillo /
+  // Unlisted gris.
+  const map: Record<ConnStatus, { label: string; fg: string }> = {
+    connected: { label: "Connected", fg: palette.ok },
+    pending: { label: "Pending", fg: palette.warn },
+    unlisted: { label: "Unlisted", fg: palette.textDim },
   };
   const s = map[status];
-  return <span style={{ display: "inline-block", fontSize: 17, fontWeight: 600, padding: "2px 10px", borderRadius: 6, color: s.fg, background: s.bg, border: `1px solid color-mix(in srgb, ${s.fg} 28%, transparent)` }}>{s.label}</span>;
+  return <span style={{ fontSize: 17, fontWeight: 700, color: s.fg }}>{s.label}</span>;
 }
 
 const th: React.CSSProperties = { textAlign: "left", padding: "9px 12px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };

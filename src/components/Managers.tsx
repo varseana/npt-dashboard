@@ -4,7 +4,7 @@ import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { TableSkeleton } from "./skeleton";
 import { InfoStar } from "./InfoStar";
-import { IconAlert } from "./icons";
+import { IconAlert, IconTrash } from "./icons";
 import { SearchInput } from "./Inputs";
 
 type Role = "standby" | "user" | "manager" | "admin";
@@ -233,9 +233,9 @@ function PersonRow({ r, teams, isMe, matched, onRole, onTeam, onAlias, onDelete 
         : <span />}
 
       <div style={{ display: "flex", justifyContent: "flex-end" }}>
-        <button onClick={onDelete} disabled={isMe} className="npt-btn-remove"
-          title={isMe ? "You can't delete yourself" : "Delete account"} style={{ padding: "7px 12px", fontSize: 18 }}>
-          Delete
+        <button onClick={onDelete} disabled={isMe} className="npt-ico-act npt-ico-danger"
+          title={isMe ? "You can't delete yourself" : "Delete account"} aria-label="Delete account">
+          <IconTrash size={19} />
         </button>
       </div>
     </div>
@@ -243,9 +243,12 @@ function PersonRow({ r, teams, isMe, matched, onRole, onTeam, onAlias, onDelete 
 }
 
 function MatchChip({ matched }: { matched: boolean }) {
-  return matched
-    ? <span style={{ fontSize: 16, fontWeight: 600, padding: "2px 8px", borderRadius: 6, color: palette.ok, background: palette.okBg, whiteSpace: "nowrap" }}>has data</span>
-    : <span style={{ fontSize: 16, fontWeight: 600, padding: "2px 8px", borderRadius: 6, color: palette.textDim, background: palette.panelAlt, whiteSpace: "nowrap" }}>no data</span>;
+  // solo texto de color, sin pill
+  return (
+    <span style={{ fontSize: 16, fontWeight: 700, whiteSpace: "nowrap", color: matched ? palette.ok : palette.textDim }}>
+      {matched ? "has data" : "no data"}
+    </span>
+  );
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
