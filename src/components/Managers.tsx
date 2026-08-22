@@ -5,6 +5,7 @@ import { palette } from "../theme";
 import { TableSkeleton } from "./skeleton";
 import { InfoStar } from "./InfoStar";
 import { IconAlert } from "./icons";
+import { SearchInput } from "./Inputs";
 
 type Role = "standby" | "user" | "manager" | "admin";
 interface MgrRow {
@@ -132,8 +133,10 @@ export default function Managers({ teams, myUserId, refreshKey }:
       {msg && <div style={{ marginBottom: 12, color: palette.bad, fontSize: 18 }}>{msg}</div>}
 
       <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 14, flexWrap: "wrap" }}>
-        <input value={query} onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search by email or username" style={searchInput} />
+        <SearchInput value={query} onChange={(e) => setQuery(e.target.value)}
+          placeholder="email or username" aria-label="Search by email or username"
+          containerStyle={{ flex: "1 1 240px", minWidth: 200 }}
+          style={{ width: "100%", fontSize: 16, padding: "8px 12px", paddingLeft: 34 }} />
       </div>
 
       {/* sub-tabs por rol: cada rol su propia lista, para que 200+ personas no se mezclen */}
@@ -280,9 +283,4 @@ const btn: React.CSSProperties = {
 const btnGhost: React.CSSProperties = {
   background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
   borderRadius: 8, padding: "7px 12px", fontSize: 18, cursor: "pointer",
-};
-const searchInput: React.CSSProperties = {
-  flex: "1 1 240px", minWidth: 200, background: palette.panel, color: palette.text,
-  border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 12px", fontSize: 16,
-  boxSizing: "border-box",
 };

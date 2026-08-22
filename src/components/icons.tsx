@@ -78,6 +78,17 @@ export function IconSearch({ size = 16, style }: P) {
   );
 }
 
+// mas (outline, currentColor -> se adapta a light y dark). va dentro del input de "agregar".
+export function IconPlus({ size = 16, style }: P) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={2.4} strokeLinecap="round" style={{ display: "block", ...style }} aria-hidden="true">
+      <line x1="12" y1="5" x2="12" y2="19" />
+      <line x1="5" y1="12" x2="19" y2="12" />
+    </svg>
+  );
+}
+
 // folder solido (currentColor). usado como toggle de "group by folder".
 export function IconFolder({ size = 16, style }: P) {
   return (

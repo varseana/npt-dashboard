@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { InfoStar } from "./InfoStar";
+import { AddInput, splitAliases } from "./Inputs";
 
 // highlight monocromatico dentro del texto del popover (bold en color de texto full)
 const hi = { color: palette.text, fontWeight: 700 } as React.CSSProperties;
@@ -59,16 +60,30 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
   useEffect(() => { load(); /* eslint-disable-next-line */ }, []);
 
   async function submit() {
-    const a = alias.trim().toLowerCase();
-    if (!a) return;
+    // acepta uno o varios usernames (coma / espacio separados); cada uno se valida y rutea server-side.
+    const aliases = splitAliases(alias);
+    if (!aliases.length) return;
     setMsg(""); setNotFound(null);
-    // valida + rutea server-side: si el alias no existe devuelve 'not_found' (no crea request).
-    const { data, error } = await supabase.rpc("request_member_access", { p_alias: a });
-    if (error) { setMsg("Error: " + error.message); return; }
-    const code = (data as string) ?? "";
-    if (code === "not_found") { setNotFound(a); return; }
-    setAlias("");
-    setMsg(REQ_MSG[code] ?? "Request sent.");
+    const notFoundList: string[] = [];
+    let sent = 0, existing = 0, lastCode = "";
+    for (const a of aliases) {
+      const { data, error } = await supabase.rpc("request_member_access", { p_alias: a });
+      if (error) { setMsg("Error: " + error.message); await load(); return; }
+      const code = (data as string) ?? "";
+      if (code === "not_found") { notFoundList.push(a); continue; }
+      if (code === "sent_manager" || code === "sent_admin") sent++; else existing++;
+      lastCode = code;
+    }
+    if (notFoundList.length) setNotFound(notFoundList.join(", "));
+    if (aliases.length === 1 && !notFoundList.length) {
+      setMsg(REQ_MSG[lastCode] ?? "Request sent.");
+    } else {
+      const parts: string[] = [];
+      if (sent) parts.push(`${sent} request${sent > 1 ? "s" : ""} sent`);
+      if (existing) parts.push(`${existing} already had access or a pending request`);
+      if (parts.length) setMsg(parts.join("; ") + ".");
+    }
+    if (!notFoundList.length) setAlias("");   // deja lo escrito si hubo alguno no encontrado, para corregir
     await load();
   }
 
@@ -130,8 +145,10 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
             ]} />
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <input value={alias} onChange={(e) => setAlias(e.target.value)} placeholder="username"
-              onKeyDown={(e) => { if (e.key === "Enter") submit(); }} style={{ ...input, flex: 1, minWidth: 0 }} />
+            <AddInput value={alias} onChange={(e) => setAlias(e.target.value)} placeholder="username(s)"
+              title="One or more usernames, comma or space separated" aria-label="Request access to usernames"
+              onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
+              containerStyle={{ display: "flex", flex: 1, minWidth: 0 }} style={{ width: "100%" }} />
             <button onClick={submit} disabled={!alias.trim()} style={btn}>Send request</button>
           </div>
           {msg && <div style={{ marginTop: 10, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 18 }}>{msg}</div>}
@@ -217,6 +234,5 @@ function Dim({ children }: { children: React.ReactNode }) {
   return <div style={{ padding: "10px 12px", color: palette.textDim, fontSize: 18 }}>{children}</div>;
 }
 
-const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 10px", fontSize: 19 };
 const btn: React.CSSProperties = { background: palette.accent, color: palette.accentText, border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600 };
 const btnGhost: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 12px", fontSize: 18, cursor: "pointer" };

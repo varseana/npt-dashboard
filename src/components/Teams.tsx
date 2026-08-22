@@ -4,11 +4,22 @@ import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { TableSkeleton } from "./skeleton";
 import { InfoStar } from "./InfoStar";
+import { AddInput } from "./Inputs";
 
 interface Team { id: string; name: string; npt_target_pct: number }
 interface Code { code: string; team_id: string; active: boolean }
 // highlight monocromatico dentro del texto del popover (bold en color de texto full)
 const hi = { color: palette.text, fontWeight: 700 } as React.CSSProperties;
+
+// normaliza el codigo de enrollment mientras se escribe: solo MAYUSCULAS, sin espacios
+// (los espacios pasan a "-"), y ningun caracter especial salvo "-" (guiones repetidos se colapsan).
+function sanitizeCode(raw: string): string {
+  return raw
+    .toUpperCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^A-Z0-9-]/g, "")
+    .replace(/-{2,}/g, "-");
+}
 
 // panel de admin: crear/editar teams y sus codigos de enrollment sin tocar SQL.
 // El borrado de teams no se expone (arrastra codigos y choca con el FK de npt_daily).
@@ -48,7 +59,7 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
       .insert({ name, npt_target_pct: 10 })
       .select("id").single();
     if (error) { setMsg("Error: " + error.message); return; }
-    const code = newCode.trim().toUpperCase();
+    const code = sanitizeCode(newCode.trim());
     if (code && data) {
       const { error: e2 } = await supabase.from("enrollments").insert({ code, team_id: (data as { id: string }).id });
       if (e2) setMsg("Team created, but code failed: " + e2.message);
@@ -66,7 +77,7 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
 
   async function addCode(teamId: string) {
     setMsg("");
-    const code = (codeInputs[teamId] ?? "").trim().toUpperCase();
+    const code = sanitizeCode((codeInputs[teamId] ?? "").trim());
     if (!code) return;
     const { error } = await supabase.from("enrollments").insert({ code, team_id: teamId });
     if (error) { setMsg("Error: " + error.message); return; }
@@ -95,9 +106,10 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
         </div>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Team name"
-            style={{ ...input, width: 200 }} />
-          <input value={newCode} onChange={(e) => setNewCode(e.target.value)} placeholder="Enrollment code (optional)"
-            style={{ ...input, width: 200, textTransform: "uppercase" }} />
+            style={{ ...input, flex: "1 1 340px", minWidth: 340 }} />
+          <input value={newCode} onChange={(e) => setNewCode(sanitizeCode(e.target.value))} placeholder="Enrollment code (optional)"
+            title="Uppercase only, no spaces, dashes (-) as separators"
+            style={{ ...input, width: 240, textTransform: "uppercase" }} />
           <button onClick={createTeam} disabled={!newName.trim()} style={btn}>Create team</button>
         </div>
       </div>
@@ -111,7 +123,7 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
               <div style={{ display: "flex", gap: 10, alignItems: "center", padding: "12px 14px", background: palette.panel, flexWrap: "wrap" }}>
                 <input defaultValue={t.name}
                   onBlur={(e) => { const v = e.target.value.trim(); if (v && v !== t.name) saveTeam(t, { name: v }); }}
-                  style={{ ...input, fontWeight: 600, width: 220 }} title="Rename team (saves on blur)" />
+                  style={{ ...input, fontWeight: 600, flex: "1 1 340px", minWidth: 340 }} title="Rename team (saves on blur)" />
               </div>
               <div style={{ padding: "10px 14px", borderTop: `1px solid ${palette.border}`, background: palette.bg }}>
                 <div style={{ fontSize: 17, color: palette.textDim, marginBottom: 8, fontWeight: 600 }}>Enrollment codes<InfoStar spin={false}>{
@@ -128,9 +140,10 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
                   </div>
                 ))}
                 <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
-                  <input value={codeInputs[t.id] ?? ""} onChange={(e) => setCodeInputs((m) => ({ ...m, [t.id]: e.target.value }))}
-                    placeholder="new code" onKeyDown={(e) => { if (e.key === "Enter") addCode(t.id); }}
-                    style={{ ...input, width: 180, textTransform: "uppercase" }} />
+                  <AddInput value={codeInputs[t.id] ?? ""} onChange={(e) => setCodeInputs((m) => ({ ...m, [t.id]: sanitizeCode(e.target.value) }))}
+                    placeholder="code" onKeyDown={(e) => { if (e.key === "Enter") addCode(t.id); }}
+                    title="Uppercase only, no spaces, dashes (-) as separators" aria-label="Add enrollment code"
+                    style={{ width: 200, textTransform: "uppercase" }} />
                   <button onClick={() => addCode(t.id)} disabled={!(codeInputs[t.id] ?? "").trim()} style={btn}>Add code</button>
                 </div>
               </div>

@@ -11,6 +11,7 @@ import { StatusChip } from "./status";
 import { InfoStar } from "./InfoStar";
 import { TableSkeleton } from "./skeleton";
 import WeekCountdown from "./WeekCountdown";
+import { SearchInput } from "./Inputs";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 // highlight monocromatico dentro del texto del popover (bold en color de texto full)
@@ -139,9 +140,8 @@ export default function Distribution({ team, refreshKey }: { team: Team; refresh
             {weeks.map((w) => (<option key={w.key} value={w.key}>{weekLabel(w)}</option>))}
           </select>
         </Field>
-        <Field label="Filter user">
-          <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="username" style={input} />
-        </Field>
+        <SearchInput value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="username"
+          aria-label="Filter by username" />
         <button onClick={exportCsv} disabled={!shown.length} style={csvBtn}>Export CSV</button>
       </div>
 

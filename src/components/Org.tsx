@@ -9,6 +9,7 @@ import {
 } from "../lib/npt";
 import { StatusChip } from "./status";
 import { BlockSkeleton } from "./skeleton";
+import { AddInput, splitAliases } from "./Inputs";
 
 interface ManagerRow { user_id: string; email: string; role: string; team_id: string | null; }
 interface MemberLink { manager_owner: string; alias: string; team_id: string | null; }
@@ -66,11 +67,12 @@ export default function Org() {
   }
 
   async function addMember(mgr: ManagerRow) {
-    const alias = (addInputs[mgr.user_id] || "").trim().toLowerCase();
-    if (!alias) return;
+    // acepta uno o varios usernames (coma / espacio separados)
+    const aliases = splitAliases(addInputs[mgr.user_id] || "");
+    if (!aliases.length) return;
     setMsg("");
-    const { error } = await supabase.from("manager_members")
-      .insert({ manager_owner: mgr.user_id, alias, team_id: mgr.team_id });
+    const rows = aliases.map((alias) => ({ manager_owner: mgr.user_id, alias, team_id: mgr.team_id }));
+    const { error } = await supabase.from("manager_members").insert(rows);
     if (error) setMsg("Error: " + error.message);
     else { setAddInputs((p) => ({ ...p, [mgr.user_id]: "" })); await load(); }
   }
@@ -147,10 +149,11 @@ export default function Org() {
               </table>
             )}
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <input list="npt-known-aliases" value={addInputs[mgr.user_id] || ""}
+              <AddInput list="npt-known-aliases" value={addInputs[mgr.user_id] || ""}
                 onChange={(e) => setAddInputs((p) => ({ ...p, [mgr.user_id]: e.target.value }))}
                 onKeyDown={(e) => { if (e.key === "Enter") addMember(mgr); }}
-                placeholder="assign username" style={{ ...input, width: 200 }} />
+                title="Assign one or more usernames, comma or space separated" aria-label="Assign username"
+                placeholder="assign" style={{ width: 220 }} />
               <button onClick={() => addMember(mgr)} disabled={!(addInputs[mgr.user_id] || "").trim()} style={btn}>Assign</button>
             </div>
           </div>

@@ -5,6 +5,7 @@ import { palette } from "../theme";
 import { InfoStar } from "./InfoStar";
 import { BlockSkeleton } from "./skeleton";
 import { IconX } from "./icons";
+import { AddInput, splitAliases } from "./Inputs";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 interface Folder { id: string; name: string; aliases: string[]; }
@@ -114,8 +115,9 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
   return (
     <div>
       <div style={{ display: "flex", gap: 8, alignItems: "center", margin: "0 0 16px", flexWrap: "wrap" }}>
-        <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Folder name (e.g. Project X)"
-          onKeyDown={(e) => { if (e.key === "Enter") create(); }} style={{ ...input, width: 280 }} />
+        <AddInput value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="folder"
+          aria-label="New folder name" title="Name a new folder (e.g. Project X)"
+          onKeyDown={(e) => { if (e.key === "Enter") create(); }} style={{ width: 260 }} />
         <button onClick={create} disabled={!newName.trim()} style={btn}>Create folder</button>
         <InfoStar spin={false}>{
           <>Private folders to organize <strong style={hi}>your own view</strong> by project. They are <strong style={hi}>yours only</strong> and <strong style={hi}>do not affect any numbers</strong>: they just group employees in Overview when you turn on <strong style={hi}>Group by folder</strong>. Adding someone from <strong style={hi}>another team</strong> sends an access request to their manager.</>
@@ -212,13 +214,28 @@ function FolderCard({ folder, teamAliases, onRemoveMember, onAddTeamMember, onRe
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
+  function addOne(alias: string) {
+    const a = alias.trim().toLowerCase();
+    if (!a || folder.aliases.includes(a)) return;
+    if (teamAliases.includes(a)) onAddTeamMember(a);   // del team: se agrega directo
+    else onRequestExternal(a);                          // de otro team: dispara el request
+  }
   function pick(alias: string) {
     const a = alias.trim();
     if (!a) return;
     setQ(""); setSugg([]); setOpen(false);
-    if (folder.aliases.includes(a)) return;
-    if (teamAliases.includes(a)) onAddTeamMember(a);   // del team: se agrega directo
-    else onRequestExternal(a);                          // de otro team: dispara el request
+    addOne(a);
+  }
+  // Enter: si escribiste varios (coma/espacio separados) los agrega en bulk; si es uno solo,
+  // usa la sugerencia del autocomplete.
+  function submit() {
+    const tokens = splitAliases(q);
+    if (tokens.length > 1) {
+      tokens.forEach(addOne);
+      setQ(""); setSugg([]); setOpen(false);
+      return;
+    }
+    pick(sugg[0] ?? q);
   }
 
   return (
@@ -247,13 +264,17 @@ function FolderCard({ folder, teamAliases, onRemoveMember, onAddTeamMember, onRe
 
       {/* add member con autocomplete */}
       <div ref={boxRef} style={{ position: "relative", marginTop: "auto" }}>
-        <input
+        <AddInput
           value={q}
           onChange={(e) => { setQ(e.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
-          onKeyDown={(e) => { if (e.key === "Enter") pick(sugg[0] ?? q); }}
-          placeholder="Add member (username)"
-          style={{ ...input, width: "100%", boxSizing: "border-box", fontSize: 16, padding: "6px 9px" }}
+          onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
+          placeholder="member(s)"
+          title="Add one or more members, comma or space separated"
+          aria-label="Add member"
+          iconSize={16}
+          containerStyle={{ display: "flex", width: "100%" }}
+          style={{ width: "100%", fontSize: 16, padding: "6px 9px", paddingLeft: 32 }}
         />
         {open && sugg.length > 0 && (
           <div style={{ position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4, background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden", zIndex: 20, maxHeight: 240, overflowY: "auto" }}>
@@ -274,5 +295,4 @@ function FolderCard({ folder, teamAliases, onRemoveMember, onAddTeamMember, onRe
   );
 }
 
-const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 10px", fontSize: 19 };
 const btn: React.CSSProperties = { background: palette.accent, color: palette.accentText, border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600 };

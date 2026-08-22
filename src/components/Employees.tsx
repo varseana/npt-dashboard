@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { InfoStar } from "./InfoStar";
 import { TableSkeleton } from "./skeleton";
+import { AddInput } from "./Inputs";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 // highlight monocromatico dentro del texto del popover (bold en color de texto full)
@@ -120,8 +121,10 @@ export default function Employees({ team, refreshKey, isAdmin }: { team: Team; r
           }</InfoStar>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <input value={single} onChange={(e) => setSingle(e.target.value)} placeholder="username"
-            onKeyDown={(e) => { if (e.key === "Enter") add(parseAliases(single)); }} style={{ ...input, width: 200 }} />
+          <AddInput value={single} onChange={(e) => setSingle(e.target.value)} placeholder="employee(s)"
+            title="One or more usernames, comma or space separated" aria-label="Add employees"
+            onKeyDown={(e) => { if (e.key === "Enter") add(parseAliases(single)); }}
+            style={{ width: 260 }} />
           <button onClick={() => add(parseAliases(single))} disabled={saving || !single.trim()} style={btn}>Add</button>
           <button onClick={() => setShowBulk((v) => !v)} style={btnGhost}>{showBulk ? "Hide bulk" : "Bulk add"}</button>
         </div>
