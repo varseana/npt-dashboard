@@ -204,7 +204,7 @@ export default function App() {
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
             <h1 style={{ margin: 0, fontSize: 42, color: palette.text, lineHeight: 1 }}>STAR NPT Dashboard</h1>
-            <Mascot inline />
+            <Mascot inline onNavigate={goTo} />
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
             <span style={{ color: palette.textDim, fontSize: 18 }}>{manager.email} ({manager.role})</span>
