@@ -102,6 +102,32 @@ export function IconMoveOut({ size = 16, style }: P) {
   );
 }
 
+// pantalla completa: cuatro esquinas hacia AFUERA (entrar).
+export function IconExpand({ size = 16, style }: P) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", ...style }} aria-hidden="true">
+      <path d="M8 3H3v5" />
+      <path d="M16 3h5v5" />
+      <path d="M8 21H3v-5" />
+      <path d="M16 21h5v-5" />
+    </svg>
+  );
+}
+
+// salir de pantalla completa: cuatro esquinas hacia ADENTRO.
+export function IconCompress({ size = 16, style }: P) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", ...style }} aria-hidden="true">
+      <path d="M9 3v6H3" />
+      <path d="M15 3v6h6" />
+      <path d="M9 21v-6H3" />
+      <path d="M15 21v-6h6" />
+    </svg>
+  );
+}
+
 // folder solido (currentColor). usado como toggle de "group by folder".
 export function IconFolder({ size = 16, style }: P) {
   return (

@@ -4,7 +4,8 @@ import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import SwirlBackground from "./SwirlBackground";
 import { InfoStar } from "./InfoStar";
-import { IconMoon, IconSun, IconEye, IconEyeOff } from "./icons";
+import Mascot from "./Mascot";
+import { IconMoon, IconSun, IconEye, IconEyeOff, IconExpand, IconCompress } from "./icons";
 
 // solo altas con correo corporativo (el piloto es interno)
 const ALLOWED_DOMAIN = "@amazon.com";
@@ -20,6 +21,18 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
   const [msg, setMsg] = useState("");
   const [ok, setOk] = useState("");
   const [busy, setBusy] = useState(false);
+  // modo "pantalla completa" (gimmick): esconde la carta y deja solo el remolino + la mascota centrada.
+  const [fs, setFs] = useState(false);
+
+  // enter/exit del gimmick. Ademas pide fullscreen REAL del navegador (best-effort, ignora errores).
+  // Si el user sale con ESC, el listener de fullscreenchange sincroniza el estado.
+  function enterFs() { setFs(true); try { void document.documentElement.requestFullscreen?.(); } catch { /* noop */ } }
+  function exitFs() { setFs(false); try { if (document.fullscreenElement) void document.exitFullscreen?.(); } catch { /* noop */ } }
+  useEffect(() => {
+    function onFsChange() { if (!document.fullscreenElement) setFs(false); }
+    document.addEventListener("fullscreenchange", onFsChange);
+    return () => document.removeEventListener("fullscreenchange", onFsChange);
+  }, []);
 
   // prellena el email guardado en este dispositivo (NO se guarda la contrasena; de eso se encarga
   // el gestor del navegador via autocomplete)
@@ -80,19 +93,38 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
   return (
     <div style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, overflow: "hidden" }}>
       <SwirlBackground dark={dark} />
+
+      {/* boton de pantalla completa (gimmick), esquina sup-der de la pantalla. Con fondo para que se
+          vea sobre el remolino. */}
+      <button type="button" onClick={fs ? exitFs : enterFs}
+        title={fs ? "Exit full screen" : "Full screen"} aria-label={fs ? "Exit full screen" : "Full screen"}
+        style={cornerBtn}>
+        {fs ? <IconCompress size={20} /> : <IconExpand size={20} />}
+      </button>
+
+      {fs ? (
+        // gimmick: solo la mascota, centrada en el remolino, animandose sola. La carta desaparece.
+        <div style={{ position: "relative", zIndex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Mascot inline showTips={false} size={150} />
+        </div>
+      ) : (
       <form onSubmit={submit} style={{ position: "relative", zIndex: 1, width: 340, background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 0, padding: 24 }}>
-        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
-          <h1 style={{ margin: "0 0 4px", fontSize: 31, color: palette.text }}>STAR NPT Dashboard</h1>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
+            <h1 style={{ margin: "0 0 4px", fontSize: 31, color: palette.text }}>STAR NPT Dashboard</h1>
+            {/* mascota a la derecha del titulo (decorativa, sin tips en el login) */}
+            <Mascot inline showTips={false} size={36} />
+          </div>
           {/* toggle de tema DENTRO de la carta, icono plano sin chrome */}
           <button type="button" onClick={onToggleTheme}
             title={dark ? "Switch to light mode" : "Switch to dark mode"} aria-label="Toggle theme"
-            style={{ marginTop: 4, background: "transparent", border: "none", padding: 2, cursor: "pointer", color: palette.textDim, display: "inline-flex", alignItems: "center" }}>
+            style={{ background: "transparent", border: "none", padding: 2, cursor: "pointer", color: palette.textDim, display: "inline-flex", alignItems: "center", flex: "0 0 auto" }}>
             {dark ? <IconSun size={20} /> : <IconMoon size={20} />}
           </button>
         </div>
         <p style={{ margin: "0 0 20px", fontSize: 18, color: palette.textDim, lineHeight: 1.5 }}>
           {mode === "in" ? (
-            <>Tracking your weekly NPT<InfoStar spin={false}>{nptStory}</InfoStar>.</>
+            <>Tracking your weekly NPT<InfoStar spin={false}>{nptStory}</InfoStar></>
           ) : (
             <>Request access with your work email. An admin approves it.</>
           )}
@@ -127,6 +159,7 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
           </button>
         </div>
       </form>
+      )}
     </div>
   );
 }
@@ -144,4 +177,10 @@ const submit_: React.CSSProperties = {
 const linkBtn: React.CSSProperties = {
   background: "none", border: "none", color: palette.accent, cursor: "pointer",
   fontSize: 18, fontWeight: 600, padding: 0,
+};
+// boton de pantalla completa: esquina sup-der, con fondo panel para verse sobre el remolino.
+const cornerBtn: React.CSSProperties = {
+  position: "absolute", top: 18, right: 18, zIndex: 2,
+  background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 8,
+  padding: 7, cursor: "pointer", color: palette.text, display: "inline-flex", alignItems: "center",
 };

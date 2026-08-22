@@ -29,7 +29,8 @@ function Ico({ children }: { children: React.ReactNode }) {
   return <span style={{ display: "inline-flex", verticalAlign: "-3px", color: palette.text, margin: "0 2px" }}>{children}</span>;
 }
 
-export default function Mascot({ inline = false, onNavigate }: { inline?: boolean; onNavigate?: (dest: NavDest) => void }) {
+export default function Mascot({ inline = false, onNavigate, showTips = true, size }:
+  { inline?: boolean; onNavigate?: (dest: NavDest) => void; showTips?: boolean; size?: number }) {
   const [anim, setAnim] = useState("");
   const [blink, setBlink] = useState(false);
   const [tip, setTip] = useState(0);
@@ -117,7 +118,7 @@ export default function Mascot({ inline = false, onNavigate }: { inline?: boolea
   // bocadillo: abre en hover del orbe o del propio bocadillo; cierra con un pequeño delay al salir
   // (asi podes viajar del orbe al bocadillo para clickear un link sin que se cierre en el hueco).
   const cancelClose = () => { if (closeRef.current) { clearTimeout(closeRef.current); closeRef.current = undefined; } };
-  const openBubble = () => { cancelClose(); setBubble(true); };
+  const openBubble = () => { if (!showTips) return; cancelClose(); setBubble(true); };
   const closeBubble = () => { cancelClose(); closeRef.current = window.setTimeout(() => setBubble(false), 220); };
   useEffect(() => () => cancelClose(), []);
 
@@ -155,9 +156,10 @@ export default function Mascot({ inline = false, onNavigate }: { inline?: boolea
   return (
     <div className={`orb-wrap ${inline ? "inline" : ""}`} ref={wrapRef} onClick={onClick}
       onMouseEnter={openBubble} onMouseLeave={closeBubble}
-      role="button" aria-label="Mascot tips">
+      style={size ? { width: size, height: size } : undefined}
+      role="button" aria-label={showTips ? "Mascot tips" : "Mascot"}>
       <style>{CSS}</style>
-      {bubble && (
+      {showTips && bubble && (
         <div className="orb-bubble" onClick={(e) => e.stopPropagation()} onMouseEnter={openBubble} onMouseLeave={closeBubble}>
           {/* barra de 4px que avanza L->R = tiempo hasta el proximo tip. al terminar, avanza. si el
               usuario dio Back/Next (paused) queda fija en 0 y NO avanza sola. */}
