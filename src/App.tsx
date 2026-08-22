@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase, emailConfirmed } from "./lib/supabase";
 import { palette } from "./theme";
@@ -39,6 +39,7 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [manager, setManager] = useState<ManagerRow | null>(null);
+  const managerRef = useRef<ManagerRow | null>(null);   // ultimo manager para loadPending (evita closure vieja)
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamId, setTeamId] = useState<string>("");
   // nav de 2 niveles (progressive disclosure): 3 secciones arriba, sub-nav adentro
@@ -68,8 +69,13 @@ export default function App() {
 
   // conteo de access_requests pendientes (RLS: admin ve todas, manager solo las suyas)
   async function loadPending() {
-    const { count } = await supabase.from("access_requests")
-      .select("*", { count: "exact", head: true }).eq("status", "pending");
+    const m = managerRef.current;
+    if (!m) { setPendingReq(0); return; }
+    // el badge cuenta SOLO lo entrante que requiere tu accion, NUNCA tus propios pedidos salientes:
+    // admin -> pedidos en la cola del admin (sin manager destino); manager -> pedidos dirigidos a el.
+    let q = supabase.from("access_requests").select("*", { count: "exact", head: true }).eq("status", "pending");
+    q = m.role === "admin" ? q.is("target_manager", null) : q.eq("target_manager", m.user_id);
+    const { count } = await q;
     setPendingReq(count ?? 0);
   }
 
@@ -125,6 +131,7 @@ export default function App() {
       m = re.data;
     }
 
+    managerRef.current = (m as ManagerRow) ?? null;
     setManager((m as ManagerRow) ?? null);
     const { data: t } = await supabase.from("teams").select("id,name,npt_target_pct");
     const tt = (t as Team[]) ?? [];
@@ -343,13 +350,15 @@ function TabBtn({ active, onClick, badge, children }:
     >
       {children}
       {badge != null && badge > 0 && (
-        // burbuja cyan de notificacion (sin sombra ni glow), arriba a la derecha
+        // burbuja cyan de notificacion: REDONDA, pegada a la esquina superior derecha del boton.
+        // tope 99+ (no crece mas alla). circulo perfecto para 1-2 digitos; pildora redonda para "99+".
         <span style={{
-          position: "absolute", top: -7, right: -7, minWidth: 20, height: 20, padding: "0 5px",
-          borderRadius: 10, background: "#06b6d4", color: "#fff", fontSize: 13, fontWeight: 700,
+          position: "absolute", top: -9, right: -9, minWidth: 22, height: 22, padding: "0 6px",
+          boxSizing: "border-box", borderRadius: 999, background: "#06b6d4", color: "#fff",
+          fontSize: 13, fontWeight: 700, fontVariantNumeric: "tabular-nums",
           display: "flex", alignItems: "center", justifyContent: "center", lineHeight: 1,
           border: `2px solid ${palette.bg}`, boxShadow: "none",
-        }}>{badge}</span>
+        }}>{badge > 99 ? "99+" : badge}</span>
       )}
     </button>
   );

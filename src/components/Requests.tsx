@@ -7,6 +7,18 @@ import { InfoStar } from "./InfoStar";
 // highlight monocromatico dentro del texto del popover (bold en color de texto full)
 const hi = { color: palette.text, fontWeight: 700 } as React.CSSProperties;
 
+// mensaje cuando el username no existe en la base (no enrolado / sin subir NPT / typo).
+// contexto: alguien aparece en la DB recien cuando se enrola en STAR Tracker (opt-in) y sube su
+// NPT (o esta en el roster de un team). Si no, no hay a quien pedirle acceso.
+const NOT_FOUND_MSG = "No user found with that username. They may not be enrolled in STAR Tracker yet, may not have uploaded any NPT (not logged in), or the username is misspelled.";
+// codigos que devuelve request_member_access
+const REQ_MSG: Record<string, string> = {
+  already: "You already have access to that person.",
+  pending: "You already have a pending request for that person.",
+  sent_manager: "Request sent to their manager.",
+  sent_admin: "That person has no manager yet. Request sent to the admin.",
+};
+
 interface AccessRequest {
   id: string;
   requester: string;
@@ -22,6 +34,7 @@ interface AccessRequest {
 export default function Requests({ role, myUserId }: { role: string; myUserId: string }) {
   const isAdmin = role === "admin";
   const [alias, setAlias] = useState("");
+  const [notFound, setNotFound] = useState<string | null>(null);
   const [reqs, setReqs] = useState<AccessRequest[]>([]);
   const [managerEmails, setManagerEmails] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -48,10 +61,22 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
   async function submit() {
     const a = alias.trim().toLowerCase();
     if (!a) return;
+    setMsg(""); setNotFound(null);
+    // valida + rutea server-side: si el alias no existe devuelve 'not_found' (no crea request).
+    const { data, error } = await supabase.rpc("request_member_access", { p_alias: a });
+    if (error) { setMsg("Error: " + error.message); return; }
+    const code = (data as string) ?? "";
+    if (code === "not_found") { setNotFound(a); return; }
+    setAlias("");
+    setMsg(REQ_MSG[code] ?? "Request sent.");
+    await load();
+  }
+
+  // cancelar un request propio pendiente (lo borra; RLS ar_own permite al requester borrar los suyos)
+  async function cancel(r: AccessRequest) {
     setMsg("");
-    const { error } = await supabase.from("access_requests").insert({ alias: a });
-    if (error) setMsg("Error: " + error.message);
-    else { setAlias(""); setMsg("Request sent."); await load(); }
+    const { error } = await supabase.from("access_requests").delete().eq("id", r.id);
+    if (error) setMsg("Error: " + error.message); else await load();
   }
 
   async function approve(req: AccessRequest) {
@@ -110,6 +135,15 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
             <button onClick={submit} disabled={!alias.trim()} style={btn}>Send request</button>
           </div>
           {msg && <div style={{ marginTop: 10, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 18 }}>{msg}</div>}
+          {notFound && (
+            <div style={{ marginTop: 10, fontSize: 16, display: "flex", alignItems: "baseline", gap: 6, flexWrap: "wrap" }}>
+              <span>
+                <strong>{notFound}</strong>
+                <span title={NOT_FOUND_MSG} style={{ color: palette.bad, fontWeight: 800, marginLeft: 3, cursor: "help" }}>*</span>
+              </span>
+              <span style={{ color: palette.bad }}>{NOT_FOUND_MSG}</span>
+            </div>
+          )}
         </div>
 
         <div>
@@ -118,7 +152,10 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
             {loading ? <Dim>Loading...</Dim> : mine.length === 0 ? <Dim>No requests yet.</Dim> : mine.map((r) => (
               <Row key={r.id}>
                 <span><strong>{r.alias}</strong></span>
-                <StatusPill status={r.status} />
+                <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                  <StatusPill status={r.status} />
+                  {r.status === "pending" && <button onClick={() => cancel(r)} style={btnGhost} title="Cancel this request">Cancel</button>}
+                </span>
               </Row>
             ))}
           </div>
