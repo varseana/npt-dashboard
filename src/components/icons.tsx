@@ -152,6 +152,18 @@ export function IconTrash({ size = 16, style }: P) {
   );
 }
 
+// descarga (outline): flecha hacia abajo a una bandeja. usado en "Export CSV".
+export function IconDownload({ size = 16, style }: P) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", ...style }} aria-hidden="true">
+      <path d="M12 3v11" />
+      <path d="M8 10l4 4 4-4" />
+      <path d="M5 20h14" />
+    </svg>
+  );
+}
+
 // usuario (outline). va a la izquierda de un input donde se escribe un username.
 export function IconUser({ size = 16, style }: P) {
   return (

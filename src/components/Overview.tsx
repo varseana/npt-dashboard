@@ -167,7 +167,7 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
             style={{ ...input, paddingLeft: 34 }} />
         </div>
         <div style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", paddingBottom: 6 }}>
-          <EmailAction icon={<IconAlert size={19} />} count={flagged.length} label="Email flagged"
+          <EmailAction icon={<IconAlert size={19} />} count={flagged.length} label="Email flagged" hoverClass="npt-hover-warn"
             onClick={() => flagged.forEach(remind)}
             info={<>Generates one reminder <strong style={hi}>.eml per person in yellow or red</strong> (near limit or over plan), each with their own weekly NPT summary. Opens as drafts in Outlook for you to review and send.</>} />
         </div>
@@ -261,8 +261,9 @@ function UserTable({ rows, remind, teamBudget }: { rows: Row[]; remind: (u: Row)
             <td style={{ ...td, textAlign: "center" }}><StatusChip status={u.status} /></td>
             <td style={{ ...td, textAlign: "center" }}>
               <button onClick={() => remind(u)} disabled={u.status === "none"} title="Send reminder .eml" aria-label="Send reminder email"
-                style={{ ...emlBtn, padding: "5px 7px", display: "inline-flex", alignItems: "center" }}>
-                <IconMail size={15} />
+                className="npt-hover-blue"
+                style={{ background: "transparent", border: "none", padding: 2, cursor: "pointer", color: palette.text, display: "inline-flex", alignItems: "center", lineHeight: 0 }}>
+                <IconMail size={17} />
               </button>
             </td>
           </tr>
@@ -412,11 +413,11 @@ function Stat({ label, value, tone, story, topRight }: { label: string; value: s
 
 // icono de accion sin chrome de boton (borderless) + contador chico + asterisco giratorio (InfoStar)
 // cuyo hover explica que hace. mismo patron que el resto del dashboard.
-function EmailAction({ icon, count, label, onClick, info }:
-  { icon: React.ReactNode; count: number; label: string; onClick: () => void; info: React.ReactNode }) {
+function EmailAction({ icon, count, label, onClick, info, hoverClass = "npt-hover-blue" }:
+  { icon: React.ReactNode; count: number; label: string; onClick: () => void; info: React.ReactNode; hoverClass?: string }) {
   return (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
-      <button onClick={onClick} disabled={!count} aria-label={label} title={label} style={iconBtn}>{icon}</button>
+      <button onClick={onClick} disabled={!count} aria-label={label} title={label} className={hoverClass} style={iconBtn}>{icon}</button>
       {count > 0 && <span style={{ fontSize: 15, color: palette.textDim, fontVariantNumeric: "tabular-nums" }}>{count}</span>}
       <InfoStar>{info}</InfoStar>
     </span>
@@ -445,6 +446,5 @@ const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", color:
 const td: React.CSSProperties = { padding: "8px 10px", borderBottom: `1px solid ${palette.border}` };
 const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 19 };
 const select: React.CSSProperties = { ...input, minWidth: 260 };
-const emlBtn: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "5px 10px", fontSize: 17, cursor: "pointer", fontWeight: 600 };
 // boton sin chrome: transparente, sin borde, solo el icono. hereda color de texto (currentColor).
 const iconBtn: React.CSSProperties = { background: "transparent", border: "none", padding: 2, cursor: "pointer", color: palette.text, display: "inline-flex", alignItems: "center", lineHeight: 0 };

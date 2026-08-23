@@ -208,7 +208,7 @@ export default function App() {
             <Mascot inline onNavigate={goTo} />
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-            <span style={{ color: palette.textDim, fontSize: 18 }}>{manager.email} ({manager.role})</span>
+            <span style={{ color: palette.textDim, fontSize: 18 }}>{manager.email} <span style={{ color: palette.blue, fontWeight: 600 }}>({manager.role})</span></span>
             <button onClick={() => setAskLogout(true)} title="Log out" aria-label="Log out" className="npt-logout">
               <IconLogout size={15} />
             </button>
