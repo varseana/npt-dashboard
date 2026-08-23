@@ -235,11 +235,16 @@ export default function App() {
       {isStaff && (<>
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10, flexWrap: "wrap" }}>
         {teams.length > 1 && (
-          <select value={teamId} onChange={(e) => setTeamId(e.target.value)} style={select}>
-            {teams.map((t) => (
-              <option key={t.id} value={t.id}>{t.name}</option>
-            ))}
-          </select>
+          <span className="npt-dd">
+            <span className="npt-dd-arrow" aria-hidden="true">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.4} strokeLinecap="round" strokeLinejoin="round"><path d="M5 9l7 7 7-7" /></svg>
+            </span>
+            <select value={teamId} onChange={(e) => setTeamId(e.target.value)}>
+              {teams.map((t) => (
+                <option key={t.id} value={t.id}>{t.name}</option>
+              ))}
+            </select>
+          </span>
         )}
         <nav style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <TabBtn active={section === "dashboard"} onClick={() => setSection("dashboard")}>Dashboard</TabBtn>
@@ -343,17 +348,11 @@ function Centered({ children }: { children: React.ReactNode }) {
 function TabBtn({ active, onClick, badge, children }:
   { active: boolean; onClick: () => void; badge?: number; children: React.ReactNode }) {
   return (
-    <button
-      onClick={onClick}
-      style={{
-        ...btn,
-        position: "relative",
-        background: active ? palette.accent : palette.panel,
-        borderColor: active ? palette.accent : palette.border,
-        color: active ? palette.accentText : palette.text,
-      }}
-    >
-      {children}
+    <button onClick={onClick} className="npt-tab">
+      {/* el chaflan vive en el inner; el activo se envuelve en ::palabra:: como marca de seleccion */}
+      <span className={active ? "npt-tab-inner npt-tab-active" : "npt-tab-inner npt-tab-idle"}>
+        {active ? <>::{children}::</> : children}
+      </span>
       {badge != null && badge > 0 && (
         // burbuja cyan de notificacion: REDONDA, pegada a la esquina superior derecha del boton.
         // tope 99+ (no crece mas alla). circulo perfecto para 1-2 digitos; pildora redonda para "99+".
@@ -398,14 +397,5 @@ const btn: React.CSSProperties = {
   borderRadius: 8,
   padding: "8px 14px",
   cursor: "pointer",
-  fontSize: 19,
-};
-
-const select: React.CSSProperties = {
-  background: palette.panel,
-  color: palette.text,
-  border: `1px solid ${palette.border}`,
-  borderRadius: 8,
-  padding: "8px 10px",
   fontSize: 19,
 };

@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NPT Dashboard :: button + dropdown styles</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+
+  /* ===== paleta real del dashboard (copiada de index.html) ===== */
+  :root {
+    --bg: #f7f7f5; --panel: #ffffff; --panelAlt: #efeeec; --border: #e2e1de;
+    --text: #111111; --textDim: #767676; --accent: #111111; --accent-text: #ffffff;
+    --ok: #1c7f46; --warn: #ecc412; --bad: #b0232b; --blue: #0d5c9d;
+  }
+  html.dark {
+    --bg: #000000; --panel: #171717; --panelAlt: #202020; --border: #2b2b2b;
+    --text: #f4f4f2; --textDim: #9a9a9a; --accent: #ffffff; --accent-text: #0d0d0d;
+    --ok: #35b368; --warn: #ecc412; --bad: #e5484d; --blue: #4a9eda;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font-family: "Outfit", system-ui, sans-serif; }
+  body { padding: 40px 48px 120px; transition: background .25s ease, color .25s ease; }
+  h1 { font-size: 34px; margin: 0 0 4px; }
+  .sub { color: var(--textDim); font-size: 17px; margin: 0 0 28px; }
+  h2 { font-size: 15px; letter-spacing: .12em; text-transform: uppercase; color: var(--textDim); margin: 40px 0 4px; font-weight: 700; }
+  .desc { color: var(--textDim); font-size: 15px; margin: 0 0 16px; max-width: 720px; }
+  .row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+  .card { border: 1px dashed var(--border); padding: 20px 22px; margin-bottom: 18px; }
+  .tag { display: inline-block; font-weight: 700; font-size: 14px; letter-spacing: .1em; color: var(--text);
+         background: var(--panelAlt); padding: 3px 8px; margin-bottom: 12px; }
+  .theme-toggle { position: fixed; top: 18px; right: 22px; z-index: 10; background: var(--panel);
+                  border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 15px;
+                  padding: 8px 14px; cursor: pointer; }
+
+  /* ===== chamfer base ===== esquina sup-der recortada, cero radius ===== */
+  .btn { font-family: inherit; font-size: 19px; font-weight: 600; padding: 9px 18px; cursor: pointer;
+         border: none; background: none; color: var(--text); line-height: 1.1; position: relative;
+         display: inline-flex; align-items: center; transition: background .18s ease, color .18s ease; }
+  .cut-12 { --cut: 12px; }
+  .cut-18 { --cut: 18px; }
+  .cut-8  { --cut: 8px; }
+  .chamfer { clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+
+  /* --- B1 solido, sin borde --- */
+  .b1-active { background: var(--accent); color: var(--accent-text); }
+  .b1-idle   { background: var(--panelAlt); color: var(--text); }
+  .b1-idle:hover { background: var(--border); }
+
+  /* --- B2 outline: borde que SIGUE el corte (fondo=border + pseudo inset=panel) --- */
+  .cut-outline { background: var(--border); color: var(--text); }
+  .cut-outline::before { content: ""; position: absolute; inset: 1.6px; background: var(--panel);
+      clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); z-index: 0; }
+  .cut-outline:hover::before { background: var(--panelAlt); }
+  .cut-outline .lbl { position: relative; z-index: 1; }
+  /* activo del par outline = solido pleno */
+  .b2-active { background: var(--accent); color: var(--accent-text); }
+
+  /* --- B4 corte + linea de acento sobre la diagonal (segundo clip como borde diagonal) --- */
+  .accent-cut { background: var(--accent); color: var(--accent-text); }
+  .accent-cut::after { content: ""; position: absolute; top: 0; right: 0; width: calc(var(--cut) * 1.42);
+      height: calc(var(--cut) * 1.42); background: var(--blue); z-index: 0;
+      clip-path: polygon(100% 0, 0 100%, 100% 100%); transform-origin: top right; }
+  .accent-cut .lbl { position: relative; z-index: 1; }
+
+  /* ===== dropdowns ===== sin caja, flecha gruesa a la izquierda ===== */
+  .dd { position: relative; display: inline-flex; align-items: center; gap: 8px; }
+  .dd select { font-family: inherit; font-size: 19px; font-weight: 600; color: var(--text);
+               background: transparent; border: none; outline: none; cursor: pointer;
+               appearance: none; -webkit-appearance: none; padding: 8px 6px 8px 0; }
+  .dd .arrow { display: inline-flex; color: var(--text); pointer-events: none; }
+  /* D3: fondo achaflanado solo en hover/focus */
+  .dd-hoverbg { padding: 2px 10px 2px 4px; transition: background .18s ease; }
+  .dd-hoverbg:hover, .dd-hoverbg:focus-within { background: var(--panelAlt); clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%); }
+  /* D4: subrayado grueso */
+  .dd-underline { border-bottom: 3px solid var(--text); padding-bottom: 3px; }
+
+  .swatch-note { font-size: 13px; color: var(--textDim); margin-left: 6px; }
+</style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="document.documentElement.classList.toggle('dark')">toggle light / dark</button>
+
+  <h1>Button + dropdown styles</h1>
+  <p class="sub">Sharp corners, cero radius, esquina sup-der recortada. Dropdowns sin caja con flecha gruesa a la izquierda. Deci cual (B# / D#).</p>
+
+  <h2>Buttons :: nav (Dashboard / Team / Access)</h2>
+  <p class="desc">Cada fila muestra el estado ACTIVO (seleccionado, solido) y el IDLE (no seleccionado). El corte va solo en la esquina superior derecha.</p>
+
+  <div class="card">
+    <span class="tag">B1 :: solido sin borde, corte 12</span>
+    <div class="row">
+      <button class="btn chamfer cut-12 b1-active">Dashboard</button>
+      <button class="btn chamfer cut-12 b1-idle">Team</button>
+      <button class="btn chamfer cut-12 b1-idle">Access</button>
+      <span class="swatch-note">idle = relleno panelAlt (sin borde)</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="tag">B2 :: outline con borde que sigue el corte, corte 12</span>
+    <div class="row">
+      <button class="btn chamfer cut-12 b2-active">Dashboard</button>
+      <button class="btn chamfer cut-12 cut-outline"><span class="lbl">Team</span></button>
+      <button class="btn chamfer cut-12 cut-outline"><span class="lbl">Access</span></button>
+      <span class="swatch-note">idle = borde 1.6px chaflanado</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="tag">B3 :: corte mas ancho (18), outline</span>
+    <div class="row">
+      <button class="btn chamfer cut-18 b2-active">Dashboard</button>
+      <button class="btn chamfer cut-18 cut-outline"><span class="lbl">Team</span></button>
+      <button class="btn chamfer cut-18 cut-outline"><span class="lbl">Access</span></button>
+      <span class="swatch-note">chaflan grande, mas agresivo</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="tag">B4 :: corte con linea de acento (azul Bauhaus) en la diagonal</span>
+    <div class="row">
+      <button class="btn chamfer cut-18 accent-cut"><span class="lbl">Dashboard</span></button>
+      <button class="btn chamfer cut-18 b1-idle">Team</button>
+      <button class="btn chamfer cut-18 b1-idle">Access</button>
+      <span class="swatch-note">solo el activo lleva el acento</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="tag">B?? :: comparacion de tamano de corte (todos idle outline)</span>
+    <div class="row">
+      <button class="btn chamfer cut-8 cut-outline"><span class="lbl">cut 8</span></button>
+      <button class="btn chamfer cut-12 cut-outline"><span class="lbl">cut 12</span></button>
+      <button class="btn chamfer cut-18 cut-outline"><span class="lbl">cut 18</span></button>
+      <span class="swatch-note">para calibrar cuanto corte te gusta</span>
+    </div>
+  </div>
+
+  <h2>Dropdowns :: (ej. selector de team / timezone)</h2>
+  <p class="desc">Sin borde ni caja de dropdown. Flecha GRUESA a la izquierda para insinuar que despliega. La flecha nativa del navegador va oculta.</p>
+
+  <div class="card">
+    <span class="tag">D1 :: triangulo relleno grueso a la izquierda</span>
+    <div class="row">
+      <span class="dd">
+        <span class="arrow"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M4 8h16l-8 10Z" fill="currentColor"/></svg></span>
+        <select><option>Alex's team</option><option>SME crew</option><option>Unassigned</option></select>
+      </span>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="tag">D2 :: chevron doble-trazo grueso a la izquierda</span>
+    <div class="row">
+      <span class="dd">
+        <span class="arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l7 7 7-7"/></svg></span>
+        <select><option>Alex's team</option><option>SME crew</option><option>Unassigned</option></select>
+      </span>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="tag">D3 :: chevron grueso + fondo achaflanado SOLO en hover/focus</span>
+    <div class="row">
+      <span class="dd dd-hoverbg">
+        <span class="arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l7 7 7-7"/></svg></span>
+        <select><option>Alex's team</option><option>SME crew</option><option>Unassigned</option></select>
+      </span>
+      <span class="swatch-note">pasale el mouse por encima</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <span class="tag">D4 :: triangulo grueso + subrayado (sin caja)</span>
+    <div class="row">
+      <span class="dd dd-underline">
+        <span class="arrow"><svg width="16" height="16" viewBox="0 0 24 24"><path d="M4 8h16l-8 10Z" fill="currentColor"/></svg></span>
+        <select><option>Alex's team</option><option>SME crew</option><option>Unassigned</option></select>
+      </span>
+    </div>
+  </div>
+
+  <h2>Contexto :: como se veria una barra de nav</h2>
+  <div class="card">
+    <div class="row" style="gap:10px;">
+      <span class="dd" style="margin-right:14px;">
+        <span class="arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l7 7 7-7"/></svg></span>
+        <select><option>Alex's team</option><option>SME crew</option></select>
+      </span>
+      <button class="btn chamfer cut-12 b2-active">Dashboard</button>
+      <button class="btn chamfer cut-12 cut-outline"><span class="lbl">Team</span></button>
+      <button class="btn chamfer cut-12 cut-outline"><span class="lbl">Access</span></button>
+    </div>
+  </div>
+
+</body>
+</html>

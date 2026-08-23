@@ -102,6 +102,29 @@
       }
       .npt-inline-input:focus { border-color: var(--text); }
       .npt-inline-input:disabled { opacity: .6; }
+      /* ===== nav tabs (Dashboard/Team/Access): estilo B1 ===== solido, cero radius, esquina sup-der
+         recortada (chaflan 12px). el clip va en el INNER para no recortar el badge (que vive afuera).
+         texto corrido 3px a la izquierda (padding left 15 / right 21). */
+      .npt-tab { position: relative; background: none; border: none; padding: 0; cursor: pointer; font-family: inherit; }
+      .npt-tab-inner {
+        display: inline-flex; align-items: center; font-size: 19px; font-weight: 600; line-height: 1.1;
+        padding: 9px 21px 9px 15px;
+        clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%);
+        transition: background .18s ease, color .18s ease;
+      }
+      .npt-tab-idle { background: var(--panelAlt); color: var(--text); }
+      .npt-tab-idle:hover { background: var(--border); }
+      .npt-tab-active { background: var(--accent); color: var(--accent-text); }
+      /* ===== dropdowns estilo D3 ===== sin caja; chevron grueso a la izquierda; fondo achaflanado
+         SOLO en hover/focus. la flecha nativa del navegador va oculta. */
+      .npt-dd { position: relative; display: inline-flex; align-items: center; gap: 8px; padding: 2px 10px 2px 6px; transition: background .18s ease; }
+      .npt-dd:hover, .npt-dd:focus-within { background: var(--panelAlt); clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%); }
+      .npt-dd select {
+        font-family: inherit; font-size: 19px; font-weight: 600; color: var(--text);
+        background: transparent; border: none; outline: none; cursor: pointer;
+        appearance: none; -webkit-appearance: none; padding: 8px 6px 8px 0;
+      }
+      .npt-dd .npt-dd-arrow { display: inline-flex; color: var(--text); pointer-events: none; }
       /* oculta el ojo/limpiar NATIVO del navegador (Edge/IE) para no tener doble ojo; dejamos el nuestro */
       input::-ms-reveal, input::-ms-clear { display: none; }
       /* accesibilidad: si el usuario pidio menos movimiento, no giramos */
