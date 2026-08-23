@@ -139,9 +139,14 @@ export default function Planned({ team }: { team: Team }) {
         </Field>
         {scope === "week" && (
           <Field label="Week">
-            <select value={weekKey} onChange={(e) => setWeekKey(e.target.value)} style={{ ...select, minWidth: 260 }}>
-              {weeks.map((w) => (<option key={w.key} value={w.key}>{weekLabel(w)}</option>))}
-            </select>
+            <span className="npt-dd">
+              <span className="npt-dd-arrow" aria-hidden="true">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.4} strokeLinecap="round" strokeLinejoin="round"><path d="M5 9l7 7 7-7" /></svg>
+              </span>
+              <select value={weekKey} onChange={(e) => setWeekKey(e.target.value)} style={{ minWidth: 240 }}>
+                {weeks.map((w) => (<option key={w.key} value={w.key}>{weekLabel(w)}</option>))}
+              </select>
+            </span>
           </Field>
         )}
       </div>
