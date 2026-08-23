@@ -200,7 +200,8 @@ export default function App() {
   return (
     <div style={{ maxWidth: "min(2100px, 97vw)", margin: "0 auto", padding: "24px 32px" }}>
       {showConfirmed && <ConfirmedBanner onClose={() => setShowConfirmed(false)} />}
-      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+      {/* separacion de lado a lado (borde full-width) + aire, para que el header respire */}
+      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, paddingBottom: 18, borderBottom: `1px solid ${palette.border}` }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
             <h1 style={{ margin: 0, fontSize: 42, color: palette.text, lineHeight: 1 }}>STAR NPT Dashboard</h1>
@@ -213,8 +214,8 @@ export default function App() {
             </button>
           </div>
         </div>
-        <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-          {/* toggle de tema: icono plano, sin chrome de boton (como el selector de tz del reloj) */}
+        {/* toggle de tema apilado y centrado horizontalmente sobre el reloj */}
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
           <button onClick={() => setDark((d) => !d)}
             title={dark ? "Switch to light mode" : "Switch to dark mode"} aria-label="Toggle theme"
             style={{ background: "transparent", border: "none", padding: 2, cursor: "pointer",
