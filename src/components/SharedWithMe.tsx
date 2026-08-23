@@ -5,6 +5,7 @@ import { palette } from "../theme";
 import { InfoStar } from "./InfoStar";
 import { TableSkeleton } from "./skeleton";
 import WeekCountdown from "./WeekCountdown";
+import { Dropdown } from "./Dropdown";
 import {
   NPT_AUX, ANCHOR, fmtHms, weekInfo, weekLabel, weekRangeLabel, recentWeeks, isoDate,
 } from "../lib/npt";
@@ -81,9 +82,8 @@ export default function SharedWithMe({ myUserId }: { myUserId: string }) {
           <div style={{ fontSize: 16, color: palette.textDim, marginBottom: 4 }}>
             <span style={{ display: "inline-flex", gap: 6, alignItems: "baseline", flexWrap: "wrap" }}>Week <WeekCountdown start={sel.start} /></span>
           </div>
-          <select value={weekKey} onChange={(e) => setWeekKey(e.target.value)} style={select}>
-            {weeks.map((w) => (<option key={w.key} value={w.key}>{weekLabel(w)}</option>))}
-          </select>
+          <Dropdown value={weekKey} onChange={setWeekKey} minWidth={260} ariaLabel="Select week"
+            options={weeks.map((w) => ({ value: w.key, label: weekLabel(w) }))} />
         </div>
       </div>
 
@@ -136,5 +136,3 @@ export default function SharedWithMe({ myUserId }: { myUserId: string }) {
 
 const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
 const td: React.CSSProperties = { padding: "8px 10px", borderBottom: `1px solid ${palette.border}` };
-const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 19 };
-const select: React.CSSProperties = { ...input, minWidth: 260 };

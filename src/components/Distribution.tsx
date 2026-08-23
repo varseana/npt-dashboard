@@ -11,6 +11,7 @@ import { StatusChip } from "./status";
 import { InfoStar } from "./InfoStar";
 import { TableSkeleton } from "./skeleton";
 import WeekCountdown from "./WeekCountdown";
+import { Dropdown } from "./Dropdown";
 import { SearchInput } from "./Inputs";
 import { IconMoveOut } from "./icons";
 
@@ -137,9 +138,8 @@ export default function Distribution({ team, refreshKey }: { team: Team; refresh
     <div>
       <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", marginBottom: 16 }}>
         <Field label={<span style={{ display: "inline-flex", gap: 6, alignItems: "baseline", flexWrap: "wrap" }}>Week <WeekCountdown start={sel.start} /></span>}>
-          <select value={weekKey} onChange={(e) => setWeekKey(e.target.value)} style={select}>
-            {weeks.map((w) => (<option key={w.key} value={w.key}>{weekLabel(w)}</option>))}
-          </select>
+          <Dropdown value={weekKey} onChange={setWeekKey} minWidth={260} ariaLabel="Select week"
+            options={weeks.map((w) => ({ value: w.key, label: weekLabel(w) }))} />
         </Field>
         <SearchInput value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="username"
           aria-label="Filter by username" />
@@ -206,6 +206,4 @@ function Field({ label, children }: { label: React.ReactNode; children: React.Re
 
 const th: React.CSSProperties = { textAlign: "center", padding: "9px 12px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}`, position: "sticky", top: 0, background: palette.bg };
 const td: React.CSSProperties = { textAlign: "center", padding: "8px 12px", borderBottom: `1px solid ${palette.border}` };
-const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 19 };
-const select: React.CSSProperties = { ...input, minWidth: 260 };
 const csvBtn: React.CSSProperties = { marginLeft: "auto", background: "transparent", border: "none", padding: "8px 4px", fontSize: 18, cursor: "pointer", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 7 };
