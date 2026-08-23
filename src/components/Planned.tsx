@@ -133,10 +133,8 @@ export default function Planned({ team }: { team: Team }) {
     <div>
       <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", margin: "0 0 16px" }}>
         <Field label="Applies to">
-          <select value={scope} onChange={(e) => setScope(e.target.value as Scope)} style={select}>
-            <option value="standing">Every week</option>
-            <option value="week">Just one week</option>
-          </select>
+          <Dropdown value={scope} onChange={(v) => setScope(v as Scope)} minWidth={200} ariaLabel="Applies to"
+            options={[{ value: "standing", label: "Every week" }, { value: "week", label: "Just one week" }]} />
         </Field>
         {scope === "week" && (
           <Field label="Week">
@@ -242,5 +240,3 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 const th: React.CSSProperties = { textAlign: "center", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
 const td: React.CSSProperties = { padding: "8px 10px", borderBottom: `1px solid ${palette.border}` };
-const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 19 };
-const select: React.CSSProperties = { ...input };
