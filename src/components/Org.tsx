@@ -10,7 +10,8 @@ import {
 import { StatusChip } from "./status";
 import { BlockSkeleton } from "./skeleton";
 import { AddButtonInput, splitAliases } from "./Inputs";
-import { IconUser } from "./icons";
+import { IconUser, IconTrash } from "./icons";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 interface ManagerRow { user_id: string; email: string; role: string; team_id: string | null; }
 interface MemberLink { manager_owner: string; alias: string; team_id: string | null; }
@@ -27,6 +28,8 @@ export default function Org() {
   const [addInputs, setAddInputs] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
+  // miembro pendiente de quitar (modal de confirmacion)
+  const [confirmRemove, setConfirmRemove] = useState<{ owner: string; alias: string } | null>(null);
 
   const sel = useMemo(() => weekInfo(new Date(weekKey + "T12:00:00")), [weekKey]);
 
@@ -141,7 +144,8 @@ export default function Org() {
                         <td style={{ ...td, color: remainColor(status) }}>{remaining != null ? fmtHms(remaining) : "-"}</td>
                         <td style={td}><StatusChip status={status} /></td>
                         <td style={{ ...td, textAlign: "center" }}>
-                          <button onClick={() => removeMember(mgr.user_id, m.alias)} className="npt-btn-remove">Remove</button>
+                          <button onClick={() => setConfirmRemove({ owner: mgr.user_id, alias: m.alias })}
+                            className="npt-ico-act npt-ico-danger" title="Remove member" aria-label="Remove member"><IconTrash size={17} /></button>
                         </td>
                       </tr>
                     );
@@ -162,6 +166,13 @@ export default function Org() {
       <datalist id="npt-known-aliases">
         {knownAliases.map((a) => (<option key={a} value={a} />))}
       </datalist>
+
+      {confirmRemove && (
+        <ConfirmDialog title="Remove member?" confirmLabel="Remove"
+          body={<>Remove <strong style={{ color: palette.text, fontWeight: 700 }}>{confirmRemove.alias}</strong> from this manager? This unlinks the grant; it does not delete their NPT data.</>}
+          onCancel={() => setConfirmRemove(null)}
+          onConfirm={() => { const c = confirmRemove; setConfirmRemove(null); removeMember(c.owner, c.alias); }} />
+      )}
     </div>
   );
 }

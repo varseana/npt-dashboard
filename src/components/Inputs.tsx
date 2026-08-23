@@ -55,17 +55,18 @@ type AddButtonInputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, "on
 };
 export function AddButtonInput({ onSubmit, icon, buttonDisabled, containerStyle, iconSize = 18, style, onKeyDown, ...rest }: AddButtonInputProps) {
   return (
-    <div style={{ display: "flex", alignItems: "stretch", width: 260, border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden", background: palette.panel, ...containerStyle }}>
+    <div style={{ display: "flex", alignItems: "stretch", height: 38, width: 260, border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden", background: palette.panel, ...containerStyle }}>
       <div style={{ position: "relative", display: "flex", alignItems: "center", flex: 1, minWidth: 0 }}>
         <span style={{ position: "absolute", left: 10, display: "inline-flex", color: palette.textDim, pointerEvents: "none" }}>
           {icon ?? <IconPlus size={iconSize} />}
         </span>
         <input {...rest}
           onKeyDown={(e) => { if (e.key === "Enter") onSubmit(); onKeyDown?.(e); }}
-          style={{ width: "100%", background: "transparent", border: "none", outline: "none", color: palette.text, padding: "8px 10px 8px 34px", fontSize: 18, textAlign: "left", ...style }} />
+          style={{ width: "100%", background: "transparent", border: "none", outline: "none", color: palette.text, padding: "0 10px 0 34px", fontSize: 18, textAlign: "left", ...style }} />
       </div>
+      {/* boton CUADRADO PERFECTO: la altura del control es fija (38) y el ancho del boton = esa altura */}
       <button type="button" onClick={onSubmit} disabled={buttonDisabled} className="npt-add-plus" aria-label="Add"
-        style={{ flex: "0 0 auto", aspectRatio: "1", display: "flex", alignItems: "center", justifyContent: "center",
+        style={{ flex: "0 0 38px", display: "flex", alignItems: "center", justifyContent: "center",
           background: palette.accent, color: palette.accentText, border: "none",
           cursor: buttonDisabled ? "default" : "pointer", opacity: buttonDisabled ? 0.5 : 1 }}>
         <IconPlus size={20} />

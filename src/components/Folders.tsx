@@ -4,8 +4,9 @@ import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { InfoStar } from "./InfoStar";
 import { BlockSkeleton } from "./skeleton";
-import { IconX, IconFolder } from "./icons";
+import { IconX, IconFolder, IconTrash } from "./icons";
 import { AddInput, AddButtonInput, splitAliases } from "./Inputs";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 interface Folder { id: string; name: string; aliases: string[]; }
@@ -29,6 +30,7 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
   const [newName, setNewName] = useState("");
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
+  const [confirmFolder, setConfirmFolder] = useState<Folder | null>(null);   // folder pendiente de borrado
   // vista admin: folders de otros managers (read-only, colapsable)
   const [allFolders, setAllFolders] = useState<AdminFolder[]>([]);
   const [managers, setManagers] = useState<ManagerLite[]>([]);
@@ -136,7 +138,7 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
               onRemoveMember={(a) => removeMember(f, a)}
               onAddTeamMember={(a) => addTeamMember(f, a)}
               onRequestExternal={requestExternal}
-              onDelete={() => remove(f.id)} />
+              onDelete={() => setConfirmFolder(f)} />
           ))}
         </div>
       )}
@@ -174,6 +176,13 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
             );
           })}
         </div>
+      )}
+
+      {confirmFolder && (
+        <ConfirmDialog title="Delete folder?"
+          body={<>This permanently deletes <strong style={hi}>{confirmFolder.name}</strong>. It only affects your own folder view, not anyone's NPT.</>}
+          onCancel={() => setConfirmFolder(null)}
+          onConfirm={() => { const id = confirmFolder.id; setConfirmFolder(null); remove(id); }} />
       )}
     </div>
   );
@@ -242,7 +251,7 @@ function FolderCard({ folder, teamAliases, onRemoveMember, onAddTeamMember, onRe
     <div style={{ border: `1px solid ${palette.border}`, borderRadius: 10, padding: "12px 14px", background: palette.panel, display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
         <div style={{ fontWeight: 700, fontSize: 20 }}>{folder.name} <span style={{ color: palette.textDim, fontWeight: 400, fontSize: 16 }}>({folder.aliases.length})</span></div>
-        <button onClick={onDelete} className="npt-btn-remove" style={{ fontSize: 14, padding: "4px 8px" }}>Delete</button>
+        <button onClick={onDelete} className="npt-ico-act npt-ico-danger" title="Delete folder" aria-label="Delete folder"><IconTrash size={17} /></button>
       </div>
 
       {/* miembros actuales como chips removibles */}
