@@ -155,7 +155,7 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
     <div>
       <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", marginBottom: 16 }}>
         <Field label={<span style={{ display: "inline-flex", gap: 6, alignItems: "baseline", flexWrap: "wrap" }}>Week <WeekCountdown start={sel.start} /></span>}>
-          <select value={weekKey} onChange={(e) => setWeekKey(e.target.value)} style={select}>
+          <select value={weekKey} onChange={(e) => setWeekKey(e.target.value)} style={{ ...select, height: 42, boxSizing: "border-box" }}>
             {weeks.map((w) => (<option key={w.key} value={w.key}>{weekLabel(w)}</option>))}
           </select>
         </Field>
@@ -164,9 +164,10 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
             <IconSearch size={17} />
           </span>
           <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="username" aria-label="Filter by username"
-            style={{ ...input, paddingLeft: 34 }} />
+            style={{ ...input, paddingLeft: 34, height: 42, boxSizing: "border-box" }} />
         </div>
-        <div style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center" }}>
+        {/* misma altura (42) que los inputs y bottom-aligned -> el icono queda centrado con el textbox */}
+        <div style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", height: 42 }}>
           <EmailAction icon={<IconAlert size={38} />} count={flagged.length} label="Email flagged" hoverClass="npt-hover-warn"
             onClick={() => flagged.forEach(remind)}
             info={<>Generates one reminder <strong style={hi}>.eml per person in yellow or red</strong> (near limit or over plan), each with their own weekly NPT summary. Opens as drafts in Outlook for you to review and send.</>} />
