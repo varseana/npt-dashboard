@@ -5,7 +5,7 @@ import { palette } from "../theme";
 import { TableSkeleton } from "./skeleton";
 import { InfoStar } from "./InfoStar";
 import { AddInput } from "./Inputs";
-import { IconPower, IconTrash } from "./icons";
+import { IconPower, IconTrash, IconPlus } from "./icons";
 
 interface Team { id: string; name: string; npt_target_pct: number }
 interface Code { code: string; team_id: string; active: boolean }
@@ -177,12 +177,16 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
                     </button>
                   </div>
                 ))}
-                {/* pill unico: 75% textbox + 25% boton ADD negro adentro */}
-                <div style={{ display: "flex", alignItems: "stretch", width: 260, marginTop: 8, border: `1px solid ${palette.border}`, borderRadius: 999, overflow: "hidden", background: palette.panel }}>
-                  <input value={codeInputs[t.id] ?? ""} onChange={(e) => setCodeInputs((m) => ({ ...m, [t.id]: sanitizeCode(e.target.value) }))}
-                    onKeyDown={(e) => { if (e.key === "Enter") addCode(t.id); }} placeholder="code"
-                    title="Uppercase only, no spaces, dashes (-) as separators" aria-label="Add enrollment code"
-                    style={{ flex: "1 1 75%", minWidth: 0, background: "transparent", border: "none", outline: "none", color: palette.text, padding: "8px 14px", fontSize: 18, textTransform: "uppercase" }} />
+                {/* control cuadrado (bordes levemente redondeados, igual look que el "+ code" de arriba):
+                    icono + adentro, input (75%) y boton Add negro PEGADO a la derecha (25%). */}
+                <div style={{ display: "flex", alignItems: "stretch", width: 260, marginTop: 8, border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden", background: palette.panel }}>
+                  <div style={{ position: "relative", display: "flex", alignItems: "center", flex: "1 1 75%", minWidth: 0 }}>
+                    <span style={{ position: "absolute", left: 10, display: "inline-flex", color: palette.textDim, pointerEvents: "none" }}><IconPlus size={18} /></span>
+                    <input value={codeInputs[t.id] ?? ""} onChange={(e) => setCodeInputs((m) => ({ ...m, [t.id]: sanitizeCode(e.target.value) }))}
+                      onKeyDown={(e) => { if (e.key === "Enter") addCode(t.id); }} placeholder="code"
+                      title="Uppercase only, no spaces, dashes (-) as separators" aria-label="Add enrollment code"
+                      style={{ width: "100%", background: "transparent", border: "none", outline: "none", color: palette.text, padding: "8px 10px 8px 34px", fontSize: 18, textTransform: "uppercase" }} />
+                  </div>
                   <button onClick={() => addCode(t.id)} disabled={!(codeInputs[t.id] ?? "").trim()} style={addPillBtn}>Add</button>
                 </div>
               </div>
