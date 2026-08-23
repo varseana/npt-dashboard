@@ -184,6 +184,37 @@
       .npt-bracket.br { bottom: 0; right: 0; border-bottom: 3px solid var(--text); border-right: 3px solid var(--text); }
       /* fuente LCD retro (Digital-7): reloj del header + used% del budget card, nada mas. */
       .npt-lcd { font-family: "Digital7", "DSEG7 Classic", "Consolas", monospace; letter-spacing: 1px; }
+      /* ===== boton SIGN IN cyberpunk ===== corte sup-der + glitch de slices SOLO en hover. El glitch es
+         una rafaga corta (~0.3s) + cooldown (~2s) que se repite mientras el mouse siga encima (no loop
+         constante). Los fantasmas (::before/::after) copian el texto via attr(data-text). */
+      .npt-login-btn { position: relative; overflow: hidden; border-radius: 0;
+        clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }
+      .npt-login-btn::before, .npt-login-btn::after {
+        content: attr(data-text); position: absolute; inset: 0;
+        display: flex; align-items: center; justify-content: center;
+        background: var(--accent); opacity: 0; pointer-events: none;
+      }
+      .npt-login-btn::before { color: var(--textDim); }
+      .npt-login-btn::after  { color: var(--accent-text); }
+      .npt-login-btn:hover:not(:disabled)::before { animation: npt-glitch-a 2.4s linear infinite; }
+      .npt-login-btn:hover:not(:disabled)::after  { animation: npt-glitch-b 2.4s linear infinite; }
+      @keyframes npt-glitch-a {
+        0%   { opacity: 1; transform: translateX(-2px); clip-path: inset(0 0 82% 0); }
+        4%   { opacity: 1; transform: translateX(3px);  clip-path: inset(40% 0 40% 0); }
+        8%   { opacity: 1; transform: translateX(-3px); clip-path: inset(74% 0 4% 0); }
+        12%  { opacity: 1; transform: translateX(2px);  clip-path: inset(16% 0 60% 0); }
+        13%, 100% { opacity: 0; }
+      }
+      @keyframes npt-glitch-b {
+        0%   { opacity: 1; transform: translateX(2px);  clip-path: inset(60% 0 14% 0); }
+        4%   { opacity: 1; transform: translateX(-3px); clip-path: inset(10% 0 66% 0); }
+        8%   { opacity: 1; transform: translateX(3px);  clip-path: inset(44% 0 34% 0); }
+        12%  { opacity: 1; transform: translateX(-2px); clip-path: inset(80% 0 6% 0); }
+        13%, 100% { opacity: 0; }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .npt-login-btn:hover::before, .npt-login-btn:hover::after { animation: none; }
+      }
       /* oculta el ojo/limpiar NATIVO del navegador (Edge/IE) para no tener doble ojo; dejamos el nuestro */
       input::-ms-reveal, input::-ms-clear { display: none; }
       /* accesibilidad: si el usuario pidio menos movimiento, no giramos */

@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NPT :: SIGN IN button (cyberpunk B&N)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap');
+
+  :root {
+    --bg:#f7f7f5; --panel:#fff; --border:#e2e1de; --text:#111; --textDim:#767676;
+    --accent:#111; --accent-text:#fff;
+    --btn-bg:#111; --btn-fg:#fff; --ghost:#9a9a9a;
+  }
+  html.dark {
+    --bg:#000; --panel:#171717; --border:#2b2b2b; --text:#f4f4f2; --textDim:#9a9a9a;
+    --accent:#fff; --accent-text:#0d0d0d;
+    --btn-bg:#f4f4f2; --btn-fg:#0d0d0d; --ghost:#6f6f6f;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:var(--bg); color:var(--text); font-family:"Outfit",system-ui,sans-serif; }
+  body { padding:40px 48px 120px; }
+  h1 { font-size:30px; margin:0 0 4px; }
+  .sub { color:var(--textDim); font-size:16px; margin:0 0 26px; max-width:760px; }
+  .theme-toggle { position:fixed; top:18px; right:22px; background:var(--panel); border:1px solid var(--border); color:var(--text); font-family:inherit; font-size:15px; padding:8px 14px; cursor:pointer; }
+  .row { display:flex; gap:26px; flex-wrap:wrap; }
+
+  /* ===== card con esquina sup-der cortada (borde que sigue el corte, como en la app) ===== */
+  .card-cut { --cut:16px; position:relative; background:var(--border); width:300px;
+    clip-path:polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+  .card-cut::before { content:""; position:absolute; inset:1px; background:var(--panel); z-index:0;
+    clip-path:polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%); }
+  .card-body { position:relative; z-index:1; padding:22px 22px 26px; }
+  .card-title { font-weight:700; font-size:22px; line-height:1.1; margin-bottom:14px; }
+  .flabel { font-size:13px; color:var(--textDim); text-transform:uppercase; letter-spacing:.08em; margin:10px 0 4px; }
+  .finput { width:100%; background:var(--bg); border:1px solid var(--border); color:var(--text); padding:8px 10px; font-family:inherit; font-size:16px; }
+  .tag { display:inline-block; font-weight:700; font-size:12px; letter-spacing:.1em; background:var(--border); padding:3px 8px; margin-bottom:10px; }
+
+  /* ===== boton cyber base (B&N) ===== */
+  .cyber-btn {
+    position:relative; display:inline-flex; align-items:center; justify-content:center; width:100%;
+    margin-top:18px; background:var(--btn-bg); color:var(--btn-fg); border:none;
+    font-family:"Outfit",sans-serif; font-weight:700; text-transform:uppercase; letter-spacing:.16em;
+    font-size:16px; padding:13px 28px; cursor:pointer; overflow:hidden;
+  }
+  /* formas (clip-path) */
+  .sh-tr  { clip-path:polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 0 100%); }                               /* corte sup-der */
+  .sh-trbl{ clip-path:polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px)); }        /* sup-der + inf-izq */
+  .sh-trbr{ clip-path:polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%); } /* sup-der + inf-der */
+
+  /* ===== glitch AUTOMATICO: rafaga corta al inicio del ciclo + ~2s de cooldown, en loop =====
+     el truco: el keyframe hace el glitch en el primer ~13% del ciclo (2.4s -> ~0.3s de rafaga) y
+     queda QUIETO el resto (~2.1s). asi hace la animacion, espera 2s y la repite (no loop constante). */
+  .g-slice::before, .g-slice::after {
+    content:attr(data-text); position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    background:var(--btn-bg); letter-spacing:.16em; opacity:0;
+  }
+  .g-slice::before { color:var(--ghost); animation:sliceA 2.4s linear infinite; }
+  .g-slice::after  { color:var(--btn-fg); animation:sliceB 2.4s linear infinite; }
+  @keyframes sliceA {
+    0%{opacity:1; transform:translateX(-2px); clip-path:inset(0 0 82% 0)}
+    4%{opacity:1; transform:translateX(3px);  clip-path:inset(40% 0 40% 0)}
+    8%{opacity:1; transform:translateX(-3px); clip-path:inset(74% 0 4% 0)}
+    12%{opacity:1; transform:translateX(2px); clip-path:inset(16% 0 60% 0)}
+    13%,100%{opacity:0}
+  }
+  @keyframes sliceB {
+    0%{opacity:1; transform:translateX(2px);  clip-path:inset(60% 0 14% 0)}
+    4%{opacity:1; transform:translateX(-3px); clip-path:inset(10% 0 66% 0)}
+    8%{opacity:1; transform:translateX(3px);  clip-path:inset(44% 0 34% 0)}
+    12%{opacity:1; transform:translateX(-2px);clip-path:inset(80% 0 6% 0)}
+    13%,100%{opacity:0}
+  }
+
+  /* ===== glitch B: invert flicker + jitter (rafaga + cooldown) ===== */
+  .g-invert { animation:invGlitch 2.4s linear infinite; }
+  @keyframes invGlitch {
+    0%   { filter:none; transform:translate(0,0); }
+    3%   { filter:invert(1); transform:translate(-2px,1px); }
+    6%   { filter:none; transform:translate(2px,-1px); }
+    9%   { filter:invert(1); transform:translate(-1px,0); }
+    12%  { filter:none; transform:translate(1px,1px); }
+    13%,100% { filter:none; transform:translate(0,0); }
+  }
+
+  /* ===== glitch C: ghost text-shadow (rafaga + cooldown) ===== */
+  .g-ghost { animation:ghostGlitch 2.4s linear infinite; }
+  @keyframes ghostGlitch {
+    0%   { text-shadow:2px 0 var(--ghost), -2px 0 var(--btn-fg); transform:translateX(0); }
+    4%   { text-shadow:-3px 0 var(--ghost), 3px 0 var(--btn-fg); transform:translateX(1px); }
+    8%   { text-shadow:2px 0 var(--btn-fg), -2px 0 var(--ghost); transform:translateX(-2px); }
+    12%  { text-shadow:-1px 0 var(--ghost), 1px 0 var(--btn-fg); transform:translateX(1px); }
+    13%,100% { text-shadow:none; transform:translateX(0); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .g-slice::before, .g-slice::after, .g-invert, .g-ghost { animation:none; }
+  }
+</style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="document.documentElement.classList.toggle('dark')">toggle light / dark</button>
+  <h1>SIGN IN button :: cyberpunk B&amp;N</h1>
+  <p class="sub">Solo el boton de login, B&amp;N, con forma angular + glitch AUTOMATICO: hace la rafaga (~0.3s), espera ~2s de cooldown y la repite (no loop constante, no hace falta hover). Deci la opcion (A / B / C).</p>
+
+  <div class="row">
+    <!-- A -->
+    <div>
+      <span class="tag">A :: corte sup-der + glitch slices</span>
+      <div class="card-cut"><div class="card-body">
+        <div class="card-title">STAR NPT<br>Dashboard</div>
+        <div class="flabel">Email</div><input class="finput" value="varseana@amazon.com" readonly>
+        <div class="flabel">Password</div><input class="finput" type="password" value="123456" readonly>
+        <button class="cyber-btn sh-tr g-slice" data-text="SIGN IN">SIGN IN</button>
+      </div></div>
+    </div>
+
+    <!-- B -->
+    <div>
+      <span class="tag">B :: 2 cortes (sup-der+inf-izq) + invert flicker</span>
+      <div class="card-cut"><div class="card-body">
+        <div class="card-title">STAR NPT<br>Dashboard</div>
+        <div class="flabel">Email</div><input class="finput" value="varseana@amazon.com" readonly>
+        <div class="flabel">Password</div><input class="finput" type="password" value="123456" readonly>
+        <button class="cyber-btn sh-trbl g-invert" data-text="SIGN IN">SIGN IN</button>
+      </div></div>
+    </div>
+
+    <!-- C -->
+    <div>
+      <span class="tag">C :: corte sup-der + ghost text-shadow</span>
+      <div class="card-cut"><div class="card-body">
+        <div class="card-title">STAR NPT<br>Dashboard</div>
+        <div class="flabel">Email</div><input class="finput" value="varseana@amazon.com" readonly>
+        <div class="flabel">Password</div><input class="finput" type="password" value="123456" readonly>
+        <button class="cyber-btn sh-tr g-ghost" data-text="SIGN IN">SIGN IN</button>
+      </div></div>
+    </div>
+  </div>
+
+  <p class="sub" style="margin-top:26px;">Al elegir, lo aplico solo al boton de Login.tsx (y el card de login con el corte sup-der). Respeta prefers-reduced-motion (sin glitch si el user pidio menos movimiento).</p>
+</body>
+</html>

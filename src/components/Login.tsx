@@ -90,6 +90,9 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
         style={{ fontWeight: 700, textDecoration: "underline", textUnderlineOffset: 3, color: palette.text }}>@varseana</a>.</>
   );
 
+  // label del boton (tambien va en data-text para los fantasmas del glitch)
+  const submitLabel = busy ? "Please wait..." : mode === "in" ? "\"Sign in\"" : "\"Create account\"";
+
   return (
     <div style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, overflow: "hidden" }}>
       <SwirlBackground dark={dark} />
@@ -108,7 +111,8 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
           <Mascot inline showTips={false} size={150} />
         </div>
       ) : (
-      <form onSubmit={submit} style={{ position: "relative", zIndex: 1, width: 340, background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 0, padding: 24 }}>
+      <form onSubmit={submit} className="npt-card-cut" style={{ position: "relative", zIndex: 1, width: 340 }}>
+       <div className="npt-card-cut-body" style={{ padding: 24 }}>
         <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", gap: 8 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
             {/* dos renglones fijos + nowrap + flex:0 0 auto => la caja se ajusta al ancho del texto
@@ -148,8 +152,8 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
           <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
           Remember me
         </label>
-        <button style={submit_} disabled={busy} type="submit">
-          {busy ? "Please wait..." : mode === "in" ? "\"Sign in\"" : "\"Create account\""}
+        <button style={submit_} className="npt-login-btn" data-text={submitLabel} disabled={busy} type="submit">
+          {submitLabel}
         </button>
         {msg && <div style={{ marginTop: 12, color: palette.bad, fontSize: 18 }}>{msg}</div>}
         {ok && <div style={{ marginTop: 12, color: palette.ok, fontSize: 18 }}>{ok}</div>}
@@ -160,6 +164,7 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
             {mode === "in" ? "Create account" : "Sign in"}
           </button>
         </div>
+       </div>
       </form>
       )}
     </div>
@@ -173,7 +178,7 @@ const input: React.CSSProperties = {
 };
 const submit_: React.CSSProperties = {
   width: "100%", marginTop: 18, background: palette.accent, color: palette.accentText, border: "none",
-  borderRadius: 8, padding: "10px", fontSize: 19, cursor: "pointer", fontWeight: 600,
+  borderRadius: 0, padding: "10px", fontSize: 19, cursor: "pointer", fontWeight: 600,
   textTransform: "uppercase", letterSpacing: "0.06em",
 };
 const linkBtn: React.CSSProperties = {
