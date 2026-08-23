@@ -9,6 +9,7 @@ import {
 } from "../lib/npt";
 import { InfoStar } from "./InfoStar";
 import { InlineEdit } from "./InlineEdit";
+import { Dropdown } from "./Dropdown";
 import { BlockSkeleton } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
@@ -139,14 +140,8 @@ export default function Planned({ team }: { team: Team }) {
         </Field>
         {scope === "week" && (
           <Field label="Week">
-            <span className="npt-dd">
-              <span className="npt-dd-arrow" aria-hidden="true">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.4} strokeLinecap="round" strokeLinejoin="round"><path d="M5 9l7 7 7-7" /></svg>
-              </span>
-              <select value={weekKey} onChange={(e) => setWeekKey(e.target.value)} style={{ minWidth: 240 }}>
-                {weeks.map((w) => (<option key={w.key} value={w.key}>{weekLabel(w)}</option>))}
-              </select>
-            </span>
+            <Dropdown value={weekKey} onChange={setWeekKey} minWidth={260} ariaLabel="Select week"
+              options={weeks.map((w) => ({ value: w.key, label: weekLabel(w) }))} />
           </Field>
         )}
       </div>

@@ -11,6 +11,7 @@ import Employees from "./components/Employees";
 import Planned from "./components/Planned";
 import Folders from "./components/Folders";
 import Clock from "./components/Clock";
+import { Dropdown } from "./components/Dropdown";
 import Org from "./components/Org";
 import Requests from "./components/Requests";
 import Managers from "./components/Managers";
@@ -235,16 +236,8 @@ export default function App() {
       {isStaff && (<>
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10, flexWrap: "wrap" }}>
         {teams.length > 1 && (
-          <span className="npt-dd">
-            <span className="npt-dd-arrow" aria-hidden="true">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.4} strokeLinecap="round" strokeLinejoin="round"><path d="M5 9l7 7 7-7" /></svg>
-            </span>
-            <select value={teamId} onChange={(e) => setTeamId(e.target.value)}>
-              {teams.map((t) => (
-                <option key={t.id} value={t.id}>{t.name}</option>
-              ))}
-            </select>
-          </span>
+          <Dropdown value={teamId} onChange={setTeamId} minWidth={200} ariaLabel="Select team"
+            options={teams.map((t) => ({ value: t.id, label: t.name }))} />
         )}
         <nav style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <TabBtn active={section === "dashboard"} onClick={() => setSection("dashboard")}>Dashboard</TabBtn>
