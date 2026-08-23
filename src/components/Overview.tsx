@@ -363,33 +363,38 @@ function TeamBudgetBar({ budget, status, users }:
     });
   }
 
-  // base = negro (o rojo si ya se paso); revelado (hover/lock) = color de status. borde del track
-  // sigue el mismo criterio (rojo si over, si no color de texto). el relleno son barras verticales
-  // INCLINADAS (120deg, 8/3) que cubren solo el % usado; lo que sobra queda como track vacio (outline).
+  // DOS modos:
+  //  - IDLE (sin hover): puramente estetico -> UN relleno continuo de barras inclinadas (120deg, 8/3),
+  //    ancho = % usado total, SIN divisores. base negro (o rojo si ya se paso el budget).
+  //  - REVELADO (hover/lock): data real -> segmentos FLAT/solidos por usuario, con divisores (gap) y
+  //    nombre, faciles de digerir. color = status.
   const baseColor = status === "bad" ? palette.bad : palette.text;
-  const fillColor = revealed ? color : baseColor;
   const stripes = (c: string) => `repeating-linear-gradient(120deg, ${c} 0 8px, transparent 8px 11px)`;
+  const totalPct = Math.min(100, contribs.reduce((a, s) => a + s.pct, 0));
 
   return (
     <div onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} onClick={toggleLock}
       title={locked ? "Locked - click to unlock" : "Hover to reveal, click to lock 30s"}
       style={{ display: "flex", height: 30, borderRadius: 0, overflow: "hidden", background: "transparent", boxSizing: "border-box",
-        border: `2px solid ${baseColor}`, gap: 1, cursor: "pointer",
+        border: `2px solid ${baseColor}`, gap: revealed ? 1 : 0, cursor: "pointer",
         outline: locked ? `2px solid ${color}` : "none", outlineOffset: 3 }}>
-      {segs.map((s, i) => (
-        <div key={i} title={`${s.label} :: ${s.pct.toFixed(1)}% (${fmtHms(s.seconds)})`}
-          style={{
-            width: s.pct + "%", minWidth: 0, background: stripes(fillColor),
-            transition: "background .2s", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
-          }}>
-          {revealed && (
-            // chip solido para que el nombre se lea sobre las barritas (bg del chip = color del fill)
-            <span style={{ fontSize: 12, background: fillColor, color: palette.bg, padding: "1px 5px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>
+      {revealed ? (
+        // desglose real por usuario: barras planas solidas + nombre
+        segs.map((s, i) => (
+          <div key={i} title={`${s.label} :: ${s.pct.toFixed(1)}% (${fmtHms(s.seconds)})`}
+            style={{
+              width: s.pct + "%", minWidth: 0, background: color,
+              display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
+            }}>
+            <span style={{ fontSize: 12, color: palette.accentText, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", padding: "0 6px" }}>
               {s.label}
             </span>
-          )}
-        </div>
-      ))}
+          </div>
+        ))
+      ) : (
+        // idle: un solo relleno de barritas inclinadas, sin divisores (estetico)
+        <div title={`Used ${totalPct.toFixed(1)}%`} style={{ width: totalPct + "%", minWidth: 0, background: stripes(baseColor) }} />
+      )}
     </div>
   );
 }
