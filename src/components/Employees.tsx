@@ -5,7 +5,7 @@ import { palette } from "../theme";
 import { InfoStar } from "./InfoStar";
 import { TableSkeleton } from "./skeleton";
 import { AddButtonInput } from "./Inputs";
-import { IconCheck, IconX, IconMoveOut } from "./icons";
+import { IconCheck, IconX, IconMoveOut, IconUser } from "./icons";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 // highlight monocromatico dentro del texto del popover (bold en color de texto full)
@@ -144,9 +144,9 @@ export default function Employees({ team, refreshKey, isAdmin }: { team: Team; r
           }</InfoStar>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-          <AddButtonInput value={single} onChange={(e) => setSingle(e.target.value)}
-            onSubmit={() => add(parseAliases(single))} buttonDisabled={saving || !single.trim()} buttonLabel="Add"
-            placeholder="EMPLOYEE(S)" title="One or more usernames, comma or space separated" aria-label="Add employees"
+          <AddButtonInput value={single} onChange={(e) => setSingle(e.target.value)} icon={<IconUser size={18} />}
+            onSubmit={() => add(parseAliases(single))} buttonDisabled={saving || !single.trim()}
+            placeholder="employee(s)" title="One or more usernames, comma or space separated" aria-label="Add employees"
             containerStyle={{ width: 300 }} />
           <button onClick={() => setShowBulk((v) => !v)} style={btnGhost}>{showBulk ? "Hide bulk" : "Bulk add"}</button>
         </div>

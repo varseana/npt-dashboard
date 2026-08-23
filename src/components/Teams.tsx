@@ -5,7 +5,7 @@ import { palette } from "../theme";
 import { TableSkeleton } from "./skeleton";
 import { InfoStar } from "./InfoStar";
 import { AddInput, AddButtonInput } from "./Inputs";
-import { IconPower, IconTrash } from "./icons";
+import { IconPower, IconTrash, IconTag } from "./icons";
 
 interface Team { id: string; name: string; npt_target_pct: number }
 interface Code { code: string; team_id: string; active: boolean }
@@ -177,7 +177,7 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
                     </button>
                   </div>
                 ))}
-                <AddButtonInput value={codeInputs[t.id] ?? ""}
+                <AddButtonInput value={codeInputs[t.id] ?? ""} icon={<IconTag size={18} />}
                   onChange={(e) => setCodeInputs((m) => ({ ...m, [t.id]: sanitizeCode(e.target.value) }))}
                   onSubmit={() => addCode(t.id)} buttonDisabled={!(codeInputs[t.id] ?? "").trim()}
                   placeholder="code" title="Uppercase only, no spaces, dashes (-) as separators"

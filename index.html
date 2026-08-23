@@ -73,6 +73,10 @@
       /* variante destructiva (remove / move out): hover rojo. */
       .npt-ico-danger:hover:not(:disabled) { color: var(--bad); }
       .npt-ico-act:disabled { opacity: .4; cursor: default; }
+      /* boton "+" de AddButtonInput: el signo brilla VERDE en claro / AZUL en oscuro al hover. */
+      .npt-add-plus { transition: color .2s ease; }
+      .npt-add-plus:hover:not(:disabled) { color: var(--ok); }
+      html.dark .npt-add-plus:hover:not(:disabled) { color: var(--blue); }
       /* oculta el ojo/limpiar NATIVO del navegador (Edge/IE) para no tener doble ojo; dejamos el nuestro */
       input::-ms-reveal, input::-ms-clear { display: none; }
       /* accesibilidad: si el usuario pidio menos movimiento, no giramos */

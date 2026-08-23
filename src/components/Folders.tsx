@@ -4,7 +4,7 @@ import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { InfoStar } from "./InfoStar";
 import { BlockSkeleton } from "./skeleton";
-import { IconX } from "./icons";
+import { IconX, IconFolder } from "./icons";
 import { AddInput, AddButtonInput, splitAliases } from "./Inputs";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
@@ -115,8 +115,8 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
   return (
     <div>
       <div style={{ display: "flex", gap: 8, alignItems: "center", margin: "0 0 16px", flexWrap: "wrap" }}>
-        <AddButtonInput value={newName} onChange={(e) => setNewName(e.target.value)}
-          onSubmit={create} buttonDisabled={!newName.trim()} buttonLabel="Create"
+        <AddButtonInput value={newName} onChange={(e) => setNewName(e.target.value)} icon={<IconFolder size={18} />}
+          onSubmit={create} buttonDisabled={!newName.trim()}
           placeholder="FOLDER" aria-label="New folder name" title="Name a new folder (e.g. Project X)"
           containerStyle={{ width: 300 }} />
         <InfoStar spin={false}>{

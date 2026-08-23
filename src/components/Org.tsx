@@ -10,6 +10,7 @@ import {
 import { StatusChip } from "./status";
 import { BlockSkeleton } from "./skeleton";
 import { AddButtonInput, splitAliases } from "./Inputs";
+import { IconUser } from "./icons";
 
 interface ManagerRow { user_id: string; email: string; role: string; team_id: string | null; }
 interface MemberLink { manager_owner: string; alias: string; team_id: string | null; }
@@ -149,10 +150,10 @@ export default function Org() {
               </table>
             )}
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <AddButtonInput list="npt-known-aliases" value={addInputs[mgr.user_id] || ""}
+              <AddButtonInput list="npt-known-aliases" value={addInputs[mgr.user_id] || ""} icon={<IconUser size={18} />}
                 onChange={(e) => setAddInputs((p) => ({ ...p, [mgr.user_id]: e.target.value }))}
-                onSubmit={() => addMember(mgr)} buttonDisabled={!(addInputs[mgr.user_id] || "").trim()} buttonLabel="Assign"
-                placeholder="USERNAME" title="Assign one or more usernames, comma or space separated"
+                onSubmit={() => addMember(mgr)} buttonDisabled={!(addInputs[mgr.user_id] || "").trim()}
+                placeholder="username" title="Assign one or more usernames, comma or space separated"
                 aria-label="Assign username" containerStyle={{ width: 260 }} />
             </div>
           </div>
