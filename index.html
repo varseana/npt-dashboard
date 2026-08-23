@@ -43,6 +43,19 @@
         --skel1: #1c1c1c; --skel2: #262626;
       }
       html, body { margin: 0; background: var(--bg); color: var(--text); }
+      /* ===== cursores cyberpunk B&N (self-hosted en /public), por contexto ===== hotspot al centro.
+         default = marco cuadrado (moviendo); pointer = brackets (clickeable); text = esquina recortada
+         (campos de texto). !important en pointer/text para ganarle a los `cursor` inline de los componentes. */
+      html, body { cursor: url("/cursor-default.svg") 16 16, auto; }
+      a, button, select, summary, label,
+      [role="button"], [role="link"], [role="option"], [role="listbox"],
+      input[type="checkbox"], input[type="radio"], input[type="button"], input[type="submit"] {
+        cursor: url("/cursor-pointer.svg") 16 16, pointer !important;
+      }
+      input:not([type="checkbox"]):not([type="radio"]):not([type="button"]):not([type="submit"]),
+      textarea, .npt-inline-input {
+        cursor: url("/cursor-text.svg") 16 16, text !important;
+      }
       /* transicion suave y profesional al cambiar de tema (colores/bordes, no layout) */
       *, *::before, *::after {
         transition: background-color .28s ease, color .28s ease, border-color .28s ease, box-shadow .28s ease;

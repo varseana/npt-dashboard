@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NPT :: cursor cuadro (cyberpunk minimal)</title>
+<style>
+  :root { --bg:#f7f7f5; --panel:#fff; --border:#e2e1de; --text:#111; --textDim:#767676; }
+  html.dark { --bg:#000; --panel:#171717; --border:#2b2b2b; --text:#f4f4f2; --textDim:#9a9a9a; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:var(--bg); color:var(--text); font-family:"Outfit",system-ui,sans-serif; }
+  body { padding:40px 48px 120px; }
+  h1 { font-size:30px; margin:0 0 4px; }
+  .sub { color:var(--textDim); font-size:16px; margin:0 0 24px; max-width:780px; }
+  .theme-toggle { position:fixed; top:18px; right:22px; background:var(--panel); border:1px solid var(--border); color:var(--text); font-family:inherit; font-size:15px; padding:8px 14px; cursor:pointer; }
+  .grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; max-width:960px; }
+  .card { border:1px solid var(--border); padding:0; }
+  .card h2 { font-size:14px; letter-spacing:.1em; text-transform:uppercase; margin:0; padding:10px 14px; border-bottom:1px solid var(--border); color:var(--textDim); }
+  .preview { display:flex; align-items:center; gap:18px; padding:18px; }
+  .preview img { width:64px; height:64px; }
+  .zone { height:160px; display:flex; align-items:center; justify-content:center; color:var(--textDim); font-size:15px; border-top:1px dashed var(--border); text-align:center; padding:12px; }
+  /* hotspot al CENTRO (16,16) como el .cur original */
+  .z1 { cursor: url("cursors/s1.svg") 16 16, auto; }
+  .z2 { cursor: url("cursors/s2.svg") 16 16, auto; }
+  .z3 { cursor: url("cursors/s3.svg") 16 16, auto; }
+</style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="document.documentElement.classList.toggle('dark')">toggle light / dark</button>
+  <h1>Cursor cuadro :: cyberpunk minimal (B&amp;N)</h1>
+  <p class="sub">Recreacion minimalista B&amp;N del reticle/cuadro (el original era un cuadro HUD lleno de texto). Doble tono (borde negro + halo blanco) para verse en light Y dark, hotspot al centro. Pasa el mouse por cada zona. Deci S1 / S2 / S3.</p>
+
+  <div class="grid">
+    <div class="card">
+      <h2>S1 :: marco cuadrado + punto</h2>
+      <div class="preview"><img src="cursors/s1.svg" alt="s1"><span style="color:var(--textDim);font-size:14px;">frame completo<br>+ centro</span></div>
+      <div class="zone z1">Move el mouse aca</div>
+    </div>
+    <div class="card">
+      <h2>S2 :: brackets de esquinas</h2>
+      <div class="preview"><img src="cursors/s2.svg" alt="s2"><span style="color:var(--textDim);font-size:14px;">reticle de<br>punteria</span></div>
+      <div class="zone z2">Move el mouse aca</div>
+    </div>
+    <div class="card">
+      <h2>S3 :: cuadro con esquina recortada</h2>
+      <div class="preview"><img src="cursors/s3.svg" alt="s3"><span style="color:var(--textDim);font-size:14px;">mismo corte que<br>botones/cards</span></div>
+      <div class="zone z3">Move el mouse aca</div>
+    </div>
+  </div>
+
+  <p class="sub" style="margin-top:26px;">Al elegir, lo aplico en la app: copio el SVG a <code>public/</code> y seteo <code>body { cursor: url(...) 16 16, auto }</code>. Solo el cursor por defecto (botones/inputs mantienen pointer/text), salvo que quieras el cuadro en todo.</p>
+</body>
+</html>
