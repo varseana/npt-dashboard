@@ -282,7 +282,9 @@ function remainingColor(s: NptStatus): string {
 function TeamBudgetCard({ budget, used, remaining, status, users, onNavigate, onEmailTeam, emailCount }:
   { budget: number | null; used: number; remaining: number | null; status: NptStatus; users: { alias: string; nptSeconds: number }[]; onNavigate?: (d: NavDest) => void; onEmailTeam?: () => void; emailCount?: number }) {
   return (
-    <div style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 0, padding: "16px 20px", marginBottom: 18 }}>
+    <div style={{ position: "relative", background: "transparent", padding: "18px 22px", marginBottom: 18 }}>
+      {/* sin caja: bg = fondo. solo marcos esquineros simetricos (no se tocan) */}
+      <span className="npt-bracket tl" /><span className="npt-bracket tr" /><span className="npt-bracket bl" /><span className="npt-bracket br" />
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
         <span className="npt-title" style={{ fontWeight: 700, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.06em" }}>"Team" // weekly NPT budget</span>
         {budget != null && (
@@ -314,11 +316,11 @@ function TeamBudgetCard({ budget, used, remaining, status, users, onNavigate, on
               <>Combined NPT consumed by <strong style={hi}>all employees</strong> so far this week / it counts against the budget above.</>
             } />
             <BudgetStat label="Remaining" value={fmtHms(remaining ?? 0)} color={remainingColor(status)} />
-            <BudgetStat label="Used %" value={((used / budget) * 100).toFixed(1) + "%"} />
           </div>
-          {/* barra edge-to-edge: margenes negativos = padding de la card (20/16) para que llegue a los bordes */}
-          <div style={{ margin: "0 -20px -16px" }}>
-            <TeamBudgetBar budget={budget} status={status} users={users} />
+          <TeamBudgetBar budget={budget} status={status} users={users} />
+          {/* used% abajo-derecha de la barra, en fuente LCD retro */}
+          <div className="npt-lcd" style={{ textAlign: "right", marginTop: 6, fontSize: 18, color: palette.textDim }}>
+            USED <span style={{ color: status === "bad" ? palette.bad : palette.text }}>{((used / budget) * 100).toFixed(1)}%</span>
           </div>
         </>
       )}
@@ -361,19 +363,28 @@ function TeamBudgetBar({ budget, status, users }:
     });
   }
 
+  // base = negro (o rojo si ya se paso); revelado (hover/lock) = color de status. borde del track
+  // sigue el mismo criterio (rojo si over, si no color de texto). el relleno son barras verticales
+  // INCLINADAS (120deg, 8/3) que cubren solo el % usado; lo que sobra queda como track vacio (outline).
+  const baseColor = status === "bad" ? palette.bad : palette.text;
+  const fillColor = revealed ? color : baseColor;
+  const stripes = (c: string) => `repeating-linear-gradient(120deg, ${c} 0 8px, transparent 8px 11px)`;
+
   return (
     <div onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} onClick={toggleLock}
       title={locked ? "Locked - click to unlock" : "Hover to reveal, click to lock 30s"}
-      style={{ display: "flex", height: 26, borderRadius: 0, overflow: "hidden", background: palette.panelAlt, gap: 1, cursor: "pointer",
-        outline: locked ? `2px solid ${color}` : "none", outlineOffset: -2 }}>
+      style={{ display: "flex", height: 30, borderRadius: 0, overflow: "hidden", background: "transparent", boxSizing: "border-box",
+        border: `2px solid ${baseColor}`, gap: 1, cursor: "pointer",
+        outline: locked ? `2px solid ${color}` : "none", outlineOffset: 3 }}>
       {segs.map((s, i) => (
         <div key={i} title={`${s.label} :: ${s.pct.toFixed(1)}% (${fmtHms(s.seconds)})`}
           style={{
-            width: s.pct + "%", minWidth: 0, background: revealed ? color : palette.text,
+            width: s.pct + "%", minWidth: 0, background: stripes(fillColor),
             transition: "background .2s", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
           }}>
           {revealed && (
-            <span style={{ fontSize: 13, color: palette.accentText, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", padding: "0 6px" }}>
+            // chip solido para que el nombre se lea sobre las barritas (bg del chip = color del fill)
+            <span style={{ fontSize: 12, background: fillColor, color: palette.bg, padding: "1px 5px", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }}>
               {s.label}
             </span>
           )}

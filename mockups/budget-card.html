@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NPT :: budget card redesign v3</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap');
+  /* fuente retro de reloj (Digital-7 Mono, Style-7) que dejo Sean en /shared/user/fuente reloj */
+  @font-face {
+    font-family: "Digital7Mono";
+    src: url("../../../fuente reloj/digital-7 (mono).ttf") format("truetype");
+    font-display: swap;
+  }
+
+  :root {
+    --bg: #f7f7f5; --panel: #ffffff; --panelAlt: #efeeec; --border: #e2e1de;
+    --text: #111111; --textDim: #767676; --accent: #111111; --accent-text: #ffffff;
+    --ok: #1c7f46; --warn: #ecc412; --bad: #b0232b; --blue: #0d5c9d; --clock: #111111;
+  }
+  html.dark {
+    --bg: #000000; --panel: #171717; --panelAlt: #202020; --border: #2b2b2b;
+    --text: #f4f4f2; --textDim: #9a9a9a; --accent: #ffffff; --accent-text: #0d0d0d;
+    --ok: #35b368; --warn: #ecc412; --bad: #e5484d; --blue: #4a9eda; --clock: #4a9eda;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font-family: "Outfit", system-ui, sans-serif; }
+  body { padding: 40px 48px 120px; }
+  h1 { font-size: 32px; margin: 0 0 4px; }
+  .sub { color: var(--textDim); font-size: 16px; margin: 0 0 8px; max-width: 820px; }
+  h2 { font-size: 14px; letter-spacing: .12em; text-transform: uppercase; color: var(--textDim); margin: 44px 0 14px; font-weight: 700; }
+  .tag { display: inline-block; font-weight: 700; font-size: 13px; letter-spacing: .1em; background: var(--panelAlt); padding: 3px 8px; margin-bottom: 12px; }
+  .theme-toggle { position: fixed; top: 18px; right: 22px; z-index: 10; background: var(--panel); border: 1px solid var(--border); color: var(--text); font-family: inherit; font-size: 15px; padding: 8px 14px; cursor: pointer; }
+  /* LCD retro: SOLO el used% de abajo-derecha (y el reloj del header en la app) */
+  .lcd { font-family: "Digital7Mono", "DSEG7 Classic", monospace; letter-spacing: 1px; }
+
+  /* ===== region con marcos esquineros CB2 (thick), bg = fondo, sin caja ===== */
+  .bracketed { position: relative; background: transparent; padding: 20px 22px; margin-bottom: 12px; }
+  .cnr { position: absolute; pointer-events: none; width: 15px; height: 15px; }
+  .cnr.tl { top: 0; left: 0; border-top: 3px solid var(--text); border-left: 3px solid var(--text); }
+  .cnr.tr { top: 0; right: 0; border-top: 3px solid var(--text); border-right: 3px solid var(--text); }
+  .cnr.bl { bottom: 0; left: 0; border-bottom: 3px solid var(--text); border-left: 3px solid var(--text); }
+  .cnr.br { bottom: 0; right: 0; border-bottom: 3px solid var(--text); border-right: 3px solid var(--text); }
+
+  .btitle { font-weight: 700; font-size: 24px; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 14px; }
+  .btitle .dim { color: var(--textDim); }
+  .stats { display: flex; gap: 32px; flex-wrap: wrap; margin-bottom: 16px; }
+  .stat .lab { font-size: 14px; color: var(--textDim); margin-bottom: 2px; }
+  .stat .val { font-size: 26px; font-weight: 700; }
+  .val.ok { color: var(--ok); } .val.bad { color: var(--bad); }
+
+  /* ===== barra: borde visible + barras verticales DENSAS cubriendo el % (look cyberpunk/eva) ===== */
+  .barwrap { margin-top: 6px; }
+  .bar { position: relative; height: 30px; border: 2px solid var(--text); background: transparent; }
+  .bar .fill { position: absolute; top: 0; left: 0; bottom: 0; }
+  /* mas barras que W-C: periodos mas chicos */
+  .d1 .fill { background: repeating-linear-gradient(90deg, var(--text) 0 8px, transparent 8px 11px); } /* 8 / 3 */
+  .d2 .fill { background: repeating-linear-gradient(90deg, var(--text) 0 6px, transparent 6px 9px);  } /* 6 / 3 */
+  .d3 .fill { background: repeating-linear-gradient(90deg, var(--text) 0 5px, transparent 5px 7px);  } /* 5 / 2 (muy denso) */
+  /* barras INCLINADAS, misma densidad D1 (8/3), distintos angulos */
+  .i1 .fill { background: repeating-linear-gradient(105deg, var(--text) 0 8px, transparent 8px 11px); } /* leve */
+  .i2 .fill { background: repeating-linear-gradient(120deg, var(--text) 0 8px, transparent 8px 11px); } /* medio */
+  .i3 .fill { background: repeating-linear-gradient(135deg, var(--text) 0 8px, transparent 8px 11px); } /* 45 diagonal */
+  .usedpct { text-align: right; font-size: 18px; color: var(--textDim); margin-top: 5px; }
+  .usedpct b { color: var(--text); font-weight: 400; }
+
+  .note { font-size: 14px; color: var(--textDim); margin-top: 8px; max-width: 820px; }
+</style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="document.documentElement.classList.toggle('dark')">toggle light / dark</button>
+
+  <h1>Budget card redesign v3</h1>
+  <p class="sub">CB2 (brackets thick), sin caja. Barra con borde + barras verticales DENSAS (look cyberpunk/eva). Fuente retro Digital-7 SOLO en el used% de abajo-derecha (y el reloj del header). Over -> rojo. Elegi densidad: D1 / D2 / D3.</p>
+
+  <h2>Densidad de barras (al 65%)</h2>
+  <div style="max-width:640px;">
+    <span class="tag">D1 :: 8px / gap 3px</span>
+    <div class="barwrap d1"><div class="bar"><div class="fill" style="width:65%;"></div></div>
+      <div class="usedpct lcd">USED 65.0%</div></div>
+
+    <span class="tag" style="margin-top:16px;">D2 :: 6px / gap 3px</span>
+    <div class="barwrap d2"><div class="bar"><div class="fill" style="width:65%;"></div></div>
+      <div class="usedpct lcd">USED 65.0%</div></div>
+
+    <span class="tag" style="margin-top:16px;">D3 :: 5px / gap 2px (muy denso)</span>
+    <div class="barwrap d3"><div class="bar"><div class="fill" style="width:65%;"></div></div>
+      <div class="usedpct lcd">USED 65.0%</div></div>
+  </div>
+
+  <h2>Inclinadas (densidad D1 = 8/3, al 65%)</h2>
+  <div style="max-width:640px;">
+    <span class="tag">D1 recta (referencia, 90deg)</span>
+    <div class="barwrap d1"><div class="bar"><div class="fill" style="width:65%;"></div></div>
+      <div class="usedpct lcd">USED 65.0%</div></div>
+
+    <span class="tag" style="margin-top:16px;">I1 :: leve (105deg)</span>
+    <div class="barwrap i1"><div class="bar"><div class="fill" style="width:65%;"></div></div>
+      <div class="usedpct lcd">USED 65.0%</div></div>
+
+    <span class="tag" style="margin-top:16px;">I2 :: medio (120deg)</span>
+    <div class="barwrap i2"><div class="bar"><div class="fill" style="width:65%;"></div></div>
+      <div class="usedpct lcd">USED 65.0%</div></div>
+
+    <span class="tag" style="margin-top:16px;">I3 :: diagonal 45 (135deg)</span>
+    <div class="barwrap i3"><div class="bar"><div class="fill" style="width:65%;"></div></div>
+      <div class="usedpct lcd">USED 65.0%</div></div>
+  </div>
+
+  <h2>Ensamblado (D1 recta de ejemplo)</h2>
+
+  <span class="tag">On track</span>
+  <div class="bracketed" style="max-width:720px;">
+    <span class="cnr tl"></span><span class="cnr tr"></span><span class="cnr bl"></span><span class="cnr br"></span>
+    <div class="btitle">"TEAM" <span class="dim">//</span> WEEKLY NPT BUDGET <span class="dim">//</span> <span style="color:var(--ok);">ON TRACK</span></div>
+    <div class="stats">
+      <div class="stat"><div class="lab">Budget</div><div class="val">10:00:00</div></div>
+      <div class="stat"><div class="lab">Used</div><div class="val">06:30:00</div></div>
+      <div class="stat"><div class="lab">Remaining</div><div class="val ok">03:30:00</div></div>
+    </div>
+    <div class="barwrap d1"><div class="bar"><div class="fill" style="width:65%;"></div></div>
+      <div class="usedpct lcd">USED 65.0%</div></div>
+  </div>
+
+  <span class="tag" style="margin-top:22px;">Over budget (barra + borde en rojo)</span>
+  <div class="bracketed" style="max-width:720px;">
+    <span class="cnr tl"></span><span class="cnr tr"></span><span class="cnr bl"></span><span class="cnr br"></span>
+    <div class="btitle">"TEAM" <span class="dim">//</span> WEEKLY NPT BUDGET <span class="dim">//</span> <span style="color:var(--bad);">OVER</span></div>
+    <div class="stats">
+      <div class="stat"><div class="lab">Budget</div><div class="val">10:00:00</div></div>
+      <div class="stat"><div class="lab">Used</div><div class="val">11:12:00</div></div>
+      <div class="stat"><div class="lab">Remaining</div><div class="val bad">-01:12:00</div></div>
+    </div>
+    <div class="barwrap"><div class="bar" style="border-color:var(--bad);"><div class="fill" style="width:100%; background: repeating-linear-gradient(90deg, var(--bad) 0 8px, transparent 8px 11px);"></div></div>
+      <div class="usedpct lcd">USED 112.0%</div></div>
+  </div>
+
+  <p class="note">Confirmado: hover por-usuario se MANTIENE (desglose de NPT por persona con nombres/colores) en la app. En la app la fuente Digital-7 se auto-hostea (copio el .ttf al proyecto); aca en el mockup se lee directo de /shared/user/fuente reloj. Deci la densidad (D1/D2/D3) y lo implemento.</p>
+
+</body>
+</html>

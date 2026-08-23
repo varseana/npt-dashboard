@@ -81,12 +81,11 @@ export default function Clock() {
 }
 
 const CSS = `
-@import url("https://cdn.jsdelivr.net/npm/dseg@0.46.0/css/dseg.css");
 .nptclk-wrap { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
 .nptclk-lcd {
   display: inline-flex; align-items: baseline; line-height: 1;
-  font-family: "DSEG7 Classic", "Consolas", "Menlo", monospace;
-  font-size: 24px; font-weight: 400; letter-spacing: 2px;
+  font-family: "Digital7", "DSEG7 Classic", "Consolas", "Menlo", monospace;
+  font-size: 26px; font-weight: 400; letter-spacing: 2px;
 }
 .nptclk-digit {
   display: inline-block; text-align: center;

@@ -7,6 +7,13 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <title>STAR NPT Dashboard</title>
     <style>
+      /* fuente retro de reloj (Digital-7 Mono, Style-7), auto-hosteada en /public. LCD look para el
+         reloj del header y el used% del budget card. */
+      @font-face {
+        font-family: "Digital7";
+        src: url("/digital7-mono.ttf") format("truetype");
+        font-display: swap;
+      }
       /* ===== paleta como CSS variables: light (default) y dark (html.dark) ===== */
       /* LIGHT: off-white + highlights totalmente negros (botones negros, texto blanco) */
       :root {
@@ -156,6 +163,14 @@
         clip-path: polygon(0 0, calc(100% - var(--cardcut)) 0, 100% var(--cardcut), 100% 100%, 0 100%);
       }
       .npt-card-cut-body { position: relative; z-index: 1; }
+      /* ===== marcos esquineros (budget card sin caja) ===== 4 L simetricas, gruesas, que NO se tocan. */
+      .npt-bracket { position: absolute; pointer-events: none; width: 15px; height: 15px; }
+      .npt-bracket.tl { top: 0; left: 0; border-top: 3px solid var(--text); border-left: 3px solid var(--text); }
+      .npt-bracket.tr { top: 0; right: 0; border-top: 3px solid var(--text); border-right: 3px solid var(--text); }
+      .npt-bracket.bl { bottom: 0; left: 0; border-bottom: 3px solid var(--text); border-left: 3px solid var(--text); }
+      .npt-bracket.br { bottom: 0; right: 0; border-bottom: 3px solid var(--text); border-right: 3px solid var(--text); }
+      /* fuente LCD retro (Digital-7): reloj del header + used% del budget card, nada mas. */
+      .npt-lcd { font-family: "Digital7", "DSEG7 Classic", "Consolas", monospace; letter-spacing: 1px; }
       /* oculta el ojo/limpiar NATIVO del navegador (Edge/IE) para no tener doble ojo; dejamos el nuestro */
       input::-ms-reveal, input::-ms-clear { display: none; }
       /* accesibilidad: si el usuario pidio menos movimiento, no giramos */
