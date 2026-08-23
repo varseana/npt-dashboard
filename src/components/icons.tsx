@@ -128,6 +128,17 @@ export function IconCompress({ size = 16, style }: P) {
   );
 }
 
+// simbolo de power (outline). toggle activar/desactivar codigos de enrollment.
+export function IconPower({ size = 16, style }: P) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", ...style }} aria-hidden="true">
+      <path d="M12 3v9" />
+      <path d="M7.4 6.3a7 7 0 1 0 9.2 0" />
+    </svg>
+  );
+}
+
 // tacho de basura (outline, currentColor). usado en el boton de eliminar cuenta (hover -> rojo).
 export function IconTrash({ size = 16, style }: P) {
   return (

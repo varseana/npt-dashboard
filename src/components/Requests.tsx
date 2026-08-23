@@ -163,7 +163,7 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
           )}
         </div>
 
-        <div>
+        <div style={{ paddingTop: 15 }}>
           <div className="npt-title" style={{ fontWeight: 700, fontSize: 22, marginBottom: 10 }}>My requests</div>
           <div style={{ border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden" }}>
             {loading ? <Dim>Loading...</Dim> : mine.length === 0 ? <Dim>No requests yet.</Dim> : mine.map((r) => (
