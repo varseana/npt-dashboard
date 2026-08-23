@@ -200,8 +200,8 @@ export default function App() {
   return (
     <div style={{ maxWidth: "min(2100px, 97vw)", margin: "0 auto", padding: "24px 32px" }}>
       {showConfirmed && <ConfirmedBanner onClose={() => setShowConfirmed(false)} />}
-      {/* separacion de lado a lado (borde full-width) + aire, para que el header respire */}
-      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 24, paddingBottom: 18, borderBottom: `1px solid ${palette.border}` }}>
+      {/* sin linea visible; el area de separacion (whitespace) se duplico para darle aire al header */}
+      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 48 }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
             <h1 style={{ margin: 0, fontSize: 42, color: palette.text, lineHeight: 1 }}>STAR NPT Dashboard</h1>
@@ -214,14 +214,16 @@ export default function App() {
             </button>
           </div>
         </div>
-        {/* toggle de tema apilado y centrado horizontalmente sobre el reloj */}
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6 }}>
-          <button onClick={() => setDark((d) => !d)}
-            title={dark ? "Switch to light mode" : "Switch to dark mode"} aria-label="Toggle theme"
-            style={{ background: "transparent", border: "none", padding: 2, cursor: "pointer",
-              color: palette.textDim, display: "inline-flex", alignItems: "center" }}>
-            {dark ? <IconSun size={19} /> : <IconMoon size={19} />}
-          </button>
+        {/* toggle de tema a la IZQUIERDA del tiempo, centrado con la linea del LCD (24px) */}
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", height: 24 }}>
+            <button onClick={() => setDark((d) => !d)}
+              title={dark ? "Switch to light mode" : "Switch to dark mode"} aria-label="Toggle theme"
+              style={{ background: "transparent", border: "none", padding: 2, cursor: "pointer",
+                color: palette.textDim, display: "inline-flex", alignItems: "center" }}>
+              {dark ? <IconSun size={19} /> : <IconMoon size={19} />}
+            </button>
+          </div>
           <Clock />
         </div>
       </header>
