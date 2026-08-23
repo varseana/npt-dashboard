@@ -144,6 +144,18 @@
       }
       .npt-dd2-opt:hover { background: var(--panelAlt); }
       .npt-dd2-opt-sel { font-weight: 700; background: var(--panelAlt); }
+      /* ===== cards con esquina sup-der recortada ===== mismo lenguaje que los botones B1: sharp, cero
+         radius, chaflan 16px arriba-derecha. el borde 1px SIGUE el corte via ::before inset (fondo=border
+         + relleno panel 1px adentro). el contenido va en .npt-card-cut-body (z-index encima). */
+      .npt-card-cut {
+        --cardcut: 16px; position: relative; border-radius: 0; background: var(--border);
+        clip-path: polygon(0 0, calc(100% - var(--cardcut)) 0, 100% var(--cardcut), 100% 100%, 0 100%);
+      }
+      .npt-card-cut::before {
+        content: ""; position: absolute; inset: 1px; background: var(--panel); z-index: 0;
+        clip-path: polygon(0 0, calc(100% - var(--cardcut)) 0, 100% var(--cardcut), 100% 100%, 0 100%);
+      }
+      .npt-card-cut-body { position: relative; z-index: 1; }
       /* oculta el ojo/limpiar NATIVO del navegador (Edge/IE) para no tener doble ojo; dejamos el nuestro */
       input::-ms-reveal, input::-ms-clear { display: none; }
       /* accesibilidad: si el usuario pidio menos movimiento, no giramos */

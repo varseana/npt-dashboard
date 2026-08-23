@@ -282,7 +282,7 @@ function remainingColor(s: NptStatus): string {
 function TeamBudgetCard({ budget, used, remaining, status, users, onNavigate, onEmailTeam, emailCount }:
   { budget: number | null; used: number; remaining: number | null; status: NptStatus; users: { alias: string; nptSeconds: number }[]; onNavigate?: (d: NavDest) => void; onEmailTeam?: () => void; emailCount?: number }) {
   return (
-    <div style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: "16px 20px", marginBottom: 18 }}>
+    <div style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 0, padding: "16px 20px", marginBottom: 18 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
         <span className="npt-title" style={{ fontWeight: 700, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.06em" }}>"Team" // weekly NPT budget</span>
         {budget != null && (
@@ -316,7 +316,10 @@ function TeamBudgetCard({ budget, used, remaining, status, users, onNavigate, on
             <BudgetStat label="Remaining" value={fmtHms(remaining ?? 0)} color={remainingColor(status)} />
             <BudgetStat label="Used %" value={((used / budget) * 100).toFixed(1) + "%"} />
           </div>
-          <TeamBudgetBar budget={budget} status={status} users={users} />
+          {/* barra edge-to-edge: margenes negativos = padding de la card (20/16) para que llegue a los bordes */}
+          <div style={{ margin: "0 -20px -16px" }}>
+            <TeamBudgetBar budget={budget} status={status} users={users} />
+          </div>
         </>
       )}
     </div>
@@ -361,8 +364,8 @@ function TeamBudgetBar({ budget, status, users }:
   return (
     <div onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} onClick={toggleLock}
       title={locked ? "Locked - click to unlock" : "Hover to reveal, click to lock 30s"}
-      style={{ display: "flex", height: 26, borderRadius: 6, overflow: "hidden", background: palette.panelAlt, gap: 1, cursor: "pointer",
-        outline: locked ? `2px solid ${color}` : "none", outlineOffset: 2 }}>
+      style={{ display: "flex", height: 26, borderRadius: 0, overflow: "hidden", background: palette.panelAlt, gap: 1, cursor: "pointer",
+        outline: locked ? `2px solid ${color}` : "none", outlineOffset: -2 }}>
       {segs.map((s, i) => (
         <div key={i} title={`${s.label} :: ${s.pct.toFixed(1)}% (${fmtHms(s.seconds)})`}
           style={{
@@ -401,12 +404,14 @@ function Field({ label, children }: { label: React.ReactNode; children: React.Re
 function Stat({ label, value, tone, story, topRight }: { label: string; value: string; tone?: "ok" | "warn" | "bad"; story?: React.ReactNode; topRight?: React.ReactNode }) {
   const color = tone === "bad" ? palette.bad : tone === "warn" ? palette.warn : tone === "ok" ? palette.ok : palette.text;
   return (
-    <div style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: "12px 16px", minWidth: 150 }}>
-      <div style={{ fontSize: 17, color: palette.textDim }}>{label}{story && <InfoStar>{story}</InfoStar>}</div>
-      {/* numero full-izquierda, toggle (si hay) full-derecha, en la misma linea */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-        <div style={{ fontSize: 31, fontWeight: 700, color }}>{value}</div>
-        {topRight}
+    <div className="npt-card-cut" style={{ minWidth: 150 }}>
+      <div className="npt-card-cut-body" style={{ padding: "12px 16px" }}>
+        <div style={{ fontSize: 17, color: palette.textDim }}>{label}{story && <InfoStar>{story}</InfoStar>}</div>
+        {/* numero full-izquierda, toggle (si hay) full-derecha, en la misma linea */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+          <div style={{ fontSize: 31, fontWeight: 700, color }}>{value}</div>
+          {topRight}
+        </div>
       </div>
     </div>
   );
