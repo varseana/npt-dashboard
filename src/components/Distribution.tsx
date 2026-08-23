@@ -12,7 +12,7 @@ import { InfoStar } from "./InfoStar";
 import { TableSkeleton } from "./skeleton";
 import WeekCountdown from "./WeekCountdown";
 import { SearchInput } from "./Inputs";
-import { IconDownload } from "./icons";
+import { IconMoveOut } from "./icons";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 // highlight monocromatico dentro del texto del popover (bold en color de texto full)
@@ -143,8 +143,8 @@ export default function Distribution({ team, refreshKey }: { team: Team; refresh
         </Field>
         <SearchInput value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="username"
           aria-label="Filter by username" />
-        <button onClick={exportCsv} disabled={!shown.length} style={csvBtn} className="npt-hover-blue">
-          <IconDownload size={18} /> Export CSV
+        <button onClick={exportCsv} disabled={!shown.length} style={csvBtn} className="npt-hover-blue" title="Export CSV" aria-label="Export CSV">
+          <IconMoveOut size={18} /> CSV
         </button>
       </div>
 
@@ -208,4 +208,4 @@ const th: React.CSSProperties = { textAlign: "center", padding: "9px 12px", colo
 const td: React.CSSProperties = { textAlign: "center", padding: "8px 12px", borderBottom: `1px solid ${palette.border}` };
 const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 19 };
 const select: React.CSSProperties = { ...input, minWidth: 260 };
-const csvBtn: React.CSSProperties = { marginLeft: "auto", background: "transparent", color: palette.text, border: "none", padding: "8px 4px", fontSize: 18, cursor: "pointer", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 7 };
+const csvBtn: React.CSSProperties = { marginLeft: "auto", background: "transparent", border: "none", padding: "8px 4px", fontSize: 18, cursor: "pointer", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 7 };

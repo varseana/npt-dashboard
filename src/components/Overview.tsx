@@ -262,7 +262,7 @@ function UserTable({ rows, remind, teamBudget }: { rows: Row[]; remind: (u: Row)
             <td style={{ ...td, textAlign: "center" }}>
               <button onClick={() => remind(u)} disabled={u.status === "none"} title="Send reminder .eml" aria-label="Send reminder email"
                 className="npt-hover-blue"
-                style={{ background: "transparent", border: "none", padding: 2, cursor: "pointer", color: palette.text, display: "inline-flex", alignItems: "center", lineHeight: 0 }}>
+                style={{ background: "transparent", border: "none", padding: 2, cursor: "pointer", display: "inline-flex", alignItems: "center", lineHeight: 0 }}>
                 <IconMail size={17} />
               </button>
             </td>
@@ -447,4 +447,4 @@ const td: React.CSSProperties = { padding: "8px 10px", borderBottom: `1px solid 
 const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 19 };
 const select: React.CSSProperties = { ...input, minWidth: 260 };
 // boton sin chrome: transparente, sin borde, solo el icono. hereda color de texto (currentColor).
-const iconBtn: React.CSSProperties = { background: "transparent", border: "none", padding: 2, cursor: "pointer", color: palette.text, display: "inline-flex", alignItems: "center", lineHeight: 0 };
+const iconBtn: React.CSSProperties = { background: "transparent", border: "none", padding: 2, cursor: "pointer", display: "inline-flex", alignItems: "center", lineHeight: 0 };

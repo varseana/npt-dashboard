@@ -77,10 +77,11 @@
       .npt-add-plus { transition: color .2s ease; }
       .npt-add-plus:hover:not(:disabled) { color: var(--ok); }
       html.dark .npt-add-plus:hover:not(:disabled) { color: var(--blue); }
-      /* iconos de accion borderless con hover de color Bauhaus (azul / amarillo). */
-      .npt-hover-blue { transition: color .2s ease; }
+      /* iconos de accion borderless con hover de color Bauhaus (azul / amarillo). el color base va en la
+         CLASE (no inline) porque un color inline le GANARIA al :hover del stylesheet. */
+      .npt-hover-blue { color: var(--text); transition: color .2s ease; }
       .npt-hover-blue:hover:not(:disabled) { color: var(--blue); }
-      .npt-hover-warn { transition: color .2s ease; }
+      .npt-hover-warn { color: var(--text); transition: color .2s ease; }
       .npt-hover-warn:hover:not(:disabled) { color: var(--warn); }
       .npt-hover-blue:disabled, .npt-hover-warn:disabled { opacity: .4; cursor: default; }
       /* oculta el ojo/limpiar NATIVO del navegador (Edge/IE) para no tener doble ojo; dejamos el nuestro */
