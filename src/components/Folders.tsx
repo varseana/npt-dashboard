@@ -5,7 +5,7 @@ import { palette } from "../theme";
 import { InfoStar } from "./InfoStar";
 import { BlockSkeleton } from "./skeleton";
 import { IconX } from "./icons";
-import { AddInput, splitAliases } from "./Inputs";
+import { AddInput, AddButtonInput, splitAliases } from "./Inputs";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 interface Folder { id: string; name: string; aliases: string[]; }
@@ -115,10 +115,10 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
   return (
     <div>
       <div style={{ display: "flex", gap: 8, alignItems: "center", margin: "0 0 16px", flexWrap: "wrap" }}>
-        <AddInput value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="folder"
-          aria-label="New folder name" title="Name a new folder (e.g. Project X)"
-          onKeyDown={(e) => { if (e.key === "Enter") create(); }} style={{ width: 260 }} />
-        <button onClick={create} disabled={!newName.trim()} style={btn}>Create folder</button>
+        <AddButtonInput value={newName} onChange={(e) => setNewName(e.target.value)}
+          onSubmit={create} buttonDisabled={!newName.trim()} buttonLabel="Create"
+          placeholder="FOLDER" aria-label="New folder name" title="Name a new folder (e.g. Project X)"
+          containerStyle={{ width: 300 }} />
         <InfoStar spin={false}>{
           <>Private folders to organize <strong style={hi}>your own view</strong> by project. They are <strong style={hi}>yours only</strong> and <strong style={hi}>do not affect any numbers</strong>: they just group employees in Overview when you turn on <strong style={hi}>Group by folder</strong>. Adding someone from <strong style={hi}>another team</strong> sends an access request to their manager.</>
         }</InfoStar>
@@ -295,4 +295,3 @@ function FolderCard({ folder, teamAliases, onRemoveMember, onAddTeamMember, onRe
   );
 }
 
-const btn: React.CSSProperties = { background: palette.accent, color: palette.accentText, border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600 };

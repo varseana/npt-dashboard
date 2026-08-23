@@ -4,8 +4,8 @@ import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { TableSkeleton } from "./skeleton";
 import { InfoStar } from "./InfoStar";
-import { AddInput } from "./Inputs";
-import { IconPower, IconTrash, IconPlus } from "./icons";
+import { AddInput, AddButtonInput } from "./Inputs";
+import { IconPower, IconTrash } from "./icons";
 
 interface Team { id: string; name: string; npt_target_pct: number }
 interface Code { code: string; team_id: string; active: boolean }
@@ -177,18 +177,12 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
                     </button>
                   </div>
                 ))}
-                {/* control cuadrado (bordes levemente redondeados, igual look que el "+ code" de arriba):
-                    icono + adentro, input (75%) y boton Add negro PEGADO a la derecha (25%). */}
-                <div style={{ display: "flex", alignItems: "stretch", width: 260, marginTop: 8, border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden", background: palette.panel }}>
-                  <div style={{ position: "relative", display: "flex", alignItems: "center", flex: "1 1 75%", minWidth: 0 }}>
-                    <span style={{ position: "absolute", left: 10, display: "inline-flex", color: palette.textDim, pointerEvents: "none" }}><IconPlus size={18} /></span>
-                    <input value={codeInputs[t.id] ?? ""} onChange={(e) => setCodeInputs((m) => ({ ...m, [t.id]: sanitizeCode(e.target.value) }))}
-                      onKeyDown={(e) => { if (e.key === "Enter") addCode(t.id); }} placeholder="code"
-                      title="Uppercase only, no spaces, dashes (-) as separators" aria-label="Add enrollment code"
-                      style={{ width: "100%", background: "transparent", border: "none", outline: "none", color: palette.text, padding: "8px 10px 8px 34px", fontSize: 18, textTransform: "uppercase" }} />
-                  </div>
-                  <button onClick={() => addCode(t.id)} disabled={!(codeInputs[t.id] ?? "").trim()} style={addPillBtn}>Add</button>
-                </div>
+                <AddButtonInput value={codeInputs[t.id] ?? ""}
+                  onChange={(e) => setCodeInputs((m) => ({ ...m, [t.id]: sanitizeCode(e.target.value) }))}
+                  onSubmit={() => addCode(t.id)} buttonDisabled={!(codeInputs[t.id] ?? "").trim()}
+                  placeholder="code" title="Uppercase only, no spaces, dashes (-) as separators"
+                  aria-label="Add enrollment code" containerStyle={{ marginTop: 8 }}
+                  style={{ textTransform: "uppercase" }} />
               </div>
             </div>
           );
@@ -234,9 +228,4 @@ const btn: React.CSSProperties = {
 const btnGhost: React.CSSProperties = {
   background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
   borderRadius: 8, padding: "6px 12px", fontSize: 18, cursor: "pointer",
-};
-// boton "Add" DENTRO del pill (25% del ancho), negro, sin borde propio.
-const addPillBtn: React.CSSProperties = {
-  flex: "0 0 25%", background: palette.accent, color: palette.accentText, border: "none",
-  cursor: "pointer", fontWeight: 700, fontSize: 15, textTransform: "uppercase", letterSpacing: "0.05em",
 };

@@ -9,7 +9,7 @@ import {
 } from "../lib/npt";
 import { StatusChip } from "./status";
 import { BlockSkeleton } from "./skeleton";
-import { AddInput, splitAliases } from "./Inputs";
+import { AddButtonInput, splitAliases } from "./Inputs";
 
 interface ManagerRow { user_id: string; email: string; role: string; team_id: string | null; }
 interface MemberLink { manager_owner: string; alias: string; team_id: string | null; }
@@ -149,12 +149,11 @@ export default function Org() {
               </table>
             )}
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <AddInput list="npt-known-aliases" value={addInputs[mgr.user_id] || ""}
+              <AddButtonInput list="npt-known-aliases" value={addInputs[mgr.user_id] || ""}
                 onChange={(e) => setAddInputs((p) => ({ ...p, [mgr.user_id]: e.target.value }))}
-                onKeyDown={(e) => { if (e.key === "Enter") addMember(mgr); }}
-                title="Assign one or more usernames, comma or space separated" aria-label="Assign username"
-                placeholder="assign" style={{ width: 220 }} />
-              <button onClick={() => addMember(mgr)} disabled={!(addInputs[mgr.user_id] || "").trim()} style={btn}>Assign</button>
+                onSubmit={() => addMember(mgr)} buttonDisabled={!(addInputs[mgr.user_id] || "").trim()} buttonLabel="Assign"
+                placeholder="USERNAME" title="Assign one or more usernames, comma or space separated"
+                aria-label="Assign username" containerStyle={{ width: 260 }} />
             </div>
           </div>
         );
@@ -174,4 +173,3 @@ const th: React.CSSProperties = { textAlign: "center", padding: "8px 10px", colo
 const td: React.CSSProperties = { textAlign: "center", padding: "8px 10px", borderBottom: `1px solid ${palette.border}` };
 const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 19 };
 const select: React.CSSProperties = { ...input, minWidth: 260 };
-const btn: React.CSSProperties = { background: palette.accent, color: palette.accentText, border: "none", borderRadius: 8, padding: "8px 12px", fontSize: 18, cursor: "pointer", fontWeight: 600 };

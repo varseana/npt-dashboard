@@ -3,7 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { InfoStar } from "./InfoStar";
-import { AddInput, splitAliases } from "./Inputs";
+import { AddButtonInput, splitAliases } from "./Inputs";
 
 // highlight monocromatico dentro del texto del popover (bold en color de texto full)
 const hi = { color: palette.text, fontWeight: 700 } as React.CSSProperties;
@@ -145,11 +145,10 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
             ]} />
           </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-            <AddInput value={alias} onChange={(e) => setAlias(e.target.value)} placeholder="username(s)"
-              title="One or more usernames, comma or space separated" aria-label="Request access to usernames"
-              onKeyDown={(e) => { if (e.key === "Enter") submit(); }}
-              containerStyle={{ display: "flex", flex: 1, minWidth: 0 }} style={{ width: "100%" }} />
-            <button onClick={submit} disabled={!alias.trim()} style={btn}>Send request</button>
+            <AddButtonInput value={alias} onChange={(e) => setAlias(e.target.value)}
+              onSubmit={submit} buttonDisabled={!alias.trim()} buttonLabel="Request"
+              placeholder="USERNAME(S)" title="One or more usernames, comma or space separated"
+              aria-label="Request access to usernames" containerStyle={{ flex: 1, minWidth: 0, width: "auto" }} />
           </div>
           {msg && <div style={{ marginTop: 10, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 18 }}>{msg}</div>}
           {notFound && (
