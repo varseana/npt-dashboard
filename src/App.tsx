@@ -200,7 +200,9 @@ export default function App() {
   return (
     <div style={{ maxWidth: "min(2100px, 97vw)", margin: "0 auto", padding: "24px 32px" }}>
       {showConfirmed && <ConfirmedBanner onClose={() => setShowConfirmed(false)} />}
-      {/* sin linea visible; el area de separacion (whitespace) se duplico para darle aire al header */}
+      {/* separador superior: MISMA linea 1px que cierra el header por abajo (el borderBottom de la nav).
+          va full-width encima del titulo y del reloj para enmarcar la cabecera arriba y abajo. */}
+      <div style={{ borderBottom: `1px solid ${palette.border}`, marginBottom: 24 }} />
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 48 }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>

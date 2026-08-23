@@ -7,6 +7,7 @@ import { BlockSkeleton } from "./skeleton";
 import { IconX, IconFolder, IconTrash } from "./icons";
 import { AddInput, AddButtonInput, splitAliases } from "./Inputs";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { InlineEdit } from "./InlineEdit";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 interface Folder { id: string; name: string; aliases: string[]; }
@@ -78,6 +79,16 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
     else await load();
   }
 
+  // renombra un folder (edicion inline). throwea para que InlineEdit muestre el error y reabra.
+  async function renameFolder(folder: Folder, name: string) {
+    const n = name.trim();
+    if (!n) throw new Error("Folder name cannot be empty.");
+    if (n === folder.name) return;
+    const { error } = await supabase.from("manager_folders").update({ name: n }).eq("id", folder.id);
+    if (error) throw new Error(error.message);
+    await load();
+  }
+
   // agrega/quita a un miembro del TEAM en el array del folder (optimista)
   async function setFolderAliases(folder: Folder, next: string[]) {
     setFolders((prev) => prev.map((f) => (f.id === folder.id ? { ...f, aliases: next } : f)));
@@ -138,6 +149,7 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
               onRemoveMember={(a) => removeMember(f, a)}
               onAddTeamMember={(a) => addTeamMember(f, a)}
               onRequestExternal={requestExternal}
+              onRename={(name) => renameFolder(f, name)}
               onDelete={() => setConfirmFolder(f)} />
           ))}
         </div>
@@ -189,12 +201,13 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
 }
 
 // ---- una carta de folder: nombre, chips de miembros actuales, y "Add member" con autocomplete ----
-function FolderCard({ folder, teamAliases, onRemoveMember, onAddTeamMember, onRequestExternal, onDelete }: {
+function FolderCard({ folder, teamAliases, onRemoveMember, onAddTeamMember, onRequestExternal, onRename, onDelete }: {
   folder: Folder;
   teamAliases: string[];
   onRemoveMember: (alias: string) => void;
   onAddTeamMember: (alias: string) => void;
   onRequestExternal: (alias: string) => void;
+  onRename: (name: string) => Promise<void>;
   onDelete: () => void;
 }) {
   const [q, setQ] = useState("");
@@ -249,8 +262,15 @@ function FolderCard({ folder, teamAliases, onRemoveMember, onAddTeamMember, onRe
 
   return (
     <div style={{ border: `1px solid ${palette.border}`, borderRadius: 10, padding: "12px 14px", background: palette.panel, display: "flex", flexDirection: "column" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
-        <div style={{ fontWeight: 700, fontSize: 20 }}>{folder.name} <span style={{ color: palette.textDim, fontWeight: 400, fontSize: 16 }}>({folder.aliases.length})</span></div>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 10 }}>
+        <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 6 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <InlineEdit value={folder.name} onSave={onRename} format={(v) => v.trim()}
+              width="100%" align="left" fontSize={20} fontWeight={700}
+              placeholder="Folder name" ariaLabel="folder name" />
+          </div>
+          <span style={{ color: palette.textDim, fontWeight: 400, fontSize: 16, whiteSpace: "nowrap" }}>({folder.aliases.length})</span>
+        </div>
         <button onClick={onDelete} className="npt-ico-act npt-ico-danger" title="Delete folder" aria-label="Delete folder"><IconTrash size={17} /></button>
       </div>
 

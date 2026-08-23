@@ -193,6 +193,17 @@ export function IconCheck({ size = 16, style }: P) {
   );
 }
 
+// lapiz (outline, currentColor). affordance de edicion inline: aparece al hacer hover sobre un
+// campo editable. gris tenue por defecto (lo controla la clase .npt-inline-pencil en index.html).
+export function IconPencil({ size = 16, style }: P) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", ...style }} aria-hidden="true">
+      <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5Z" />
+    </svg>
+  );
+}
+
 // luna solida (se muestra en modo claro: click -> oscuro)
 export function IconMoon({ size = 16, style }: P) {
   return (

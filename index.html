@@ -84,6 +84,24 @@
       .npt-hover-warn { color: var(--text); transition: color .2s ease; }
       .npt-hover-warn:hover:not(:disabled) { color: var(--warn); }
       .npt-hover-blue:disabled, .npt-hover-warn:disabled { opacity: .4; cursor: default; }
+      /* ===== edicion inline ===== lectura = texto con lapiz al hover; input = MISMO box, solo el
+         borde pasa de transparente a visible. zero layout shift (misma metrica en ambos modos). */
+      .npt-inline-field .npt-inline-read {
+        box-sizing: border-box; margin: 0; border: 1px solid transparent; border-radius: 8px;
+        background: transparent; cursor: text; font-family: inherit; color: var(--text);
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        transition: background .15s ease, border-color .15s ease;
+      }
+      .npt-inline-field:hover .npt-inline-read { background: color-mix(in srgb, var(--text) 7%, transparent); }
+      .npt-inline-read:focus-visible { outline: none; border-color: var(--border); }
+      .npt-inline-pencil { opacity: 0; color: var(--textDim); transition: opacity .15s ease; }
+      .npt-inline-field:hover .npt-inline-pencil { opacity: 1; }
+      .npt-inline-input {
+        box-sizing: border-box; margin: 0; border: 1px solid var(--border); border-radius: 8px;
+        background: var(--panel); color: var(--text); font-family: inherit; outline: none;
+      }
+      .npt-inline-input:focus { border-color: var(--text); }
+      .npt-inline-input:disabled { opacity: .6; }
       /* oculta el ojo/limpiar NATIVO del navegador (Edge/IE) para no tener doble ojo; dejamos el nuestro */
       input::-ms-reveal, input::-ms-clear { display: none; }
       /* accesibilidad: si el usuario pidio menos movimiento, no giramos */

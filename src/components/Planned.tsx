@@ -8,6 +8,7 @@ import {
   type PlannedRow, type PlanContext,
 } from "../lib/npt";
 import { InfoStar } from "./InfoStar";
+import { InlineEdit } from "./InlineEdit";
 import { BlockSkeleton } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
@@ -25,11 +26,7 @@ export default function Planned({ team }: { team: Team }) {
   const [rows, setRows] = useState<PlannedRow[]>([]);
   const [budgetRows, setBudgetRows] = useState<{ week_key: string; planned_seconds: number }[]>([]);
   const [aliases, setAliases] = useState<string[]>([]);
-  const [budgetInput, setBudgetInput] = useState("");
-  const [personInputs, setPersonInputs] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [msg, setMsg] = useState("");
 
   const scopeKey = scope === "standing" ? "" : weekKey;
 
@@ -58,18 +55,6 @@ export default function Planned({ team }: { team: Team }) {
   }
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [team.id]);
-
-  // prefill de los inputs cuando cambia el scope o llega data
-  useEffect(() => {
-    const bud = budgetRows.find((r) => r.week_key === scopeKey);
-    setBudgetInput(bud ? fmtHms(bud.planned_seconds) : "");
-    const pi: Record<string, string> = {};
-    for (const a of aliases) {
-      const row = rows.find((r) => r.alias === a && r.week_key === scopeKey);
-      pi[a] = row ? fmtHms(row.planned_seconds) : "";
-    }
-    setPersonInputs(pi);
-  }, [rows, budgetRows, aliases, scopeKey]);
 
   const headcount = aliases.length;
   const budgetSeconds = resolveTeamBudget(budgetRows, scopeKey);
@@ -110,28 +95,33 @@ export default function Planned({ team }: { team: Team }) {
     if (error) throw error;
   }
 
-  async function save() {
-    // CAP: los customs (targets individuales) nunca pueden sumar mas que el budget (evita el bug de
-    // asignar mas NPT del que hay). Priorizamos los individuales; lo que sobra = fair share al resto.
-    const budgetSecs = parseDuration(budgetInput);
-    if (budgetSecs != null) {
+  // guardado inline del budget. valida que no baje por debajo de la suma de customs ya puestos
+  // (mismo CAP de antes, pero por-campo). Vacio = borra el budget.
+  async function onSaveBudget(next: string) {
+    const secs = parseDuration(next);
+    if (next.trim() !== "" && secs == null) throw new Error("Use hours like 10 or H:MM (e.g. 10:00).");
+    if (secs != null) {
       let sum = 0;
-      for (const a of aliases) { const s = parseDuration(personInputs[a] ?? ""); if (s != null) sum += s; }
-      if (sum > budgetSecs) {
-        setMsg(`Custom targets add up to ${fmtHms(sum)}, more than the budget ${fmtHms(budgetSecs)}. Lower them so they fit.`);
-        return;
-      }
+      for (const r of rows) if (r.week_key === scopeKey && r.planned_seconds) sum += r.planned_seconds;
+      if (sum > secs) throw new Error(`Custom targets add up to ${fmtHms(sum)}, more than this budget ${fmtHms(secs)}. Lower them first.`);
     }
-    setSaving(true); setMsg("");
-    try {
-      await upsertOrDeleteBudget(budgetInput);
-      for (const a of aliases) await upsertOrDelete(a, personInputs[a] ?? "");
-      await load();
-      setMsg("Saved. Everyone's target and the colors recompute.");
-    } catch (e: any) {
-      setMsg("Error: " + (e?.message || String(e)));
+    await upsertOrDeleteBudget(next);
+    await load();
+  }
+
+  // guardado inline de un custom. valida que la suma de todos los customs no pase el budget.
+  // Vacio = borra el custom (esa persona vuelve al fair share).
+  async function onSaveCustom(alias: string, next: string) {
+    const secs = parseDuration(next);
+    if (next.trim() !== "" && secs == null) throw new Error("Use hours like 2 or H:MM (e.g. 2:30).");
+    const budgetSecs = resolveTeamBudget(budgetRows, scopeKey);
+    if (secs != null && budgetSecs != null) {
+      let sum = secs;
+      for (const r of rows) if (r.week_key === scopeKey && r.alias !== alias && r.planned_seconds) sum += r.planned_seconds;
+      if (sum > budgetSecs) throw new Error(`Custom targets would total ${fmtHms(sum)}, over the budget ${fmtHms(budgetSecs)}.`);
     }
-    setSaving(false);
+    await upsertOrDelete(alias, next);
+    await load();
   }
 
   if (loading) return <BlockSkeleton />;
@@ -174,8 +164,20 @@ export default function Planned({ team }: { team: Team }) {
             </div>
           )}
         </div>
-        <input value={budgetInput} onChange={(e) => setBudgetInput(e.target.value)} onBlur={() => setBudgetInput(normalize(budgetInput))} placeholder="H:MM (e.g. 10:00)" style={{ ...input, width: 180 }} />
-        {budgetSeconds == null && <div style={{ fontSize: 17, color: palette.textDim, marginTop: 8 }}>No budget set. Set it above to give everyone a target.</div>}
+        <InlineEdit
+          value={(() => { const b = budgetRows.find((r) => r.week_key === scopeKey); return b ? fmtHms(b.planned_seconds) : ""; })()}
+          onSave={onSaveBudget}
+          format={normalize}
+          placeholder="H:MM (e.g. 10:00)"
+          emptyHint={<span style={{ color: palette.textDim }}>Set budget</span>}
+          width={180}
+          align="left"
+          fontSize={19}
+          fontWeight={600}
+          ariaLabel="team weekly budget"
+          inputMode="numeric"
+        />
+        {budgetSeconds == null && <div style={{ fontSize: 17, color: palette.textDim, marginTop: 8 }}>No budget set. Click above to give everyone a target.</div>}
       </div>
 
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19 }}>
@@ -200,9 +202,18 @@ export default function Planned({ team }: { team: Team }) {
               <tr key={a} style={{ background: i % 2 ? palette.panel : palette.panelAlt }}>
                 <td style={{ ...td, textAlign: "left", fontWeight: 600 }}>{a}</td>
                 <td style={{ ...td, textAlign: "center" }}>
-                  <input value={personInputs[a] ?? ""} onChange={(e) => setPersonInputs((p) => ({ ...p, [a]: e.target.value }))}
-                    onBlur={() => setPersonInputs((p) => ({ ...p, [a]: normalize(p[a] ?? "") }))}
-                    placeholder={fair != null ? fmtHms(fair) : "H:MM"} style={{ ...input, width: 120, textAlign: "center" }} />
+                  <InlineEdit
+                    value={(() => { const r = rows.find((x) => x.alias === a && x.week_key === scopeKey); return r ? fmtHms(r.planned_seconds) : ""; })()}
+                    onSave={(v) => onSaveCustom(a, v)}
+                    format={normalize}
+                    placeholder={fair != null ? fmtHms(fair) : "H:MM"}
+                    emptyHint={<span style={{ color: palette.textDim }}>{fair != null ? fmtHms(fair) : "-"}</span>}
+                    width={120}
+                    align="center"
+                    fontSize={19}
+                    ariaLabel={`custom target for ${a}`}
+                    inputMode="numeric"
+                  />
                 </td>
                 <td style={{ ...td, textAlign: "center", color: eff != null ? palette.text : palette.textDim, fontWeight: isCustom ? 700 : 400 }}>
                   {eff != null ? fmtHms(eff) : "no budget"}
@@ -213,10 +224,9 @@ export default function Planned({ team }: { team: Team }) {
         </tbody>
       </table>
 
-      <button onClick={save} disabled={saving} style={{ marginTop: 16, background: palette.accent, color: palette.accentText, border: "none", borderRadius: 8, padding: "10px 18px", fontSize: 19, cursor: "pointer", fontWeight: 600 }}>
-        {saving ? "Saving..." : "Save"}
-      </button>
-      {msg && <div style={{ marginTop: 12, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 18 }}>{msg}</div>}
+      <div style={{ marginTop: 14, fontSize: 16, color: palette.textDim }}>
+        Changes save on their own. Click any budget or custom value to edit it.
+      </div>
     </div>
   );
 }
