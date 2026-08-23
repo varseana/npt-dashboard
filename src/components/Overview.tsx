@@ -166,7 +166,7 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
           <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="username" aria-label="Filter by username"
             style={{ ...input, paddingLeft: 34 }} />
         </div>
-        <div style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", paddingBottom: 6 }}>
+        <div style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center" }}>
           <EmailAction icon={<IconAlert size={38} />} count={flagged.length} label="Email flagged" hoverClass="npt-hover-warn"
             onClick={() => flagged.forEach(remind)}
             info={<>Generates one reminder <strong style={hi}>.eml per person in yellow or red</strong> (near limit or over plan), each with their own weekly NPT summary. Opens as drafts in Outlook for you to review and send.</>} />
@@ -416,10 +416,13 @@ function Stat({ label, value, tone, story, topRight }: { label: string; value: s
 function EmailAction({ icon, count, label, onClick, info, hoverClass = "npt-hover-blue" }:
   { icon: React.ReactNode; count: number; label: string; onClick: () => void; info: React.ReactNode; hoverClass?: string }) {
   return (
-    <span style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
-      <button onClick={onClick} disabled={!count} aria-label={label} title={label} className={hoverClass} style={iconBtn}>{icon}</button>
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+      {/* asterisco (InfoStar) ARRIBA A LA DERECHA del icono; el contador queda AL LADO del icono */}
+      <span style={{ position: "relative", display: "inline-flex" }}>
+        <button onClick={onClick} disabled={!count} aria-label={label} title={label} className={hoverClass} style={iconBtn}>{icon}</button>
+        <span style={{ position: "absolute", top: -3, right: -3 }}><InfoStar>{info}</InfoStar></span>
+      </span>
       {count > 0 && <span style={{ fontSize: 15, color: palette.textDim, fontVariantNumeric: "tabular-nums" }}>{count}</span>}
-      <InfoStar>{info}</InfoStar>
     </span>
   );
 }
