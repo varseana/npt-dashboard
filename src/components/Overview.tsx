@@ -11,6 +11,7 @@ import { StatusChip } from "./status";
 import { InfoStar, StoryLink } from "./InfoStar";
 import { downloadEml, downloadTeamEml } from "../lib/reminder";
 import WeekCountdown from "./WeekCountdown";
+import { Dropdown } from "./Dropdown";
 import { IconMail, IconAlert, IconSearch, IconFolder, IconCheck } from "./icons";
 import { TableSkeleton } from "./skeleton";
 
@@ -155,9 +156,8 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
     <div>
       <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", marginBottom: 16 }}>
         <Field label={<span style={{ display: "inline-flex", gap: 6, alignItems: "baseline", flexWrap: "wrap" }}>Week <WeekCountdown start={sel.start} /></span>}>
-          <select value={weekKey} onChange={(e) => setWeekKey(e.target.value)} style={{ ...select, height: 42, boxSizing: "border-box" }}>
-            {weeks.map((w) => (<option key={w.key} value={w.key}>{weekLabel(w)}</option>))}
-          </select>
+          <Dropdown value={weekKey} onChange={setWeekKey} minWidth={260} ariaLabel="Select week"
+            options={weeks.map((w) => ({ value: w.key, label: weekLabel(w) }))} />
         </Field>
         <div style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
           <span style={{ position: "absolute", left: 10, display: "inline-flex", color: palette.textDim, pointerEvents: "none" }}>
@@ -449,6 +449,5 @@ function FolderToggle({ active, onToggle }: { active: boolean; onToggle: () => v
 const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
 const td: React.CSSProperties = { padding: "8px 10px", borderBottom: `1px solid ${palette.border}` };
 const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 19 };
-const select: React.CSSProperties = { ...input, minWidth: 260 };
 // boton sin chrome: transparente, sin borde, solo el icono. hereda color de texto (currentColor).
 const iconBtn: React.CSSProperties = { background: "transparent", border: "none", padding: 2, cursor: "pointer", display: "inline-flex", alignItems: "center", lineHeight: 0 };
