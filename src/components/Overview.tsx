@@ -167,7 +167,7 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
             style={{ ...input, paddingLeft: 34 }} />
         </div>
         <div style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", paddingBottom: 6 }}>
-          <EmailAction icon={<IconAlert size={19} />} count={flagged.length} label="Email flagged" hoverClass="npt-hover-warn"
+          <EmailAction icon={<IconAlert size={38} />} count={flagged.length} label="Email flagged" hoverClass="npt-hover-warn"
             onClick={() => flagged.forEach(remind)}
             info={<>Generates one reminder <strong style={hi}>.eml per person in yellow or red</strong> (near limit or over plan), each with their own weekly NPT summary. Opens as drafts in Outlook for you to review and send.</>} />
         </div>
