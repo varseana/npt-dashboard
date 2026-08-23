@@ -263,13 +263,10 @@ function FolderCard({ folder, teamAliases, onRemoveMember, onAddTeamMember, onRe
   return (
     <div style={{ border: `1px solid ${palette.border}`, borderRadius: 10, padding: "12px 14px", background: palette.panel, display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 10 }}>
-        <div style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 6 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <InlineEdit value={folder.name} onSave={onRename} format={(v) => v.trim()}
-              width="100%" align="left" fontSize={20} fontWeight={700}
-              placeholder="Folder name" ariaLabel="folder name" />
-          </div>
-          <span style={{ color: palette.textDim, fontWeight: 400, fontSize: 16, whiteSpace: "nowrap" }}>({folder.aliases.length})</span>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <InlineEdit value={folder.name} onSave={onRename} format={(v) => v.trim()}
+            width="100%" align="left" fontSize={20} fontWeight={700}
+            placeholder="Folder name" ariaLabel="folder name" />
         </div>
         <button onClick={onDelete} className="npt-ico-act npt-ico-danger" title="Delete folder" aria-label="Delete folder"><IconTrash size={17} /></button>
       </div>
