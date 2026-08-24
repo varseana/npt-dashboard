@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase, emailConfirmed } from "./lib/supabase";
 import { palette } from "./theme";
+import { runThemeToggle } from "./lib/themeTransition";
 import Login from "./components/Login";
 import Overview from "./components/Overview";
 import Distribution from "./components/Distribution";
@@ -224,7 +225,7 @@ export default function App() {
         {/* toggle de tema a la IZQUIERDA del tiempo, centrado con la linea del LCD (24px) */}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <div style={{ display: "flex", alignItems: "center", height: 24 }}>
-            <button onClick={() => setDark((d) => !d)}
+            <button onClick={(e) => runThemeToggle(!dark, () => setDark(!dark), e.currentTarget)}
               title={dark ? "Switch to light mode" : "Switch to dark mode"} aria-label="Toggle theme"
               style={{ background: "transparent", border: "none", padding: 2, cursor: "pointer",
                 color: palette.textDim, display: "inline-flex", alignItems: "center" }}>

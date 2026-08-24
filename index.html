@@ -46,6 +46,12 @@
         --skel1: #1c1c1c; --skel2: #262626;
       }
       html, body { margin: 0; background: var(--bg); color: var(--text); }
+      /* ===== theme toggle animado (View Transitions API) ===== el reveal en estrella lo maneja
+         lib/themeTransition.ts; aca se apaga la animacion default del VT y se scopea la duracion +
+         el clip inicial SOLO mientras el toggle esta en vuelo (data-vt="active"), sin afectar nada mas. */
+      ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+      html[data-vt="active"]::view-transition-group(root) { animation-duration: var(--vt-dur, 450ms); }
+      html[data-vt="active"]::view-transition-new(root) { clip-path: var(--vt-clip-from); }
       /* ===== cursores cyberpunk B&N (self-hosted en /public), por contexto ===== hotspot al centro.
          default = marco cuadrado (moviendo); pointer = brackets (clickeable); text = esquina recortada
          (campos de texto). !important en pointer/text para ganarle a los `cursor` inline de los componentes. */

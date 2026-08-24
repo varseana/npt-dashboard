@@ -2,6 +2,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
+import { runThemeToggle } from "../lib/themeTransition";
 import SwirlBackground from "./SwirlBackground";
 import { InfoStar } from "./InfoStar";
 import Mascot from "./Mascot";
@@ -122,7 +123,7 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
             <Mascot inline showTips={false} size={64} />
           </div>
           {/* toggle de tema en la esquina sup-der de la carta (alineado al top) */}
-          <button type="button" onClick={onToggleTheme}
+          <button type="button" onClick={(e) => runThemeToggle(!dark, onToggleTheme, e.currentTarget)}
             title={dark ? "Switch to light mode" : "Switch to dark mode"} aria-label="Toggle theme"
             style={{ background: "transparent", border: "none", padding: 2, cursor: "pointer", color: palette.textDim, display: "inline-flex", alignItems: "center", flex: "0 0 auto" }}>
             {dark ? <IconSun size={20} /> : <IconMoon size={20} />}

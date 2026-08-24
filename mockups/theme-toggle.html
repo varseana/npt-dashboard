@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NPT :: animated theme toggle</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap');
+  :root { --bg:#f7f7f5; --panel:#fff; --panelAlt:#efeeec; --border:#e2e1de; --text:#111; --textDim:#767676; --accent:#111; --accent-text:#fff; }
+  html.dark { --bg:#000; --panel:#171717; --panelAlt:#202020; --border:#2b2b2b; --text:#f4f4f2; --textDim:#9a9a9a; --accent:#fff; --accent-text:#0d0d0d; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:var(--bg); color:var(--text); font-family:"Outfit",system-ui,sans-serif; }
+  body { padding:36px 48px 90px; }
+  h1 { font-size:30px; margin:0 0 6px; }
+  .sub { color:var(--textDim); font-size:15px; max-width:760px; margin:0 0 22px; }
+  .bar { display:flex; gap:26px; flex-wrap:wrap; align-items:center; margin-bottom:26px; }
+  .grp { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+  .lbl { font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--textDim); margin-right:4px; }
+  .chip { font-family:inherit; font-size:14px; padding:6px 12px; border:1px solid var(--border); background:var(--panel); color:var(--text); cursor:pointer; }
+  .chip.on { background:var(--accent); color:var(--accent-text); border-color:var(--accent); }
+  /* el boton de toggle: usa NUESTRA marca (asterisco) o sol/luna, sin caja */
+  .toggle { background:transparent; border:none; cursor:pointer; color:var(--text); padding:6px; display:inline-flex; align-items:center; }
+  .npt-aster { animation:spin 3s linear infinite; transform-origin:50% 50%; }
+  @keyframes spin { to { transform:rotate(360deg); } }
+  /* demo content */
+  .cards { display:flex; gap:14px; flex-wrap:wrap; }
+  .card { background:var(--panel); border:1px solid var(--border); padding:16px 18px; min-width:180px; }
+  .card b { font-size:26px; } .card small { color:var(--textDim); }
+
+  /* ===== View Transitions (theme) ===== */
+  ::view-transition-old(root), ::view-transition-new(root) { animation:none; mix-blend-mode:normal; }
+  html[data-vt="active"]::view-transition-group(root) { animation-duration: var(--vt-dur, 450ms); }
+  html[data-vt="active"]::view-transition-new(root) { clip-path: var(--vt-clip-from); }
+</style>
+</head>
+<body>
+  <h1>Animated theme toggle</h1>
+  <p class="sub">View Transitions API: el cambio light/dark se revela con un clip-path que se expande desde el boton. Elegi la FORMA y el ICONO del boton; despues lo integro a la app. (En Safari/Firefox sin soporte: togglea sin animacion.)</p>
+
+  <div class="bar">
+    <div class="grp"><span class="lbl">Toggle</span>
+      <button id="toggle" class="toggle" title="Toggle theme" aria-label="Toggle theme"></button>
+    </div>
+    <div class="grp"><span class="lbl">Shape</span><span id="shapes"></span></div>
+    <div class="grp"><span class="lbl">Icon</span>
+      <button class="chip" data-icon="aster">Asterisco</button>
+      <button class="chip" data-icon="sunmoon">Sol / Luna</button>
+    </div>
+    <div class="grp"><span class="lbl">Origen</span>
+      <button class="chip" id="origin">desde el boton</button>
+    </div>
+  </div>
+
+  <div class="cards">
+    <div class="card"><small>Employees</small><br><b>14</b></div>
+    <div class="card"><small>Team NPT</small><br><b>03:15:00</b></div>
+    <div class="card"><small>Over</small><br><b>4 / 14</b></div>
+    <div class="card"><small>Near limit</small><br><b>2</b></div>
+  </div>
+
+  <script>
+    const SHAPES = ['circle','square','diamond','hexagon','triangle','rectangle','star'];
+    let shape = 'circle', iconMode = 'aster', fromCenter = false;
+    const DUR = 450;
+
+    // ---- iconos (nuestros, no Lucide) ----
+    const aster = (s=22) => `<svg class="npt-aster" viewBox="0 0 24 24" width="${s}" height="${s}" aria-hidden="true"><g stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><line x1="12" y1="3" x2="12" y2="21"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="5.6" y1="5.6" x2="18.4" y2="18.4"/><line x1="18.4" y1="5.6" x2="5.6" y2="18.4"/></g></svg>`;
+    const sun = (s=22) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" aria-hidden="true"><circle cx="12" cy="12" r="4.6" fill="currentColor"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.6 4.6l2.1 2.1M17.3 17.3l2.1 2.1M19.4 4.6l-2.1 2.1M6.7 17.3l-2.1 2.1" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+    const moon = (s=22) => `<svg viewBox="0 0 24 24" width="${s}" height="${s}" aria-hidden="true"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4 8.5 8.5 0 1 0 20 14.5Z" fill="currentColor"/></svg>`;
+    function renderIcon() {
+      const dark = document.documentElement.classList.contains('dark');
+      const btn = document.getElementById('toggle');
+      btn.innerHTML = iconMode === 'aster' ? aster() : (dark ? sun() : moon());
+    }
+
+    // ---- clip-paths (portado del componente, en % del viewport) ----
+    function polyCollapsed(pt, n){ return `polygon(${Array.from({length:n},()=>pt).join(', ')})`; }
+    function clips(variant, cx, cy, R, vw, vh) {
+      const X = x => `${(x/vw)*100}%`, Y = y => `${(y/vh)*100}%`, P = (x,y)=>`${X(x)} ${Y(y)}`;
+      const toR = r => `${(r/(Math.hypot(vw,vh)/Math.SQRT2))*100}%`;
+      switch (variant) {
+        case 'circle': return [`circle(0% at ${P(cx,cy)})`, `circle(${toR(R)} at ${P(cx,cy)})`];
+        case 'square': { const h=Math.max(Math.max(cx,vw-cx),Math.max(cy,vh-cy))*1.05;
+          return [polyCollapsed(P(cx,cy),4), `polygon(${[P(cx-h,cy-h),P(cx+h,cy-h),P(cx+h,cy+h),P(cx-h,cy+h)].join(', ')})`]; }
+        case 'triangle': { const s=R*2.2, dx=(Math.sqrt(3)/2)*s;
+          return [polyCollapsed(P(cx,cy),3), `polygon(${[P(cx,cy-s),P(cx+dx,cy+0.5*s),P(cx-dx,cy+0.5*s)].join(', ')})`]; }
+        case 'diamond': { const r=R*Math.SQRT2;
+          return [polyCollapsed(P(cx,cy),4), `polygon(${[P(cx,cy-r),P(cx+r,cy),P(cx,cy+r),P(cx-r,cy)].join(', ')})`]; }
+        case 'hexagon': { const r=R*Math.SQRT2, v=[]; for(let i=0;i<6;i++){const a=-Math.PI/2+i*Math.PI/3; v.push(P(cx+r*Math.cos(a),cy+r*Math.sin(a)));}
+          return [polyCollapsed(P(cx,cy),6), `polygon(${v.join(', ')})`]; }
+        case 'rectangle': { const hw=Math.max(cx,vw-cx), hh=Math.max(cy,vh-cy);
+          return [polyCollapsed(P(cx,cy),4), `polygon(${[P(cx-hw,cy-hh),P(cx+hw,cy-hh),P(cx+hw,cy+hh),P(cx-hw,cy+hh)].join(', ')})`]; }
+        case 'star': { const r=R*Math.SQRT2*1.03, inner=0.42; const star=rad=>{const v=[];for(let i=0;i<5;i++){const oa=-Math.PI/2+i*2*Math.PI/5; v.push(P(cx+rad*Math.cos(oa),cy+rad*Math.sin(oa))); const ia=oa+Math.PI/5; v.push(P(cx+rad*inner*Math.cos(ia),cy+rad*inner*Math.sin(ia)));} return `polygon(${v.join(', ')})`;};
+          return [star(Math.max(2,r*0.025)), star(r)]; }
+        default: return [`circle(0% at ${P(cx,cy)})`, `circle(${toR(R)} at ${P(cx,cy)})`];
+      }
+    }
+
+    function toggle() {
+      const root = document.documentElement;
+      const apply = () => { root.classList.toggle('dark'); renderIcon(); };
+      if (typeof document.startViewTransition !== 'function') { apply(); return; }
+      const btn = document.getElementById('toggle');
+      const r = btn.getBoundingClientRect();
+      const vw = innerWidth, vh = innerHeight;
+      const x = fromCenter ? vw/2 : r.left + r.width/2;
+      const y = fromCenter ? vh/2 : r.top + r.height/2;
+      const R = Math.hypot(Math.max(x,vw-x), Math.max(y,vh-y));
+      const [from,to] = clips(shape, x, y, R, vw, vh);
+      root.dataset.vt = 'active';
+      root.style.setProperty('--vt-dur', DUR+'ms');
+      root.style.setProperty('--vt-clip-from', from);
+      const t = document.startViewTransition(apply);
+      t.ready.then(() => {
+        root.animate({ clipPath:[from,to] }, { duration:DUR, easing: shape==='star'?'linear':'ease-in-out', fill:'forwards', pseudoElement:'::view-transition-new(root)' });
+      }).catch(()=>{});
+      t.finished.finally(() => { delete root.dataset.vt; root.style.removeProperty('--vt-dur'); root.style.removeProperty('--vt-clip-from'); });
+    }
+
+    // ---- UI ----
+    const shapesEl = document.getElementById('shapes');
+    shapesEl.innerHTML = SHAPES.map(s => `<button class="chip${s===shape?' on':''}" data-shape="${s}">${s}</button>`).join('');
+    shapesEl.addEventListener('click', e => { const b=e.target.closest('[data-shape]'); if(!b) return; shape=b.dataset.shape; [...shapesEl.children].forEach(c=>c.classList.toggle('on', c.dataset.shape===shape)); });
+    document.querySelectorAll('[data-icon]').forEach(b => b.addEventListener('click', () => { iconMode=b.dataset.icon; document.querySelectorAll('[data-icon]').forEach(c=>c.classList.toggle('on', c.dataset.icon===iconMode)); renderIcon(); }));
+    document.getElementById('origin').addEventListener('click', function(){ fromCenter=!fromCenter; this.classList.toggle('on', fromCenter); this.textContent = fromCenter? 'desde el centro':'desde el boton'; });
+    document.getElementById('toggle').addEventListener('click', toggle);
+    document.querySelector('[data-icon="aster"]').classList.add('on');
+    renderIcon();
+  </script>
+</body>
+</html>
