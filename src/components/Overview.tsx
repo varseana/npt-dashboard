@@ -186,7 +186,10 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
             <div style={{ flex: "1 1 480px", minWidth: 320 }}>
               <TeamBudgetCard budget={teamBudget} used={teamNpt} remaining={teamRemaining} status={teamStatus} users={users} onNavigate={onNavigate} onEmailTeam={emailTeam} emailCount={teamRecipients.length} />
             </div>
-            <div style={{ flex: "1 1 340px", display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12, alignContent: "start" }}>
+            {/* mismos marcos esquineros que la budget card, envolviendo los 4 stats como un solo rectangulo */}
+            <div style={{ flex: "1 1 340px", position: "relative", padding: "18px 22px", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span className="npt-bracket tl" /><span className="npt-bracket tr" /><span className="npt-bracket bl" /><span className="npt-bracket br" />
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12, width: "100%", alignContent: "center" }}>
               <Stat label="Employees" value={String(users.length)}
                 topRight={folders.length > 0 ? <FolderToggle active={groupBy} onToggle={() => setGroupBy((v) => !v)} /> : undefined}
                 story={
@@ -205,6 +208,7 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
                 <>Employees with <strong style={hi}>one hour or less</strong> of plan remaining. The per-activity reason behind it sits in Breakdown.
                   <div style={{ marginTop: 8 }}><StoryLink onClick={() => onNavigate?.({ section: "dashboard", tab: "breakdown" })}>Open the Breakdown</StoryLink></div></>
               } />
+              </div>
             </div>
           </div>
 
