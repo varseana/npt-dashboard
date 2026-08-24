@@ -9,6 +9,7 @@ import {
 } from "../lib/npt";
 import { StatusChip } from "./status";
 import { InfoStar } from "./InfoStar";
+import { Dropdown } from "./Dropdown";
 import { BlockSkeleton } from "./skeleton";
 
 // highlight monocromatico dentro del texto del popover (bold en color de texto full)
@@ -89,9 +90,8 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
   return (
     <div>
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
-        <select value={weekKey} onChange={(e) => setWeekKey(e.target.value)} style={select}>
-          {weeks.map((w) => <option key={w.key} value={w.key}>{weekLabel(w)}</option>)}
-        </select>
+        <Dropdown value={weekKey} onChange={setWeekKey} minWidth={260} ariaLabel="Select week"
+          options={weeks.map((w) => ({ value: w.key, label: weekLabel(w) }))} />
         <span style={{ color: palette.textDim, fontSize: 18 }}>Signed in as {alias}</span>
       </div>
 
@@ -154,8 +154,4 @@ function Stat({ label, value, extra, story }: { label: string; value: string; ex
 
 const card: React.CSSProperties = {
   background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: 20,
-};
-const select: React.CSSProperties = {
-  background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
-  borderRadius: 8, padding: "8px 10px", fontSize: 19,
 };

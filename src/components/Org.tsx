@@ -12,6 +12,7 @@ import { BlockSkeleton } from "./skeleton";
 import { AddButtonInput, splitAliases } from "./Inputs";
 import { IconUser, IconTrash } from "./icons";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { Dropdown } from "./Dropdown";
 
 interface ManagerRow { user_id: string; email: string; role: string; team_id: string | null; }
 interface MemberLink { manager_owner: string; alias: string; team_id: string | null; }
@@ -97,9 +98,8 @@ export default function Org() {
       <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", marginBottom: 16 }}>
         <div>
           <div style={{ fontSize: 16, color: palette.textDim, marginBottom: 4 }}>Week</div>
-          <select value={weekKey} onChange={(e) => setWeekKey(e.target.value)} style={select}>
-            {weeks.map((w) => (<option key={w.key} value={w.key}>{weekLabel(w)}</option>))}
-          </select>
+          <Dropdown value={weekKey} onChange={setWeekKey} minWidth={260} ariaLabel="Select week"
+            options={weeks.map((w) => ({ value: w.key, label: weekLabel(w) }))} />
         </div>
         <div style={{ color: palette.textDim, fontSize: 18 }}>{realManagers.length} managers</div>
       </div>
@@ -183,5 +183,3 @@ function remainColor(s: NptStatus): string {
 
 const th: React.CSSProperties = { textAlign: "center", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
 const td: React.CSSProperties = { textAlign: "center", padding: "8px 10px", borderBottom: `1px solid ${palette.border}` };
-const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 19 };
-const select: React.CSSProperties = { ...input, minWidth: 260 };

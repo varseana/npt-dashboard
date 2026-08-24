@@ -6,6 +6,7 @@ import { TableSkeleton } from "./skeleton";
 import { InfoStar } from "./InfoStar";
 import { IconAlert, IconTrash } from "./icons";
 import { SearchInput } from "./Inputs";
+import { Dropdown } from "./Dropdown";
 
 type Role = "standby" | "user" | "manager" | "admin";
 interface MgrRow {
@@ -204,20 +205,15 @@ function PersonRow({ r, teams, isMe, matched, onRole, onTeam, onAlias, onDelete 
         {isMe && <span style={{ color: palette.textDim, fontWeight: 400 }}> (you)</span>}
       </div>
 
-      <select value={r.role} disabled={isMe} title={isMe ? "You can't change your own role" : ROLE_HELP[r.role]}
-        onChange={(e) => onRole(r, e.target.value as Role)} style={cell}>
-        <option value="standby">Standby</option>
-        <option value="user">User</option>
-        <option value="manager">Manager</option>
-        <option value="admin">Admin</option>
-      </select>
+      <Dropdown fill value={r.role} disabled={isMe} ariaLabel="Role"
+        title={isMe ? "You can't change your own role" : ROLE_HELP[r.role]}
+        onChange={(v) => onRole(r, v as Role)}
+        options={[{ value: "standby", label: "Standby" }, { value: "user", label: "User" }, { value: "manager", label: "Manager" }, { value: "admin", label: "Admin" }]} />
 
       {r.role === "manager"
         ? (
-          <select value={r.team_id ?? ""} onChange={(e) => onTeam(e.target.value)} style={cell} title="Team">
-            <option value="">No team</option>
-            {teams.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-          </select>
+          <Dropdown fill value={r.team_id ?? ""} onChange={onTeam} title="Team" ariaLabel="Team"
+            options={[{ value: "", label: "No team" }, ...teams.map((t) => ({ value: t.id, label: t.name }))]} />
         )
         : <span style={{ fontSize: 17, color: palette.textDim }}>{r.role === "admin" ? "All teams" : "-"}</span>}
 

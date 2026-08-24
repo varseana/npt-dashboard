@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { computeDay, fmtHms, type NptDailyRow } from "../lib/npt";
 import { TableSkeleton } from "./skeleton";
+import { Dropdown } from "./Dropdown";
 
 // UUID fijo del team Unassigned (igual que en el trigger set_team_from_code)
 const UNASSIGNED_ID = "00000000-0000-0000-0000-000000000001";
@@ -69,10 +70,9 @@ export default function Unassigned({ teams, refreshKey }: { teams: Team[]; refre
           <div key={r.alias} style={{ display: "grid", gridTemplateColumns: "1.2fr auto 1fr auto", gap: 12, alignItems: "center", padding: "12px 14px", borderBottom: `1px solid ${palette.border}` }}>
             <span style={{ fontWeight: 600, fontSize: 19 }}>{r.alias}</span>
             <span style={{ color: palette.textDim, fontSize: 16, whiteSpace: "nowrap" }}>{r.days}d :: {fmtHms(r.nptSeconds)} NPT</span>
-            <select value={pick[r.alias] ?? ""} onChange={(e) => setPick((p) => ({ ...p, [r.alias]: e.target.value }))} style={cell}>
-              <option value="">Move to team...</option>
-              {targets.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
-            </select>
+            <Dropdown fill value={pick[r.alias] ?? ""} ariaLabel="Move to team"
+              onChange={(v) => setPick((p) => ({ ...p, [r.alias]: v }))}
+              options={[{ value: "", label: "Move to team..." }, ...targets.map((t) => ({ value: t.id, label: t.name }))]} />
             <button onClick={() => assign(r.alias)} disabled={!pick[r.alias]} style={btn}>Assign</button>
           </div>
         ))}
@@ -81,10 +81,6 @@ export default function Unassigned({ teams, refreshKey }: { teams: Team[]; refre
   );
 }
 
-const cell: React.CSSProperties = {
-  background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
-  borderRadius: 8, padding: "7px 8px", fontSize: 18, width: "100%", boxSizing: "border-box",
-};
 const btn: React.CSSProperties = {
   background: palette.accent, color: palette.accentText, border: "none", borderRadius: 8,
   padding: "7px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600,

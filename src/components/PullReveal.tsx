@@ -27,6 +27,7 @@ export default function PullReveal({ pageRef }: { pageRef: React.RefObject<HTMLD
   const handleRef = useRef<HTMLDivElement>(null);
   const [phrase, setPhrase] = useState("");
   const st = useRef({ dragging: false, startY: 0, armed: false, last: -1 });
+  const restTimer = useRef<number | undefined>(undefined);
 
   function pick(): string {
     let i: number;
@@ -64,8 +65,17 @@ export default function PullReveal({ pageRef }: { pageRef: React.RefObject<HTMLD
     window.removeEventListener("pointercancel", onUp);
     setSettle(true);      // sube con bounce
     setReveal(0);
+    // IMPORTANTE: tras el bounce hay que QUITAR el transform del page. Un `translateY(0)` que quede
+    // igual crea un containing-block para los `position:fixed` de adentro (overlay del modal de logout,
+    // banners, ConfirmDialog) -> el gris solo cubriria la columna del contenido, no el viewport.
+    clearTimeout(restTimer.current);
+    restTimer.current = window.setTimeout(() => {
+      if (pageRef.current && !st.current.dragging) pageRef.current.style.transform = "";
+      setSettle(false);
+    }, 600);
   }
   function onDown(e: React.PointerEvent) {
+    clearTimeout(restTimer.current);   // cancela el "limpiar transform" si se vuelve a tirar
     st.current.dragging = true;
     st.current.armed = false;
     st.current.startY = e.clientY;

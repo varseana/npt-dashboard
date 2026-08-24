@@ -148,16 +148,17 @@
         font-weight: 600; color: var(--text); padding: 8px 10px 8px 6px; text-align: left;
         transition: background .18s ease;
       }
-      .npt-dd2-trigger:hover, .npt-dd2-open .npt-dd2-trigger {
+      .npt-dd2-trigger:hover:not(:disabled), .npt-dd2-open .npt-dd2-trigger {
         background: var(--panelAlt);
         clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
       }
+      .npt-dd2-trigger:disabled { opacity: .5; cursor: default; }
       .npt-dd2-arrow { display: inline-flex; color: var(--text); pointer-events: none; transition: transform .18s ease; }
       .npt-dd2-open .npt-dd2-arrow { transform: rotate(180deg); }
       .npt-dd2-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      /* panel: posicion la fija el componente inline (position:fixed + portal a body); aca solo lo visual. */
       .npt-dd2-panel {
-        position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 40;
-        background: var(--panel); border: 1px solid var(--border); max-height: 320px; overflow-y: auto;
+        z-index: 80; background: var(--panel); border: 1px solid var(--border); max-height: 320px; overflow-y: auto;
         clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
       }
       .npt-dd2-opt {
