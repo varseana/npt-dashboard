@@ -108,12 +108,14 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
         } />
       </div>
 
-      <div style={card}>
-        <div className="npt-title" style={{ fontWeight: 700, marginBottom: 10, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.04em" }}>
-          Breakdown<InfoStar>{
-            <>How your weekly NPT splits across the activities that count / <strong style={hi}>Meeting, Training, Project, Personal, System</strong>. Everything else / Available, Offline, breaks / does not count as NPT.</>
-          }</InfoStar>
-        </div>
+      {/* titulo AFUERA del rectangulo; la tabla va dentro de los 4 marcos esquineros */}
+      <div className="npt-title" style={{ fontWeight: 700, marginBottom: 12, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.04em" }}>
+        Breakdown<InfoStar>{
+          <>How your weekly NPT splits across the activities that count / <strong style={hi}>Meeting, Training, Project, Personal, System</strong>. Everything else / Available, Offline, breaks / does not count as NPT.</>
+        }</InfoStar>
+      </div>
+      <div style={{ position: "relative", padding: "18px 22px" }}>
+        <span className="npt-bracket tl" /><span className="npt-bracket tr" /><span className="npt-bracket bl" /><span className="npt-bracket br" />
         <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19 }}>
           <tbody>
             {NPT_AUX.map((a) => (
@@ -140,13 +142,15 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
 
 function Stat({ label, value, extra, story }: { label: string; value: string; extra?: React.ReactNode; story?: React.ReactNode }) {
   return (
-    <div style={{ ...card, padding: "16px 18px" }}>
-      <div style={{ color: palette.textDim, fontSize: 17, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>
-        {label}{story && <InfoStar>{story}</InfoStar>}
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{ fontSize: 31, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{value}</span>
-        {extra}
+    <div className="npt-card-cut">
+      <div className="npt-card-cut-body" style={{ padding: "16px 18px" }}>
+        <div style={{ color: palette.textDim, fontSize: 17, marginBottom: 6, textTransform: "uppercase", letterSpacing: "0.05em", fontWeight: 600 }}>
+          {label}{story && <InfoStar>{story}</InfoStar>}
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 31, fontWeight: 700, fontVariantNumeric: "tabular-nums" }}>{value}</span>
+          {extra}
+        </div>
       </div>
     </div>
   );
