@@ -23,21 +23,19 @@ function starClips(cx: number, cy: number, R: number, vw: number, vh: number): [
   return [star(Math.max(2, r * 0.025)), star(r)];
 }
 
-// next = valor de dark al que vamos. applyState = flip del estado de React (setDark). btn = el boton
-// clickeado (para el origen del reveal). El cambio de clase se hace DENTRO del callback de la view
-// transition (sincrono) para que el snapshot capture el tema nuevo.
-export function runThemeToggle(next: boolean, applyState: () => void, btn: HTMLElement | null) {
+// next = valor de dark al que vamos. applyState = flip del estado de React (setDark). El reveal sale
+// SIEMPRE desde el centro del viewport (pedido de Sean, header y login). El cambio de clase se hace
+// DENTRO del callback de la view transition (sincrono) para que el snapshot capture el tema nuevo.
+export function runThemeToggle(next: boolean, applyState: () => void) {
   const root = document.documentElement;
   const apply = () => { root.classList.toggle("dark", next); applyState(); };
 
   const start = (document as unknown as { startViewTransition?: (cb: () => void) => any }).startViewTransition;
-  if (typeof start !== "function" || !btn) { apply(); return; }
+  if (typeof start !== "function") { apply(); return; }
 
   const vw = window.innerWidth, vh = window.innerHeight;
-  const rect = btn.getBoundingClientRect();
-  const x = rect.left + rect.width / 2;
-  const y = rect.top + rect.height / 2;
-  const R = Math.hypot(Math.max(x, vw - x), Math.max(y, vh - y));   // radio maximo hasta la esquina mas lejana
+  const x = vw / 2, y = vh / 2;                 // origen = centro del viewport
+  const R = Math.hypot(vw / 2, vh / 2);         // radio del centro a cualquier esquina
   const [from, to] = starClips(x, y, R, vw, vh);
   const DUR = 450;
 

@@ -225,7 +225,7 @@ export default function App() {
         {/* toggle de tema a la IZQUIERDA del tiempo, centrado con la linea del LCD (24px) */}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <div style={{ display: "flex", alignItems: "center", height: 24 }}>
-            <button onClick={(e) => runThemeToggle(!dark, () => setDark(!dark), e.currentTarget)}
+            <button onClick={() => runThemeToggle(!dark, () => setDark(!dark))}
               title={dark ? "Switch to light mode" : "Switch to dark mode"} aria-label="Toggle theme"
               style={{ background: "transparent", border: "none", padding: 2, cursor: "pointer",
                 color: palette.textDim, display: "inline-flex", alignItems: "center" }}>
