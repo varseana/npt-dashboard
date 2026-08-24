@@ -20,6 +20,7 @@ import Unassigned from "./components/Unassigned";
 import SelfView from "./components/SelfView";
 import { IconLogout, IconMoon, IconSun, IconX } from "./components/icons";
 import Mascot from "./components/Mascot";
+import PullReveal from "./components/PullReveal";
 
 interface ManagerRow {
   user_id: string;
@@ -41,6 +42,7 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [manager, setManager] = useState<ManagerRow | null>(null);
   const managerRef = useRef<ManagerRow | null>(null);   // ultimo manager para loadPending (evita closure vieja)
+  const pageRef = useRef<HTMLDivElement>(null);          // pagina que baja con el gimmick pull-to-reveal
   const [teams, setTeams] = useState<Team[]>([]);
   const [teamId, setTeamId] = useState<string>("");
   // nav de 2 niveles (progressive disclosure): 3 secciones arriba, sub-nav adentro
@@ -199,7 +201,9 @@ export default function App() {
   }
 
   return (
-    <div style={{ maxWidth: "min(2100px, 97vw)", margin: "0 auto", padding: "24px 32px" }}>
+    <>
+    <PullReveal pageRef={pageRef} />
+    <div ref={pageRef} style={{ maxWidth: "min(2100px, 97vw)", margin: "0 auto", padding: "24px 32px" }}>
       {showConfirmed && <ConfirmedBanner onClose={() => setShowConfirmed(false)} />}
       {/* separador superior = whitespace (SIN linea visible), igual que el de abajo del header.
           da aire arriba del titulo + reloj para enmarcar la cabecera simetrica. */}
@@ -293,6 +297,7 @@ export default function App() {
       )}
 
     </div>
+    </>
   );
 }
 

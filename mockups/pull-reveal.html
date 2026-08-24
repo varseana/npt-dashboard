@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NPT :: pull to reveal (gimmick)</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&family=Press+Start+2P&display=swap');
+  :root { --bg:#f7f7f5; --panel:#fff; --border:#e2e1de; --text:#111; --textDim:#767676; }
+  html.dark { --bg:#000; --panel:#171717; --border:#2b2b2b; --text:#f4f4f2; --textDim:#9a9a9a; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; background:var(--bg); color:var(--text); font-family:"Outfit",system-ui,sans-serif; }
+
+  .theme-toggle { position:fixed; top:16px; right:22px; z-index:60; background:var(--panel); border:1px solid var(--border); color:var(--text); font-family:inherit; font-size:15px; padding:8px 14px; cursor:pointer; }
+
+  /* seccion revelada arriba: color OPUESTO (fondo=--text, texto=--bg). fija atras; su alto = el pull. */
+  #panel {
+    position:fixed; top:0; left:0; right:0; height:0; overflow:hidden; z-index:1;
+    background:var(--text); color:var(--bg);
+    display:flex; align-items:center; justify-content:center;
+  }
+  #panel.settle { transition:height .55s cubic-bezier(.34,1.56,.64,1); }
+  #phrase {
+    font-family:"Press Start 2P", monospace; font-size:15px; line-height:1.8; text-align:center;
+    max-width:80%; padding:0 20px; opacity:0; letter-spacing:1px;
+  }
+
+  /* TODA la pagina baja: #page se traslada hacia abajo con el pull (cubre el panel salvo el hueco). */
+  #page { position:relative; z-index:2; background:var(--bg); min-height:140vh; transform:translateY(0); will-change:transform; padding:0 48px 90px; }
+  #page.settle { transition:transform .55s cubic-bezier(.34,1.56,.64,1); }
+
+  /* handle: 3 puntos SOLOS (sin caja), centro-arriba de la pagina. el padding invisible agranda el agarre. */
+  #handle { display:flex; gap:9px; justify-content:center; width:max-content; margin:0 auto; padding:16px 44px; cursor:grab; touch-action:none; }
+  #handle:active { cursor:grabbing; }
+  #handle .dot { width:7px; height:7px; background:var(--text); }
+  .hint { text-align:center; color:var(--textDim); font-size:12px; letter-spacing:.14em; text-transform:uppercase; margin-top:-6px; transition:opacity .3s ease; }
+
+  h1 { font-size:30px; margin:40px 0 6px; }
+  .sub { color:var(--textDim); font-size:15px; max-width:640px; }
+  @media (prefers-reduced-motion: reduce) { #panel.settle, #page.settle { transition-duration:.2s; } }
+</style>
+</head>
+<body>
+  <button class="theme-toggle" onclick="document.documentElement.classList.toggle('dark')">toggle light / dark</button>
+
+  <div id="panel"><div id="phrase"></div></div>
+
+  <div id="page">
+    <div id="handle" aria-label="Pull down"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div>
+    <div class="hint">pull down</div>
+
+    <h1>Pull to reveal :: gimmick</h1>
+    <p class="sub">Agarra los 3 puntos de arriba-centro y tira hacia abajo: baja TODA la pagina y arriba se revela una seccion del color opuesto con una frase. Resistencia elastica (peso), umbral con haptic (mobile), la frase aparece a medida que tiras (handoff), y al soltar sube con bounce. Cada pull = otra frase. Scroll vivo debajo.</p>
+  </div>
+
+  <script>
+    const phrases = [
+      "Are you really you?",
+      "Who are you offline?",
+      "Just a role you play?",
+      "Do you exist after work?",
+      "Whose life are you living?",
+      "Present, or just performing?",
+      "What remains when you leave?",
+      "Is this you, or them?",
+      "Does the title define you?",
+      "Who logs off tonight?"
+    ];
+    const panel = document.getElementById('panel');
+    const phraseEl = document.getElementById('phrase');
+    const page = document.getElementById('page');
+    const handle = document.getElementById('handle');
+    const hint = document.querySelector('.hint');
+    const MAX = 260;        // pull maximo (asintota de la resistencia)
+    const THRESHOLD = 120;  // umbral: haptic + frase full
+    let dragging = false, startY = 0, armed = false, last = -1;
+
+    function pick() {
+      let i; do { i = Math.floor(Math.random() * phrases.length); } while (i === last && phrases.length > 1);
+      last = i; return phrases[i];
+    }
+    function setReveal(h) {
+      panel.style.height = h + 'px';
+      page.style.transform = `translateY(${h}px)`;   // baja TODA la pagina
+      phraseEl.style.opacity = Math.min(1, h / THRESHOLD);
+    }
+    function start(e) {
+      dragging = true; armed = false; startY = e.clientY;
+      phraseEl.textContent = pick();
+      panel.classList.remove('settle'); page.classList.remove('settle');
+      hint.style.opacity = 0;
+      try { handle.setPointerCapture(e.pointerId); } catch (_) {}
+      e.preventDefault();
+    }
+    function move(e) {
+      if (!dragging) return;
+      let raw = e.clientY - startY; if (raw < 0) raw = 0;
+      const h = MAX * (1 - Math.exp(-raw / MAX));   // resistencia elastica (rubber band)
+      setReveal(h);
+      if (h >= THRESHOLD && !armed) { armed = true; if (navigator.vibrate) navigator.vibrate(12); }
+      if (h < THRESHOLD) armed = false;
+    }
+    function end() {
+      if (!dragging) return; dragging = false;
+      panel.classList.add('settle'); page.classList.add('settle');
+      setReveal(0);   // sube con bounce (overshoot del cubic-bezier)
+    }
+    handle.addEventListener('pointerdown', start);
+    window.addEventListener('pointermove', move);
+    window.addEventListener('pointerup', end);
+    window.addEventListener('pointercancel', end);
+  </script>
+</body>
+</html>

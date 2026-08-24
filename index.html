@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="STAR NPT Dashboard: weekly non-productive time tracking and planning for SEPO SAFE-T managers." />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
     <title>STAR NPT Dashboard</title>
     <style>
       /* fuente retro de reloj (Digital-7 Mono, Style-7), auto-hosteada en /public. LCD look para el
@@ -215,6 +218,26 @@
       @media (prefers-reduced-motion: reduce) {
         .npt-login-btn:hover::before, .npt-login-btn:hover::after { animation: none; }
       }
+      /* ===== pull-to-reveal (gimmick) ===== 3 puntos arriba-centro; al tirar con el mouse baja TODA la
+         pagina y arriba se revela una seccion del color opuesto con una frase pixelada. Al soltar sube
+         con bounce. Cada pull = otra frase. */
+      .npt-pull-panel {
+        position: fixed; top: 0; left: 0; right: 0; height: 0; overflow: hidden; z-index: 70;
+        background: var(--text); color: var(--bg); display: flex; align-items: center; justify-content: center;
+      }
+      .npt-pull-phrase {
+        font-family: "Press Start 2P", monospace; font-size: 15px; line-height: 1.8; text-align: center;
+        max-width: 80%; padding: 0 20px; opacity: 0; letter-spacing: 1px;
+      }
+      .npt-pull-handle {
+        position: fixed; top: 0; left: 50%; transform: translate(-50%, 0); z-index: 71;
+        display: flex; gap: 9px; padding: 14px 44px; cursor: grab; touch-action: none;
+      }
+      .npt-pull-handle:active { cursor: grabbing; }
+      .npt-pull-dot { width: 7px; height: 7px; background: var(--text); }
+      /* transicion de "soltar" (bounce) que se aplica solo al soltar (no durante el arrastre) */
+      .npt-pull-settle { transition: transform .55s cubic-bezier(.34,1.56,.64,1), height .55s cubic-bezier(.34,1.56,.64,1); }
+      @media (prefers-reduced-motion: reduce) { .npt-pull-settle { transition-duration: .2s; } }
       /* oculta el ojo/limpiar NATIVO del navegador (Edge/IE) para no tener doble ojo; dejamos el nuestro */
       input::-ms-reveal, input::-ms-clear { display: none; }
       /* accesibilidad: si el usuario pidio menos movimiento, no giramos */
