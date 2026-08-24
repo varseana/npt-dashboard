@@ -22,6 +22,7 @@ import SelfView from "./components/SelfView";
 import { IconLogout, IconMoon, IconSun, IconX } from "./components/icons";
 import Mascot from "./components/Mascot";
 import PullReveal from "./components/PullReveal";
+import ScrambleText from "./components/ScrambleText";
 
 interface ManagerRow {
   user_id: string;
@@ -212,7 +213,9 @@ export default function App() {
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 48 }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <h1 style={{ margin: 0, fontSize: 42, color: palette.text, lineHeight: 1 }}>STAR NPT Dashboard</h1>
+            <h1 style={{ margin: 0, fontSize: 42, color: palette.text, lineHeight: 1 }}>
+              <ScrambleText text="STAR NPT Dashboard" radius={90} scrambleChars="._/:<>*=" />
+            </h1>
             <Mascot inline onNavigate={goTo} />
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
