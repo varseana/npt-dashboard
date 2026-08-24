@@ -318,9 +318,9 @@ function TeamBudgetCard({ budget, used, remaining, status, users, onNavigate, on
             <BudgetStat label="Remaining" value={fmtHms(remaining ?? 0)} color={remainingColor(status)} />
           </div>
           <TeamBudgetBar budget={budget} status={status} users={users} />
-          {/* used% abajo-derecha de la barra, en fuente LCD retro */}
-          <div className="npt-lcd" style={{ textAlign: "right", marginTop: 6, fontSize: 18, color: palette.textDim }}>
-            USED <span style={{ color: status === "bad" ? palette.bad : palette.text }}>{((used / budget) * 100).toFixed(1)}%</span>
+          {/* used% abajo-derecha: "USED" en fuente normal, SOLO el numero en LCD retro */}
+          <div style={{ textAlign: "right", marginTop: 6, fontSize: 18, color: palette.textDim }}>
+            USED <span className="npt-lcd" style={{ color: status === "bad" ? palette.bad : palette.text }}>{((used / budget) * 100).toFixed(1)}%</span>
           </div>
         </>
       )}
@@ -369,7 +369,6 @@ function TeamBudgetBar({ budget, status, users }:
   //  - REVELADO (hover/lock): data real -> segmentos FLAT/solidos por usuario, con divisores (gap) y
   //    nombre, faciles de digerir. color = status.
   const baseColor = status === "bad" ? palette.bad : palette.text;
-  const stripes = (c: string) => `repeating-linear-gradient(120deg, ${c} 0 8px, transparent 8px 11px)`;
   const totalPct = Math.min(100, contribs.reduce((a, s) => a + s.pct, 0));
 
   return (
@@ -392,8 +391,8 @@ function TeamBudgetBar({ budget, status, users }:
           </div>
         ))
       ) : (
-        // idle: un solo relleno de barritas inclinadas, sin divisores (estetico)
-        <div title={`Used ${totalPct.toFixed(1)}%`} style={{ width: totalPct + "%", minWidth: 0, background: stripes(baseColor) }} />
+        // idle: un solo relleno FLAT solido, sin divisores (estetico)
+        <div title={`Used ${totalPct.toFixed(1)}%`} style={{ width: totalPct + "%", minWidth: 0, background: baseColor }} />
       )}
     </div>
   );
