@@ -181,26 +181,31 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
         <div style={{ color: palette.textDim }}>No reported data for {weekLabel(sel)}.</div>
       ) : (
         <>
-          <TeamBudgetCard budget={teamBudget} used={teamNpt} remaining={teamRemaining} status={teamStatus} users={users} onNavigate={onNavigate} onEmailTeam={emailTeam} emailCount={teamRecipients.length} />
-          <div style={{ display: "flex", gap: 12, marginBottom: 18, flexWrap: "wrap" }}>
-            <Stat label="Employees" value={String(users.length)}
-              topRight={folders.length > 0 ? <FolderToggle active={groupBy} onToggle={() => setGroupBy((v) => !v)} /> : undefined}
-              story={
-              <>Team members who have uploaded NPT this week. The full roster and status / <strong style={hi}>Connected . Pending . Unlisted</strong> / lives in the Employees panel.
-                <div style={{ marginTop: 8 }}><StoryLink onClick={() => onNavigate?.({ section: "team", tab: "employees" })}>Open the Employees panel</StoryLink></div></>
-            } />
-            <Stat label="Team NPT" value={fmtHms(teamNpt)} story={
-              <>Combined NPT for the whole team this week / <strong style={hi}>Meeting + Training + Project + Personal + System</strong> / sourced directly from STAR Tracker uploads. The weekly ceiling is defined in Planned.
-                <div style={{ marginTop: 8 }}><StoryLink onClick={() => onNavigate?.({ section: "team", tab: "planned" })}>Set the team budget in Planned</StoryLink></div></>
-            } />
-            <Stat label="Over" value={`${overCount} / ${users.length}`} tone={overCount ? "bad" : "ok"} story={
-              <>Employees who have exceeded their <strong style={hi}>individual weekly plan</strong>. Per-person plans are configured in Planned.
-                <div style={{ marginTop: 8 }}><StoryLink onClick={() => onNavigate?.({ section: "team", tab: "planned" })}>Adjust plans in Planned</StoryLink></div></>
-            } />
-            <Stat label="Near limit" value={String(warnCount)} tone={warnCount ? "warn" : "ok"} story={
-              <>Employees with <strong style={hi}>one hour or less</strong> of plan remaining. The per-activity reason behind it sits in Breakdown.
-                <div style={{ marginTop: 8 }}><StoryLink onClick={() => onNavigate?.({ section: "dashboard", tab: "breakdown" })}>Open the Breakdown</StoryLink></div></>
-            } />
+          {/* dos segmentos lado a lado: budget (angosto) izquierda // stats 2x2 derecha */}
+          <div style={{ display: "flex", gap: 24, marginBottom: 18, flexWrap: "wrap", alignItems: "stretch" }}>
+            <div style={{ flex: "1 1 480px", minWidth: 320 }}>
+              <TeamBudgetCard budget={teamBudget} used={teamNpt} remaining={teamRemaining} status={teamStatus} users={users} onNavigate={onNavigate} onEmailTeam={emailTeam} emailCount={teamRecipients.length} />
+            </div>
+            <div style={{ flex: "1 1 340px", display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12, alignContent: "start" }}>
+              <Stat label="Employees" value={String(users.length)}
+                topRight={folders.length > 0 ? <FolderToggle active={groupBy} onToggle={() => setGroupBy((v) => !v)} /> : undefined}
+                story={
+                <>Team members who have uploaded NPT this week. The full roster and status / <strong style={hi}>Connected . Pending . Unlisted</strong> / lives in the Employees panel.
+                  <div style={{ marginTop: 8 }}><StoryLink onClick={() => onNavigate?.({ section: "team", tab: "employees" })}>Open the Employees panel</StoryLink></div></>
+              } />
+              <Stat label="Team NPT" value={fmtHms(teamNpt)} story={
+                <>Combined NPT for the whole team this week / <strong style={hi}>Meeting + Training + Project + Personal + System</strong> / sourced directly from STAR Tracker uploads. The weekly ceiling is defined in Planned.
+                  <div style={{ marginTop: 8 }}><StoryLink onClick={() => onNavigate?.({ section: "team", tab: "planned" })}>Set the team budget in Planned</StoryLink></div></>
+              } />
+              <Stat label="Over" value={`${overCount} / ${users.length}`} tone={overCount ? "bad" : "ok"} story={
+                <>Employees who have exceeded their <strong style={hi}>individual weekly plan</strong>. Per-person plans are configured in Planned.
+                  <div style={{ marginTop: 8 }}><StoryLink onClick={() => onNavigate?.({ section: "team", tab: "planned" })}>Adjust plans in Planned</StoryLink></div></>
+              } />
+              <Stat label="Near limit" value={String(warnCount)} tone={warnCount ? "warn" : "ok"} story={
+                <>Employees with <strong style={hi}>one hour or less</strong> of plan remaining. The per-activity reason behind it sits in Breakdown.
+                  <div style={{ marginTop: 8 }}><StoryLink onClick={() => onNavigate?.({ section: "dashboard", tab: "breakdown" })}>Open the Breakdown</StoryLink></div></>
+              } />
+            </div>
           </div>
 
           {groups ? (
@@ -282,7 +287,7 @@ function remainingColor(s: NptStatus): string {
 function TeamBudgetCard({ budget, used, remaining, status, users, onNavigate, onEmailTeam, emailCount }:
   { budget: number | null; used: number; remaining: number | null; status: NptStatus; users: { alias: string; nptSeconds: number }[]; onNavigate?: (d: NavDest) => void; onEmailTeam?: () => void; emailCount?: number }) {
   return (
-    <div style={{ position: "relative", background: "transparent", padding: "18px 22px", marginBottom: 18 }}>
+    <div style={{ position: "relative", background: "transparent", padding: "18px 22px", height: "100%", boxSizing: "border-box" }}>
       {/* sin caja: bg = fondo. solo marcos esquineros simetricos (no se tocan) */}
       <span className="npt-bracket tl" /><span className="npt-bracket tr" /><span className="npt-bracket bl" /><span className="npt-bracket br" />
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
