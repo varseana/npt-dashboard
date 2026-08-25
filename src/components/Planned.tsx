@@ -116,7 +116,7 @@ export default function Planned({ team }: { team: Team }) {
     if (secs != null) {
       let sum = 0;
       for (const r of rows) if (r.week_key === scopeKey && r.planned_seconds) sum += r.planned_seconds;
-      if (sum > secs) throw new Error(`Custom targets add up to ${fmtHms(sum)}, more than this budget ${fmtHms(secs)}. Lower them first.`);
+      if (sum > secs) throw new Error(`Custom targets add up to ${fmtHms(sum)}, more than this threshold ${fmtHms(secs)}. Lower them first.`);
     }
     await upsertOrDeleteBudget(next);
     await load();
@@ -131,7 +131,7 @@ export default function Planned({ team }: { team: Team }) {
     if (secs != null && budgetSecs != null) {
       let sum = secs;
       for (const r of rows) if (r.week_key === scopeKey && r.alias !== alias && r.planned_seconds) sum += r.planned_seconds;
-      if (sum > budgetSecs) throw new Error(`Custom targets would total ${fmtHms(sum)}, over the budget ${fmtHms(budgetSecs)}.`);
+      if (sum > budgetSecs) throw new Error(`Custom targets would total ${fmtHms(sum)}, over the threshold ${fmtHms(budgetSecs)}.`);
     }
     await upsertOrDelete(alias, next);
     await load();
@@ -169,9 +169,9 @@ export default function Planned({ team }: { team: Team }) {
         <span className="npt-bracket tl" /><span className="npt-bracket tr" /><span className="npt-bracket bl" /><span className="npt-bracket br" />
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
           <div className="npt-title" style={{ fontWeight: 700, fontSize: 28 }}>
-            Team weekly budget<InfoStar pages={[
+            Team weekly threshold<InfoStar pages={[
               <>The <strong style={hi}>total NPT the whole team can spend</strong> in a week (the number ops hands you). Everyone draws from it. Type hours like <strong style={hi}>10</strong> (= 10:00:00) or H:MM. Applies to <strong style={hi}>{scopeLabel}</strong>.</>,
-              <><strong style={hi}>How it splits.</strong> Individual custom targets come <strong style={hi}>first</strong> and can never add up to more than the budget. Whatever is left over becomes the <strong style={hi}>fair share</strong>, split equally among everyone without a custom. Example: budget <strong style={hi}>10:00</strong>, one person set to <strong style={hi}>4:00</strong> leaves <strong style={hi}>6:00</strong> for the rest of the team.</>,
+              <><strong style={hi}>How it splits.</strong> Individual custom targets come <strong style={hi}>first</strong> and can never add up to more than the threshold. Whatever is left over becomes the <strong style={hi}>fair share</strong>, split equally among everyone without a custom. Example: threshold <strong style={hi}>10:00</strong>, one person set to <strong style={hi}>4:00</strong> leaves <strong style={hi}>6:00</strong> for the rest of the team.</>,
             ]} />
           </div>
           {budgetSeconds != null && fair != null && (
@@ -188,15 +188,15 @@ export default function Planned({ team }: { team: Team }) {
           onSave={onSaveBudget}
           format={normalize}
           placeholder="H:MM (e.g. 10:00)"
-          emptyHint={<span style={{ color: palette.textDim }}>Set budget</span>}
+          emptyHint={<span style={{ color: palette.textDim }}>Set threshold</span>}
           width={180}
           align="left"
           fontSize={19}
           fontWeight={600}
-          ariaLabel="team weekly budget"
+          ariaLabel="team weekly threshold"
           inputMode="numeric"
         />
-        {budgetSeconds == null && <div style={{ fontSize: 17, color: palette.textDim, marginTop: 8 }}>No budget set. Click above to give everyone a target.</div>}
+        {budgetSeconds == null && <div style={{ fontSize: 17, color: palette.textDim, marginTop: 8 }}>No threshold set. Click above to give everyone a target.</div>}
       </div>
 
       {aliases.length > 0 && (
@@ -249,7 +249,7 @@ export default function Planned({ team }: { team: Team }) {
                   />
                 </td>
                 <td style={{ ...td, textAlign: "center", whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums", color: eff != null ? palette.text : palette.textDim, fontWeight: isCustom ? 700 : 400 }}>
-                  {eff != null ? fmtHms(eff) : "no budget"}
+                  {eff != null ? fmtHms(eff) : "no threshold"}
                 </td>
               </tr>
             );
@@ -258,7 +258,7 @@ export default function Planned({ team }: { team: Team }) {
       </table>
 
       <div style={{ marginTop: 14, fontSize: 16, color: palette.textDim }}>
-        Changes save on their own. Click any budget or custom value to edit it.
+        Changes save on their own. Click any threshold or custom value to edit it.
       </div>
     </div>
   );

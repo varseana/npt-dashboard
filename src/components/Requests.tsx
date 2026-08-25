@@ -207,7 +207,7 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
           body={<>
             You are about to give <strong style={hi}>{confirmShare.requester_email}</strong> access to{" "}
             <strong style={hi}>{confirmShare.req_alias}</strong>. They will be able to see this person's
-            NPT, the target you set for them, and your team's available budget - until you revoke it. Continue?
+            NPT, the target you set for them, and your team's available threshold - until you revoke it. Continue?
           </>}
           onCancel={() => setConfirmShare(null)}
           onConfirm={() => { const id = confirmShare.id; setConfirmShare(null); approveToMe(id); }}

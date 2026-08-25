@@ -51,7 +51,7 @@ export default function Mascot({ inline = false, onNavigate, showTips = true, si
     <>In <Loc to={{ section: "team", tab: "employees" }}>Team &gt; Employees</Loc>: <strong style={hiTxt}>Connected</strong> is reporting and expected, <strong style={hiTxt}>Pending</strong> is expected but not reporting yet, <strong style={hiTxt}>Unlisted</strong> is reporting but not on your roster.</>,
     <>A <Ico><IconCheck size={15} /></Ico> on an <strong style={hiTxt}>Unlisted</strong> person simply adds them to your roster. They already report under your team; this only stops them showing as unexpected.</>,
     <>Weeks roll over automatically every Sunday. Nothing is deleted: pick any past week from the selector in <Loc to={{ section: "dashboard", tab: "breakdown" }}>Dashboard &gt; Breakdown</Loc> to review it.</>,
-    <>Set your team's weekly NPT budget in <Loc to={{ section: "team", tab: "planned" }}>Team &gt; Planned</Loc> once and it carries over on its own. Each person's target is their fair share of it.</>,
+    <>Set your team's weekly NPT threshold in <Loc to={{ section: "team", tab: "planned" }}>Team &gt; Planned</Loc> once and it carries over on its own. Each person's target is their fair share of it.</>,
     <><Ico><IconAlert size={15} /></Ico> Email flagged nudges only those near or over plan; <Ico><IconMail size={15} /></Ico> Email team sends a shared summary. Both open as drafts to review first, in <Loc to={{ section: "dashboard", tab: "summary" }}>Dashboard &gt; Summary</Loc>.</>,
     <>Adding several people at once? Type or paste usernames separated by commas or spaces in any <Ico><IconPlus size={15} /></Ico> field.</>,
   ], [onNavigate]);

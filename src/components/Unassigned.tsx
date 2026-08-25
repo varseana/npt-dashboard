@@ -59,7 +59,7 @@ export default function Unassigned({ teams, refreshKey }: { teams: Team[]; refre
       </div>
       <div style={{ color: palette.textDim, fontSize: 18, marginBottom: 16 }}>
         People reporting NPT with an invalid/empty enrollment code, or not tied to any team. Assign one to
-        a team to move their NPT (including history) under that team and its budget.
+        a team to move their NPT (including history) under that team and its threshold.
       </div>
       {msg && <div style={{ marginBottom: 12, color: msg.startsWith("Error") ? palette.bad : palette.warn, fontSize: 18 }}>{msg}</div>}
 

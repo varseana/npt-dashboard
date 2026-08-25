@@ -198,7 +198,7 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
               } />
               <Stat label="Team NPT" value={fmtHms(teamNpt)} story={
                 <>Combined NPT for the whole team this week / <strong style={hi}>Meeting + Training + Project + Personal + System</strong> / sourced directly from STAR Tracker uploads. The weekly ceiling is defined in Planned.
-                  <div style={{ marginTop: 8 }}><StoryLink onClick={() => onNavigate?.({ section: "team", tab: "planned" })}>Set the team budget in Planned</StoryLink></div></>
+                  <div style={{ marginTop: 8 }}><StoryLink onClick={() => onNavigate?.({ section: "team", tab: "planned" })}>Set the team threshold in Planned</StoryLink></div></>
               } />
               <Stat label="Over" value={`${overCount} / ${users.length}`} tone={overCount ? "bad" : "ok"} story={
                 <>Employees who have exceeded their <strong style={hi}>individual weekly plan</strong>. Per-person plans are configured in Planned.
@@ -240,7 +240,7 @@ function UserTable({ rows, remind, teamBudget }: { rows: Row[]; remind: (u: Row)
     { label: "Days" },
     { label: "Planned", story: <>The employee's <strong style={hi}>weekly NPT target</strong>, set per person in the Planned tab. Shown in Hh:mm:ss.</> },
     { label: "Actual NPT", story: <>Total NPT this week / <strong style={hi}>Meeting + Training + Project + Personal + System</strong> / sourced from STAR Tracker uploads. Shown in Hh:mm:ss.</> },
-    { label: "% of budget", story: <>This employee's <strong style={hi}>share of the team's total weekly budget</strong>.</> },
+    { label: "% of threshold", story: <>This employee's <strong style={hi}>share of the team's total weekly threshold</strong>.</> },
     { label: "Remaining", story: <><strong style={hi}>Remaining = Planned - Actual</strong>. Positive means plan left, negative means over. Shown in Hh:mm:ss.</> },
     { label: "Status", story: <>On track / <strong style={hi}>Near limit</strong> is one hour or less remaining / <strong style={hi}>Over</strong> is past the plan.</> },
   ];
@@ -295,7 +295,7 @@ function TeamBudgetCard({ budget, used, remaining, status, users, onNavigate, on
       {/* sin caja: bg = fondo. solo marcos esquineros simetricos (no se tocan) */}
       <span className="npt-bracket tl" /><span className="npt-bracket tr" /><span className="npt-bracket bl" /><span className="npt-bracket br" />
       <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap", marginBottom: 12 }}>
-        <span className="npt-title" style={{ fontWeight: 700, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.06em" }}>"Team" // weekly NPT budget</span>
+        <span className="npt-title" style={{ fontWeight: 700, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.06em" }}>"Team" // weekly NPT threshold</span>
         {budget != null && (
           <>
             <span className="npt-title" style={{ fontWeight: 700, fontSize: 28, letterSpacing: "0.06em", color: palette.textDim }}>//</span>
@@ -306,13 +306,13 @@ function TeamBudgetCard({ budget, used, remaining, status, users, onNavigate, on
           <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center" }}>
             <EmailAction icon={<IconMail size={19} />} count={emailCount ?? 0} label="Email team"
               onClick={onEmailTeam}
-              info={<>Generates a single neutral <strong style={hi}>.eml to the whole team</strong> with the team's shared NPT budget and how much is left this week. No individual figures. Includes a link to the personal dashboard.</>} />
+              info={<>Generates a single neutral <strong style={hi}>.eml to the whole team</strong> with the team's shared NPT threshold and how much is left this week. No individual figures. Includes a link to the personal dashboard.</>} />
           </span>
         )}
       </div>
       {budget == null ? (
         <div style={{ color: palette.textDim, fontSize: 18 }}>
-          No team budget set for this week. Set it in the Planned tab (Team weekly budget).
+          No team threshold set for this week. Set it in the Planned tab (Team weekly threshold).
         </div>
       ) : (
         <>
@@ -322,7 +322,7 @@ function TeamBudgetCard({ budget, used, remaining, status, users, onNavigate, on
                 <div style={{ marginTop: 8 }}><StoryLink onClick={() => onNavigate?.({ section: "team", tab: "planned" })}>Set it in Planned</StoryLink></div></>
             } />
             <BudgetStat label="Used" value={fmtHms(used)} story={
-              <>Combined NPT consumed by <strong style={hi}>all employees</strong> so far this week / it counts against the budget above.</>
+              <>Combined NPT consumed by <strong style={hi}>all employees</strong> so far this week / it counts against the threshold above.</>
             } />
             <BudgetStat label="Remaining" value={fmtHms(remaining ?? 0)} color={remainingColor(status)} />
           </div>

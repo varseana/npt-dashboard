@@ -129,7 +129,7 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
       <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "14px 16px", marginBottom: 20 }}>
         <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, marginBottom: 10 }}>
           New team<InfoStar spin={false} pages={[
-            <>Create a team and, optionally, its <strong style={hi}>enrollment code</strong>. The team's weekly NPT target is its <strong style={hi}>budget</strong>, set by its manager in Team {"->"} Planned.</>,
+            <>Create a team and, optionally, its <strong style={hi}>enrollment code</strong>. The team's weekly NPT target is its <strong style={hi}>threshold</strong>, set by its manager in Team {"->"} Planned.</>,
             <><strong style={hi}>Enrollment codes</strong> are what employees type in STAR Tracker to join a team. A team can have several. <strong style={hi}>Deactivate</strong> one to stop new joins without touching data already uploaded; <strong style={hi}>delete</strong> removes it entirely.</>,
           ]} />
         </div>

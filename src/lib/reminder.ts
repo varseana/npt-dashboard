@@ -116,17 +116,17 @@ export interface TeamReminderData {
 function teamInner(d: TeamReminderData): string {
   const over = d.remaining < 0;
   const marginLine = over
-    ? `<b>Over budget by</b> ${chip(fmtHms(-d.remaining), "bad")} for the week.`
+    ? `<b>Over threshold by</b> ${chip(fmtHms(-d.remaining), "bad")} for the week.`
     : `<b>Available for the rest of the week:</b> ${chip(fmtHms(d.remaining), "ok")}.`;
   const ask = over
-    ? "The budget is shared across the whole team, so we would appreciate limiting non-essential NPT for the rest of the week to get us back within it."
-    : "The budget is shared across the whole team, so please keep the remaining margin in mind when planning non-essential NPT over the next few days, so that together we stay within it.";
+    ? "The threshold is shared across the whole team, so we would appreciate limiting non-essential NPT for the rest of the week to get us back within it."
+    : "The threshold is shared across the whole team, so please keep the remaining margin in mind when planning non-essential NPT over the next few days, so that together we stay within it.";
   const url = esc(d.dashboardUrl);
   return [
     `<p>Hi team,</p>`,
     `<p>Here is the <b>team NPT summary</b> for this week (<b>Week ${d.weekNum}</b>, ${esc(d.weekRange)}), for everyone's visibility:</p>`,
     `<ul style="margin:0 0 14px 0;padding-left:20px;">`,
-    `<li><b>Team budget:</b> ${fmtHms(d.budget)}</li>`,
+    `<li><b>Team threshold:</b> ${fmtHms(d.budget)}</li>`,
     `<li><b>Used so far:</b> ${fmtHms(d.used)}</li>`,
     `<li>${marginLine}</li>`,
     `</ul>`,

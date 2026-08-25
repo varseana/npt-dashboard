@@ -100,7 +100,7 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
           <>The NPT you have logged so far this week / <strong style={hi}>Meeting + Training + Project + Personal + System</strong> / captured automatically by STAR Tracker. Shown in Hh:mm:ss.</>
         } />
         <Stat label="Planned" value={plannedSec == null ? "Not set" : fmtHms(plannedSec)} story={
-          <>Your weekly NPT target: your <strong style={hi}>custom allowance</strong> if your manager set one, otherwise your <strong style={hi}>fair share</strong> of the team budget. <strong style={hi}>Not set</strong> means there is no team budget yet.</>
+          <>Your weekly NPT target: your <strong style={hi}>custom allowance</strong> if your manager set one, otherwise your <strong style={hi}>fair share</strong> of the team threshold. <strong style={hi}>Not set</strong> means there is no team threshold yet.</>
         } />
         <Stat label="Remaining" value={remaining == null ? "-" : fmtHms(remaining)}
           extra={<StatusChip status={status} />} story={

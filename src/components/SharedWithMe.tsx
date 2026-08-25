@@ -101,7 +101,7 @@ export default function SharedWithMe({ myUserId }: { myUserId: string }) {
 
       <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, margin: "0 0 6px" }}>
         Shared with me<InfoStar spin={false}>{
-          <>People from <strong style={hi}>other teams</strong> whose manager granted you access. Shown here <strong style={hi}>separately</strong> so they never affect your own team's budget or numbers. Read-only; you can revoke access anytime.</>
+          <>People from <strong style={hi}>other teams</strong> whose manager granted you access. Shown here <strong style={hi}>separately</strong> so they never affect your own team's threshold or numbers. Read-only; you can revoke access anytime.</>
         }</InfoStar>
       </div>
       <div style={{ color: palette.textDim, fontSize: 16, marginBottom: 12 }}>Week {sel.week} :: {weekRangeLabel(sel)}</div>
@@ -125,7 +125,7 @@ export default function SharedWithMe({ myUserId }: { myUserId: string }) {
                 <th style={{ ...th, textAlign: "center" }}>NPT</th>
                 <th style={{ ...th, textAlign: "center" }}>Target</th>
                 <th style={{ ...th, textAlign: "center" }}>Team available<InfoStar spin={false}>{
-                  <>Their team's weekly NPT budget: <strong style={hi}>remaining</strong> / <strong style={hi}>total</strong>. Set by their own manager; shared with you for context. Applies to the whole team, not just this person.</>
+                  <>Their team's weekly NPT threshold: <strong style={hi}>remaining</strong> / <strong style={hi}>total</strong>. Set by their own manager; shared with you for context. Applies to the whole team, not just this person.</>
                 }</InfoStar></th>
                 <th style={{ ...th, textAlign: "center" }}></th>
               </tr>
