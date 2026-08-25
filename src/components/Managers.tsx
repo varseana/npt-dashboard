@@ -4,7 +4,7 @@ import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { TableSkeleton } from "./skeleton";
 import { InfoStar } from "./InfoStar";
-import { IconAlert, IconTrash } from "./icons";
+import { IconAlert, IconTrash, IconKey, IconEye, IconEyeOff } from "./icons";
 import { SearchInput } from "./Inputs";
 import { Dropdown } from "./Dropdown";
 
@@ -58,6 +58,7 @@ export default function Managers({ teams, myUserId, refreshKey }:
   const [msg, setMsg] = useState("");
   const [confirmAdmin, setConfirmAdmin] = useState<MgrRow | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<MgrRow | null>(null);
+  const [resetTarget, setResetTarget] = useState<MgrRow | null>(null);
   const [query, setQuery] = useState("");
   const [roleTab, setRoleTab] = useState<Role>("standby");
 
@@ -100,6 +101,17 @@ export default function Managers({ teams, myUserId, refreshKey }:
     if (error) { setMsg("Error deleting: " + error.message); load(false); }
   }
 
+  // resetea la contrasena de una cuenta (via Edge Function con service_role) y fuerza que
+  // la persona ponga la suya propia en el proximo login (must_set_password lo setea el server).
+  async function resetPassword(r: MgrRow, password: string) {
+    setMsg("");
+    const { data, error } = await supabase.functions.invoke("admin-users", {
+      body: { action: "reset_password", user_id: r.user_id, password },
+    });
+    if (error || data?.error) { setMsg("Error: " + (data?.error || error?.message || "reset failed")); return false; }
+    return true;
+  }
+
   // agrupa por rol para las sub-tabs (una lista por rol; no se mezclan)
   const byRole = useMemo(() => {
     const m: Record<Role, MgrRow[]> = { standby: [], user: [], manager: [], admin: [] };
@@ -127,6 +139,7 @@ export default function Managers({ teams, myUserId, refreshKey }:
     onRole: onRoleChange, onTeam: (id: string) => patch(r, { team_id: id || null }),
     onAlias: (a: string) => patch(r, { alias: a.trim() || null }),
     onDelete: () => setConfirmDelete(r),
+    onReset: () => setResetTarget(r),
   });
 
   return (
@@ -187,14 +200,57 @@ export default function Managers({ teams, myUserId, refreshKey }:
           onCancel={() => setConfirmDelete(null)}
           onConfirm={() => { remove(confirmDelete); setConfirmDelete(null); }} />
       )}
+      {resetTarget && (
+        <ResetDialog email={resetTarget.email}
+          onCancel={() => setResetTarget(null)}
+          onConfirm={async (pw) => { const ok = await resetPassword(resetTarget, pw); if (ok) setResetTarget(null); }} />
+      )}
     </div>
   );
 }
 
-function PersonRow({ r, teams, isMe, matched, onRole, onTeam, onAlias, onDelete }: {
+// dialogo de reset de contrasena: el admin teclea una contrasena temporal para entregarle
+// a la persona. En el proximo login el sistema la obliga a poner la suya propia.
+function ResetDialog({ email, onCancel, onConfirm }: {
+  email: string; onCancel: () => void; onConfirm: (pw: string) => void | Promise<void>;
+}) {
+  const [pw, setPw] = useState("");
+  const [show, setShow] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const valid = pw.length >= 6;
+  return (
+    <div onClick={onCancel} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 60, padding: 24 }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: 24, width: 420, maxWidth: "90vw" }}>
+        <h2 style={{ margin: "0 0 8px", fontSize: 27, color: palette.text }}>Reset password</h2>
+        <p style={{ margin: "0 0 16px", color: palette.textDim, fontSize: 18, lineHeight: 1.5 }}>
+          Set a temporary password for <strong style={{ color: palette.text }}>{email}</strong> and give it to them.
+          They will be required to set their own password on next sign-in.
+        </p>
+        <div style={{ position: "relative", marginBottom: 20 }}>
+          <input value={pw} onChange={(e) => setPw(e.target.value)} type={show ? "text" : "password"}
+            placeholder="temporary password (min 6)" autoFocus
+            style={{ width: "100%", boxSizing: "border-box", background: palette.bg, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "9px 40px 9px 10px", fontSize: 18 }} />
+          <button type="button" className="npt-eye" onClick={() => setShow((s) => !s)}
+            aria-label={show ? "Hide" : "Show"} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "transparent", border: "none", padding: 2, cursor: "pointer", display: "inline-flex" }}>
+            {show ? <IconEyeOff size={18} /> : <IconEye size={18} />}
+          </button>
+        </div>
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+          <button onClick={onCancel} style={{ background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 14px", fontSize: 17, cursor: "pointer" }}>Cancel</button>
+          <button disabled={!valid || busy} onClick={async () => { setBusy(true); await onConfirm(pw); setBusy(false); }}
+            style={{ background: palette.accent, color: palette.accentText, border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 17, cursor: valid && !busy ? "pointer" : "default", opacity: valid && !busy ? 1 : 0.5, fontWeight: 600 }}>
+            {busy ? "Resetting..." : "Reset"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PersonRow({ r, teams, isMe, matched, onRole, onTeam, onAlias, onDelete, onReset }: {
   r: MgrRow; teams: Team[]; isMe: boolean; matched: boolean;
   onRole: (r: MgrRow, role: Role) => void; onTeam: (id: string) => void;
-  onAlias: (a: string) => void; onDelete: () => void;
+  onAlias: (a: string) => void; onDelete: () => void; onReset: () => void;
 }) {
   const showAlias = r.role === "user";
   return (
@@ -228,7 +284,11 @@ function PersonRow({ r, teams, isMe, matched, onRole, onTeam, onAlias, onDelete 
         )
         : <span />}
 
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>
+      <div style={{ display: "flex", justifyContent: "flex-end", gap: 12 }}>
+        <button onClick={onReset} className="npt-ico-act"
+          title="Reset password" aria-label="Reset password">
+          <IconKey size={19} />
+        </button>
         <button onClick={onDelete} disabled={isMe} className="npt-ico-act npt-ico-danger"
           title={isMe ? "You can't delete yourself" : "Delete account"} aria-label="Delete account">
           <IconTrash size={19} />

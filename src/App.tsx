@@ -18,6 +18,8 @@ import Requests from "./components/Requests";
 import Managers from "./components/Managers";
 import Teams from "./components/Teams";
 import Unassigned from "./components/Unassigned";
+import CreateUsers from "./components/CreateUsers";
+import SetPassword from "./components/SetPassword";
 import SelfView from "./components/SelfView";
 import { IconLogout, IconMoon, IconSun, IconX } from "./components/icons";
 import Mascot from "./components/Mascot";
@@ -31,6 +33,7 @@ interface ManagerRow {
   team_id: string | null;
   alias: string | null;
   approved: boolean;
+  must_set_password: boolean;
 }
 
 interface Team {
@@ -51,7 +54,7 @@ export default function App() {
   const [section, setSection] = useState<"dashboard" | "team" | "access">("dashboard");
   const [dashView, setDashView] = useState<"summary" | "breakdown" | "shared">("summary");
   const [teamTab, setTeamTab] = useState<"employees" | "planned" | "folders">("employees");
-  const [accessTab, setAccessTab] = useState<"requests" | "org" | "managers" | "teams" | "unassigned">("requests");
+  const [accessTab, setAccessTab] = useState<"requests" | "org" | "managers" | "teams" | "unassigned" | "create">("requests");
   const [askLogout, setAskLogout] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
   const [pendingReq, setPendingReq] = useState(0);   // access requests pendientes (badge en Access)
@@ -118,7 +121,7 @@ export default function App() {
   async function loadManager(s: Session) {
     let { data: m } = await supabase
       .from("managers")
-      .select("user_id,email,role,team_id,alias,approved")
+      .select("user_id,email,role,team_id,alias,approved,must_set_password")
       .eq("user_id", s.user.id)
       .maybeSingle();
 
@@ -130,7 +133,7 @@ export default function App() {
       );
       const re = await supabase
         .from("managers")
-        .select("user_id,email,role,team_id,alias,approved")
+        .select("user_id,email,role,team_id,alias,approved,must_set_password")
         .eq("user_id", s.user.id)
         .maybeSingle();
       m = re.data;
@@ -174,6 +177,11 @@ export default function App() {
 
   if (loading) return <Centered>Loading...</Centered>;
   if (!session) return <Login dark={dark} onToggleTheme={() => setDark((d) => !d)} />;
+  // cuenta creada por el admin (o con password reseteada): obligar a poner su propia
+  // contrasena antes de entrar. El flag lo limpia SetPassword (RPC clear_must_set_password).
+  if (manager?.must_set_password) {
+    return <SetPassword email={manager.email} onDone={() => loadManager(session)} />;
+  }
   // standby = registrado pero sin rol asignado todavia: no ve nada
   if (!manager || manager.role === "standby" || !manager.approved) {
     return (
@@ -199,7 +207,7 @@ export default function App() {
     setSection(dest.section);
     if (dest.section === "dashboard" && dest.tab) setDashView(dest.tab as "summary" | "breakdown");
     if (dest.section === "team" && dest.tab) setTeamTab(dest.tab as "employees" | "planned" | "folders");
-    if (dest.section === "access" && dest.tab) setAccessTab(dest.tab as "requests" | "org" | "managers" | "teams" | "unassigned");
+    if (dest.section === "access" && dest.tab) setAccessTab(dest.tab as "requests" | "org" | "managers" | "teams" | "unassigned" | "create");
   }
 
   return (
@@ -268,6 +276,7 @@ export default function App() {
         {section === "access" && (<>
           <SubBtn active={accessTab === "requests"} onClick={() => setAccessTab("requests")}>Requests</SubBtn>
           {manager.role === "admin" && <SubBtn active={accessTab === "managers"} onClick={() => setAccessTab("managers")}>Users</SubBtn>}
+          {manager.role === "admin" && <SubBtn active={accessTab === "create"} onClick={() => setAccessTab("create")}>Create</SubBtn>}
           {manager.role === "admin" && <SubBtn active={accessTab === "teams"} onClick={() => setAccessTab("teams")}>Teams</SubBtn>}
           {manager.role === "admin" && <SubBtn active={accessTab === "unassigned"} onClick={() => setAccessTab("unassigned")}>Unassigned</SubBtn>}
           {manager.role === "admin" && <SubBtn active={accessTab === "org"} onClick={() => setAccessTab("org")}>Org</SubBtn>}
@@ -283,6 +292,8 @@ export default function App() {
       {section === "access" && accessTab === "requests" && <Requests role={manager.role} myUserId={manager.user_id} />}
       {section === "access" && accessTab === "managers" && manager.role === "admin" &&
         <Managers teams={teams} myUserId={manager.user_id} refreshKey={refreshTick} />}
+      {section === "access" && accessTab === "create" && manager.role === "admin" &&
+        <CreateUsers teams={teams} />}
       {section === "access" && accessTab === "teams" && manager.role === "admin" &&
         <Teams refreshKey={refreshTick} />}
       {section === "access" && accessTab === "unassigned" && manager.role === "admin" &&

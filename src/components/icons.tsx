@@ -164,6 +164,18 @@ export function IconUser({ size = 16, style }: P) {
 }
 
 // etiqueta / tag (outline). va a la izquierda de un input donde se escribe un codigo de enrollment.
+export function IconKey({ size = 16, style }: P) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
+      strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", ...style }} aria-hidden="true">
+      <circle cx="7.5" cy="15.5" r="4.5" />
+      <path d="M10.7 12.3 19 4" />
+      <path d="M16 7l3 3" />
+      <path d="M14 9l2 2" />
+    </svg>
+  );
+}
+
 export function IconTag({ size = 16, style }: P) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
