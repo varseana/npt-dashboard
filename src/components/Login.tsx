@@ -49,18 +49,21 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
     e.preventDefault();
     setMsg("");
     setOk("");
-    const mail = email.trim().toLowerCase();
+    // normaliza: si escriben solo el usuario (sin @), le agregamos @amazon.com.
+    // el dominio es OBLIGATORIO en ambos modos (login y alta): evita que confundan
+    // el campo con "solo usuario" y terminen registrandose por error.
+    let mail = email.trim().toLowerCase();
+    if (mail && !mail.includes("@")) mail = mail + ALLOWED_DOMAIN;
+    if (!mail.endsWith(ALLOWED_DOMAIN)) {
+      setMsg(`Use your ${ALLOWED_DOMAIN} email.`);
+      return;
+    }
 
     // remember me: solo el email (nunca la contrasena)
     try {
       if (remember) localStorage.setItem("nptLoginEmail", mail);
       else localStorage.removeItem("nptLoginEmail");
     } catch { /* noop */ }
-
-    if (mode === "up" && !mail.endsWith(ALLOWED_DOMAIN)) {
-      setMsg(`Use your ${ALLOWED_DOMAIN} email to request access.`);
-      return;
-    }
 
     setBusy(true);
     if (mode === "in") {
@@ -140,13 +143,8 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
           )}
         </p>
         <label style={label}>Amazon email</label>
-        <input style={input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
+        <input style={input} type="text" value={email} onChange={(e) => setEmail(e.target.value)} required
           autoComplete="username" placeholder="you@amazon.com" />
-        {mode === "in" && (
-          <div style={{ fontSize: 14, color: palette.textDim, margin: "4px 0 0" }}>
-            Use your full <strong style={{ color: palette.text }}>@amazon.com</strong> email, not just your username.
-          </div>
-        )}
         <label style={label}>Password</label>
         <div style={{ position: "relative" }}>
           <input style={{ ...input, paddingRight: 42 }} type={showPw ? "text" : "password"} value={password}
