@@ -10,7 +10,7 @@ import {
 import { InfoStar } from "./InfoStar";
 import { InlineEdit } from "./InlineEdit";
 import { Dropdown } from "./Dropdown";
-import { SearchInput } from "./Inputs";
+import { BracketSearch } from "./Inputs";
 import { BlockSkeleton } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
@@ -186,11 +186,9 @@ export default function Planned({ team }: { team: Team }) {
       </div>
 
       {aliases.length > 0 && (
-        <div style={{ marginBottom: 10, maxWidth: 360 }}>
-          <SearchInput value={query} onChange={(e) => setQuery(e.target.value)}
-            placeholder="find a person to set a custom" aria-label="Search employees"
-            style={{ width: "100%", fontSize: 17, padding: "8px 12px", paddingLeft: 34 }} />
-        </div>
+        <BracketSearch value={query} onChange={(e) => setQuery(e.target.value)}
+          placeholder="find a person" aria-label="Search employees"
+          containerStyle={{ marginBottom: 12, width: 320 }} />
       )}
 
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19, tableLayout: "fixed" }}>

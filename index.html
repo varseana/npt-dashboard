@@ -192,6 +192,9 @@
       .npt-bracket.tr { top: 0; right: 0; border-top: 3px solid var(--textDim); border-right: 3px solid var(--textDim); }
       .npt-bracket.bl { bottom: 0; left: 0; border-bottom: 3px solid var(--textDim); border-left: 3px solid var(--textDim); }
       .npt-bracket.br { bottom: 0; right: 0; border-bottom: 3px solid var(--textDim); border-right: 3px solid var(--textDim); }
+      /* buscador con marco esquinero (patron canonico, ver Inputs.tsx BracketSearch): al enfocar,
+         los 4 brackets pasan a contraste full. mismo lenguaje monocromatico, sin caja ni radius. */
+      .npt-bracket-search:focus-within .npt-bracket { border-color: var(--text); }
       /* fuente LCD retro (Digital-7): reloj del header + used% del budget card, nada mas. */
       .npt-lcd { font-family: "Digital7", "DSEG7 Classic", "Consolas", monospace; letter-spacing: 1px; }
       /* ===== boton SIGN IN cyberpunk ===== corte sup-der + glitch de slices SOLO en hover. El glitch es
