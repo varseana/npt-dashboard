@@ -317,7 +317,7 @@ function TeamBudgetCard({ budget, used, remaining, status, users, onNavigate, on
       ) : (
         <>
           <div style={{ display: "flex", gap: 28, flexWrap: "wrap", marginBottom: 12 }}>
-            <BudgetStat label="Budget" value={fmtHms(budget)} story={
+            <BudgetStat label="Threshold" value={fmtHms(budget)} story={
               <>The team's <strong style={hi}>total weekly NPT ceiling</strong>, handed down by ops and defined in Planned.
                 <div style={{ marginTop: 8 }}><StoryLink onClick={() => onNavigate?.({ section: "team", tab: "planned" })}>Set it in Planned</StoryLink></div></>
             } />
