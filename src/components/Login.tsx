@@ -139,8 +139,14 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
             <>Request access with your work email. An admin approves it.</>
           )}
         </p>
-        <label style={label}>Email</label>
-        <input style={input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required autoComplete="username" />
+        <label style={label}>Amazon email</label>
+        <input style={input} type="email" value={email} onChange={(e) => setEmail(e.target.value)} required
+          autoComplete="username" placeholder="you@amazon.com" />
+        {mode === "in" && (
+          <div style={{ fontSize: 14, color: palette.textDim, margin: "4px 0 0" }}>
+            Use your full <strong style={{ color: palette.text }}>@amazon.com</strong> email, not just your username.
+          </div>
+        )}
         <label style={label}>Password</label>
         <div style={{ position: "relative" }}>
           <input style={{ ...input, paddingRight: 42 }} type={showPw ? "text" : "password"} value={password}
