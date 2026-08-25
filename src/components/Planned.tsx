@@ -23,8 +23,8 @@ const hi = { color: palette.text, fontWeight: 700 } as React.CSSProperties;
 // (budget / headcount) salvo que tenga un custom. Los customs rebalancean el resto, asi el
 // total siempre = budget. Ver lib/npt.ts (resolvePersonPlan / fairShareSeconds).
 export default function Planned({ team }: { team: Team }) {
-  // incluye semanas FUTURAS (8 adelante) para poder planear "la semana que viene", + actual + 14 pasadas
-  const weeks = useMemo(() => weeksAround(new Date(), 8, 14), []);
+  // incluye semanas FUTURAS (4 adelante = 1 mes de anticipacion) para planear, + actual + 14 pasadas
+  const weeks = useMemo(() => weeksAround(new Date(), 4, 14), []);
   const thisKey = useMemo(() => weekInfo(new Date()).key, []);
   // la semana que viene = la entrada apenas mas futura que la actual (la lista es descendente)
   const nextKey = useMemo(() => { const i = weeks.findIndex((w) => w.key === thisKey); return i > 0 ? weeks[i - 1].key : ""; }, [weeks, thisKey]);
