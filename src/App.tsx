@@ -221,10 +221,11 @@ export default function App() {
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 48 }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <h1 style={{ margin: 0, fontSize: 42, color: palette.text, lineHeight: 1.05 }}>
-              <ScrambleText text={"STAR\nReal Time NPT Dashboard"} radius={90} scrambleChars="._/:<>*=" />
+            <h1 style={{ margin: 0, color: palette.text, lineHeight: 1.02 }}>
+              <span style={{ display: "block", fontSize: 60 }}><ScrambleText text="STAR" radius={90} scrambleChars="._/:<>*=" /></span>
+              <span style={{ display: "block", fontSize: 34 }}><ScrambleText text="Real Time NPT Dashboard" radius={90} scrambleChars="._/:<>*=" /></span>
             </h1>
-            <Mascot inline onNavigate={goTo} />
+            <Mascot inline onNavigate={goTo} size={88} />
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
             <span style={{ color: palette.textDim, fontSize: 18 }}>{manager.email} <span style={{ color: palette.blue, fontWeight: 600 }}>({manager.role})</span></span>

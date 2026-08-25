@@ -122,11 +122,13 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
           <div style={{ display: "flex", alignItems: "center", gap: 8, minWidth: 0 }}>
             {/* dos renglones fijos + nowrap + flex:0 0 auto => la caja se ajusta al ancho del texto
                 (no al del contenedor), asi la mascota queda pegada al titulo sin hueco. */}
-            <h1 style={{ margin: 0, fontSize: 27, color: palette.text, lineHeight: 1.15, whiteSpace: "nowrap", flex: "0 0 auto" }}>
-              <ScrambleText text={"STAR\nReal Time\nNPT Dashboard"} radius={90} scrambleChars="._/:<>*=" />
+            <h1 style={{ margin: 0, color: palette.text, lineHeight: 1.1, whiteSpace: "nowrap", flex: "0 0 auto" }}>
+              <span style={{ display: "block", fontSize: 38 }}><ScrambleText text="STAR" radius={90} scrambleChars="._/:<>*=" /></span>
+              <span style={{ display: "block", fontSize: 22 }}><ScrambleText text="Real Time" radius={90} scrambleChars="._/:<>*=" /></span>
+              <span style={{ display: "block", fontSize: 22 }}><ScrambleText text="NPT Dashboard" radius={90} scrambleChars="._/:<>*=" /></span>
             </h1>
-            {/* mascota pegada al titulo, del alto de los dos renglones (decorativa, sin tips en el login) */}
-            <Mascot inline showTips={false} size={64} />
+            {/* mascota mas grande, centrada vertical contra las 3 lineas -> queda sobre "NPT Dashboard" */}
+            <Mascot inline showTips={false} size={72} />
           </div>
           {/* toggle de tema en la esquina sup-der de la carta (alineado al top) */}
           <button type="button" onClick={() => runThemeToggle(!dark, onToggleTheme)}
