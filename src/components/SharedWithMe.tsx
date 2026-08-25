@@ -7,7 +7,7 @@ import { TableSkeleton } from "./skeleton";
 import WeekCountdown from "./WeekCountdown";
 import { Dropdown } from "./Dropdown";
 import {
-  NPT_AUX, ANCHOR, fmtHms, weekInfo, weekLabel, weekRangeLabel, recentWeeks, isoDate,
+  NPT_AUX, ANCHOR, dedupePersonDay, fmtHms, weekInfo, weekLabel, weekRangeLabel, recentWeeks, isoDate,
 } from "../lib/npt";
 
 // highlight monocromatico dentro del popover
@@ -60,7 +60,7 @@ export default function SharedWithMe({ myUserId }: { myUserId: string }) {
     const by = new Map<string, PersonNpt>();
     for (const a of aliases) by.set(a, { alias: a, days: 0, total: 0, buckets: {} });
     const seen = new Map<string, Set<string>>();
-    for (const r of rows) {
+    for (const r of dedupePersonDay(rows)) {
       const p = by.get(r.alias); if (!p) continue;
       const days = seen.get(r.alias) ?? new Set<string>(); days.add(r.work_date); seen.set(r.alias, days);
       for (const [name, sec] of Object.entries(r.aux_seconds || {})) {

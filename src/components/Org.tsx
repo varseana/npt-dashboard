@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import {
-  computeDay, fmtHms, resolvePlanned, statusFor,
+  computeDay, dedupePersonDay, fmtHms, resolvePlanned, statusFor,
   weekInfo, weekLabel, recentWeeks, isoDate,
   type NptDailyRow, type NptStatus, type PlannedRow,
 } from "../lib/npt";
@@ -55,7 +55,7 @@ export default function Org() {
   // NPT actual por alias en la semana
   const nptByAlias = useMemo(() => {
     const m = new Map<string, number>();
-    for (const r of daily) m.set(r.alias, (m.get(r.alias) || 0) + computeDay(r.aux_seconds).nptSeconds);
+    for (const r of dedupePersonDay(daily)) m.set(r.alias, (m.get(r.alias) || 0) + computeDay(r.aux_seconds).nptSeconds);
     return m;
   }, [daily]);
 

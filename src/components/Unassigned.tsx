@@ -2,7 +2,7 @@ import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
-import { computeDay, fmtHms, type NptDailyRow } from "../lib/npt";
+import { computeDay, dedupePersonDay, fmtHms, type NptDailyRow } from "../lib/npt";
 import { TableSkeleton } from "./skeleton";
 import { Dropdown } from "./Dropdown";
 
@@ -28,7 +28,7 @@ export default function Unassigned({ teams, refreshKey }: { teams: Team[]; refre
       .select("alias,aux_seconds,work_date").eq("team_id", UNASSIGNED_ID);
     if (error) setMsg("Error: " + error.message);
     const m = new Map<string, Row>();
-    for (const r of (data as NptDailyRow[]) ?? []) {
+    for (const r of dedupePersonDay((data as NptDailyRow[]) ?? [])) {
       const a = m.get(r.alias) || { alias: r.alias, nptSeconds: 0, days: 0 };
       a.nptSeconds += computeDay(r.aux_seconds).nptSeconds;
       a.days += 1;

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import {
-  NPT_AUX, fmtHms, resolveTeamBudget, buildPlanOverrides, resolvePersonPlan, statusFor,
+  NPT_AUX, dedupePersonDay, fmtHms, resolveTeamBudget, buildPlanOverrides, resolvePersonPlan, statusFor,
   weekInfo, weekLabel, recentWeeks, isoDate,
   type NptDailyRow, type NptStatus, type PlannedRow, type TeamBudgetRow, type PlanContext,
 } from "../lib/npt";
@@ -75,7 +75,7 @@ export default function Distribution({ team, refreshKey }: { team: Team; refresh
 
   const matrix: Row[] = useMemo(() => {
     const byUser = new Map<string, Row>();
-    for (const r of rows) {
+    for (const r of dedupePersonDay(rows)) {
       let u = byUser.get(r.alias);
       if (!u) {
         const perAux: Record<string, number> = {};

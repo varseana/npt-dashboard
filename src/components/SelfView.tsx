@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import {
-  NPT_AUX, computeDay, fmtHms, buildPlanOverrides, statusFor,
+  NPT_AUX, computeDay, dedupePersonDay, fmtHms, buildPlanOverrides, statusFor,
   weekInfo, weekLabel, recentWeeks, isoDate,
   type NptDailyRow, type PlannedRow,
 } from "../lib/npt";
@@ -60,7 +60,7 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
     const per: Record<string, number> = {};
     for (const a of NPT_AUX) per[a] = 0;
     let total = 0;
-    for (const r of rows) {
+    for (const r of dedupePersonDay(rows)) {
       total += computeDay(r.aux_seconds).nptSeconds;
       for (const a of NPT_AUX) per[a] += r.aux_seconds?.[a] ?? 0;
     }

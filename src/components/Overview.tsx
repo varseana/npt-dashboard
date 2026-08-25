@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import {
-  computeDay, fmtHms, resolveTeamBudget, buildPlanOverrides, resolvePersonPlan, statusFor,
+  computeDay, dedupePersonDay, fmtHms, resolveTeamBudget, buildPlanOverrides, resolvePersonPlan, statusFor,
   weekInfo, weekLabel, weekRangeLabel, recentWeeks, isoDate,
   type NptDailyRow, type NptStatus, type PlannedRow, type TeamBudgetRow, type PlanContext,
 } from "../lib/npt";
@@ -77,7 +77,7 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
 
   const users = useMemo(() => {
     const byUser = new Map<string, Row>();
-    for (const r of rows) {
+    for (const r of dedupePersonDay(rows)) {
       const day = computeDay(r.aux_seconds);
       let u = byUser.get(r.alias);
       if (!u) { u = { alias: r.alias, daysReported: 0, nptSeconds: 0, planned: null, remaining: null, status: "none" }; byUser.set(r.alias, u); }

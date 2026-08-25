@@ -29,6 +29,30 @@ export interface DayNpt {
   nptPct: number;
 }
 
+// suma total de segundos de una fila (todos los AUX). Se usa para elegir la fila mas completa.
+function totalAuxSeconds(aux: AuxSeconds | null): number {
+  let t = 0;
+  for (const v of Object.values(aux || {})) t += v || 0;
+  return t;
+}
+
+// Colapsa filas duplicadas por PROFILE. La PK de npt_daily es (alias, work_date, profile),
+// asi que una persona puede tener >1 fila el mismo dia si subio bajo mas de un profile
+// (ej. cambio el perfil activo de 'safet' al nuevo 'npt' en el dia: queda la fila vieja +
+// la nueva). aux_seconds es el reloj de PRESENCIA de la persona, IDENTICO entre profiles
+// (no es por-cola), asi que sumar esas filas duplica el tiempo (bug de NPT x2). Nos quedamos
+// con UNA fila por (alias, work_date): la de mayor tiempo total (la mas completa).
+// SIEMPRE aplicar esto antes de agregar/sumar filas de npt_daily.
+export function dedupePersonDay<T extends { alias: string; work_date: string; aux_seconds: AuxSeconds | null }>(rows: T[]): T[] {
+  const best = new Map<string, T>();
+  for (const r of rows) {
+    const key = r.alias + "|" + r.work_date;
+    const cur = best.get(key);
+    if (!cur || totalAuxSeconds(r.aux_seconds) > totalAuxSeconds(cur.aux_seconds)) best.set(key, r);
+  }
+  return Array.from(best.values());
+}
+
 // NPT de un solo dia/fila. NPT = suma de los 5 AUX globales; tracked = todo menos Offline.
 // _excluded queda por compatibilidad de firma pero YA NO se usa (NPT es fijo).
 export function computeDay(aux: AuxSeconds, _excluded?: string[]): DayNpt {
@@ -59,7 +83,7 @@ export function aggregateByUser(
   targetPct: number
 ): UserAgg[] {
   const byUser = new Map<string, UserAgg>();
-  for (const row of rows) {
+  for (const row of dedupePersonDay(rows)) {
     const d = computeDay(row.aux_seconds);
     let u = byUser.get(row.alias);
     if (!u) {
