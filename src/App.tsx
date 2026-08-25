@@ -221,8 +221,8 @@ export default function App() {
       <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 48 }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
-            <h1 style={{ margin: 0, fontSize: 42, color: palette.text, lineHeight: 1 }}>
-              <ScrambleText text="STAR NPT Dashboard" radius={90} scrambleChars="._/:<>*=" />
+            <h1 style={{ margin: 0, fontSize: 42, color: palette.text, lineHeight: 1.05 }}>
+              <ScrambleText text={"STAR\nReal Time NPT Dashboard"} radius={90} scrambleChars="._/:<>*=" />
             </h1>
             <Mascot inline onNavigate={goTo} />
           </div>

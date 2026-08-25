@@ -212,6 +212,9 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
             </div>
           </div>
 
+          {/* aire (sin linea) entre las metricas y la tabla de nombres, igual que los separadores del header */}
+          <div style={{ height: 24 }} />
+
           {groups ? (
             groups.map((g) => (
               <div key={g.name} style={{ marginBottom: 20 }}>
