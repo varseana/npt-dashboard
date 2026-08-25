@@ -210,6 +210,20 @@ export function recentWeeks(today: Date, n: number): WeekInfo[] {
   return out;
 }
 
+// semanas alrededor de hoy: `ahead` FUTURAS + la actual + `back` pasadas, orden descendente
+// (la mas futura primero -> la mas antigua ultima). Sirve para PLANEAR semanas que aun no
+// empezaron (ej. el budget de la semana que viene), a diferencia de recentWeeks que es solo pasado.
+export function weeksAround(today: Date, ahead: number, back: number): WeekInfo[] {
+  const out: WeekInfo[] = [];
+  const cur = weekStart(today);
+  for (let i = ahead; i >= -back; i--) {
+    const d = new Date(cur);
+    d.setDate(d.getDate() + i * 7);
+    out.push(weekInfo(d));
+  }
+  return out;
+}
+
 export interface PlannedRow { alias: string; week_key: string; planned_seconds: number; }
 
 // resuelve el planned de una persona/semana con la misma prioridad que planned_seconds_for:

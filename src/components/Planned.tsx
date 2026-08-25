@@ -4,13 +4,14 @@ import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import {
   parseDuration, fmtHms, resolveTeamBudget, buildPlanOverrides, fairShareSeconds, resolvePersonPlan,
-  weekInfo, weekLabel, recentWeeks,
+  weekInfo, weekLabel, weeksAround,
   type PlannedRow, type PlanContext,
 } from "../lib/npt";
 import { InfoStar } from "./InfoStar";
 import { InlineEdit } from "./InlineEdit";
 import { Dropdown } from "./Dropdown";
 import { SearchInput } from "./Inputs";
+import WeekCountdown from "./WeekCountdown";
 import { BlockSkeleton } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
@@ -22,7 +23,11 @@ const hi = { color: palette.text, fontWeight: 700 } as React.CSSProperties;
 // (budget / headcount) salvo que tenga un custom. Los customs rebalancean el resto, asi el
 // total siempre = budget. Ver lib/npt.ts (resolvePersonPlan / fairShareSeconds).
 export default function Planned({ team }: { team: Team }) {
-  const weeks = useMemo(() => recentWeeks(new Date(), 16), []);
+  // incluye semanas FUTURAS (8 adelante) para poder planear "la semana que viene", + actual + 14 pasadas
+  const weeks = useMemo(() => weeksAround(new Date(), 8, 14), []);
+  const thisKey = useMemo(() => weekInfo(new Date()).key, []);
+  // la semana que viene = la entrada apenas mas futura que la actual (la lista es descendente)
+  const nextKey = useMemo(() => { const i = weeks.findIndex((w) => w.key === thisKey); return i > 0 ? weeks[i - 1].key : ""; }, [weeks, thisKey]);
   const [scope, setScope] = useState<Scope>("standing");
   const [weekKey, setWeekKey] = useState(() => weekInfo(new Date()).key);
   const [rows, setRows] = useState<PlannedRow[]>([]);
@@ -145,8 +150,15 @@ export default function Planned({ team }: { team: Team }) {
         </Field>
         {scope === "week" && (
           <Field label="Week">
-            <Dropdown value={weekKey} onChange={setWeekKey} minWidth={260} ariaLabel="Select week"
-              options={weeks.map((w) => ({ value: w.key, label: weekLabel(w) }))} />
+            <Dropdown value={weekKey} onChange={setWeekKey} minWidth={280} ariaLabel="Select week"
+              options={weeks.map((w) => ({
+                value: w.key,
+                label: weekLabel(w) + (w.key === thisKey ? "  (this week)" : w.key === nextKey ? "  (next week)" : ""),
+              }))} />
+            {/* semana futura: cuenta hasta que arranca (amarillo). semana en curso: cuenta hasta que termina. */}
+            <div style={{ marginTop: 6, minHeight: 20, fontSize: 15 }}>
+              <WeekCountdown start={weekInfo(new Date(weekKey + "T12:00:00")).start} standalone />
+            </div>
           </Field>
         )}
       </div>

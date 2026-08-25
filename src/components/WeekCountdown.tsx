@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { palette } from "../theme";
 
-// contador LIVE junto al titulo "Week": tiempo restante hasta que termine la semana
-// (sabado medianoche, o sea domingo 00:00). solo se muestra si la semana elegida es la
-// que esta en curso; para semanas pasadas/futuras no aplica y no renderiza nada.
-// compartido por Summary (Overview) y Breakdown (Distribution).
-export default function WeekCountdown({ start }: { start: Date }) {
+// contador LIVE junto al titulo "Week". Tres estados segun la semana elegida:
+//  - FUTURA (aun no empieza): cuenta hasta el INICIO (domingo 00:00), en AMARILLO Bauhaus ("starts in").
+//  - EN CURSO: cuenta hasta el FIN (sabado medianoche = domingo 00:00), color texto ("ends in").
+//  - PASADA: no renderiza nada.
+// `standalone` quita el separador "·" del principio (para usarlo suelto, no despues de "Week").
+// compartido por Summary (Overview), Breakdown (Distribution) y ahora Planned (planear semana futura).
+export default function WeekCountdown({ start, standalone }: { start: Date; standalone?: boolean }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
@@ -20,9 +22,10 @@ export default function WeekCountdown({ start }: { start: Date }) {
     return e.getTime();
   }, [startMs]);
 
-  if (now < startMs || now >= end) return null; // solo la semana en curso
+  if (now >= end) return null; // semana pasada: no aplica
 
-  const total = Math.floor((end - now) / 1000);
+  const future = now < startMs;
+  const total = Math.floor(((future ? startMs : end) - now) / 1000);
   const d = Math.floor(total / 86400);
   const h = Math.floor((total % 86400) / 3600);
   const m = Math.floor((total % 3600) / 60);
@@ -32,10 +35,10 @@ export default function WeekCountdown({ start }: { start: Date }) {
 
   return (
     <span
-      title="Time left until this week ends (Saturday midnight)"
-      style={{ color: palette.text, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}
+      title={future ? "Time until this week starts (Sunday 00:00)" : "Time left until this week ends (Saturday midnight)"}
+      style={{ color: future ? palette.warn : palette.text, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}
     >
-      {"·"} ends in {clock}
+      {standalone ? "" : "· "}{future ? "starts in " : "ends in "}{clock}
     </span>
   );
 }
