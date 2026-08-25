@@ -10,7 +10,7 @@ import {
 import { InfoStar } from "./InfoStar";
 import { InlineEdit } from "./InlineEdit";
 import { Dropdown } from "./Dropdown";
-import { BracketSearch } from "./Inputs";
+import { SearchInput } from "./Inputs";
 import { BlockSkeleton } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
@@ -151,8 +151,10 @@ export default function Planned({ team }: { team: Team }) {
         )}
       </div>
 
-      {/* UNICO input principal: el budget total del team */}
-      <div style={{ background: palette.panel, border: `2px solid ${palette.text}`, borderRadius: 8, padding: "14px 16px", marginBottom: 16 }}>
+      {/* UNICO input principal: el budget total del team. Sin caja: 4 marcos esquineros (mismo
+          patron que el budget card de Dashboard > Summary). */}
+      <div style={{ position: "relative", background: "transparent", padding: "18px 22px", marginBottom: 16 }}>
+        <span className="npt-bracket tl" /><span className="npt-bracket tr" /><span className="npt-bracket bl" /><span className="npt-bracket br" />
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
           <div className="npt-title" style={{ fontWeight: 700, fontSize: 28 }}>
             Team weekly budget<InfoStar pages={[
@@ -186,9 +188,10 @@ export default function Planned({ team }: { team: Team }) {
       </div>
 
       {aliases.length > 0 && (
-        <BracketSearch value={query} onChange={(e) => setQuery(e.target.value)}
-          placeholder="find a person" aria-label="Search employees"
-          containerStyle={{ marginBottom: 12, width: 320 }} />
+        <div style={{ marginBottom: 12 }}>
+          <SearchInput value={query} onChange={(e) => setQuery(e.target.value)}
+            placeholder="username" aria-label="Search employees" />
+        </div>
       )}
 
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19, tableLayout: "fixed" }}>

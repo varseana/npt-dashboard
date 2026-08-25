@@ -26,25 +26,6 @@ export function SearchInput({ style, containerStyle, iconSize = 17, ...rest }: I
   );
 }
 
-// Buscador MINIMALISTA con marco esquinero (el patron del dashboard: budget card). SIN caja,
-// SIN radius: fondo transparente + 4 brackets `.npt-bracket` en las esquinas + lupa adentro. Al
-// enfocar, los brackets pasan a contraste full (.npt-bracket-search:focus-within, en index.html).
-// Es el buscador CANONICO del dashboard. Usar este (no una caja con borde) para filtrar listas.
-export function BracketSearch({ style, containerStyle, iconSize = 17, ...rest }: IconInputProps) {
-  return (
-    <div className="npt-bracket-search" style={{ position: "relative", display: "inline-flex", alignItems: "center", ...containerStyle }}>
-      <span className="npt-bracket tl" /><span className="npt-bracket tr" /><span className="npt-bracket bl" /><span className="npt-bracket br" />
-      <span style={{ position: "absolute", left: 12, display: "inline-flex", color: palette.textDim, pointerEvents: "none" }}>
-        <IconSearch size={iconSize} />
-      </span>
-      <input {...rest} style={{
-        background: "transparent", border: "none", outline: "none", color: palette.text,
-        fontSize: 17, padding: "10px 14px 10px 38px", width: "100%", boxSizing: "border-box", ...style,
-      }} />
-    </div>
-  );
-}
-
 // input con "+" adentro (AGREGAR / crear / asignar). placeholder = lo que se agrega.
 // Mismo lenguaje visual que SearchInput: lupa = buscar, + = agregar.
 export function AddInput({ style, containerStyle, iconSize = 18, ...rest }: IconInputProps) {
