@@ -181,6 +181,9 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
         <div style={{ color: palette.textDim }}>No reported data for {weekLabel(sel)}.</div>
       ) : (
         <>
+          {/* 2 separadores invisibles (aire, sin linea) entre el selector de semana y las tablas de info */}
+          <div style={{ height: 24 }} />
+          <div style={{ height: 24 }} />
           {/* dos segmentos lado a lado: budget (angosto) izquierda // stats 2x2 derecha */}
           <div style={{ display: "flex", gap: 24, marginBottom: 18, flexWrap: "wrap", alignItems: "stretch" }}>
             <div style={{ flex: "1 1 480px", minWidth: 320 }}>
@@ -212,7 +215,9 @@ export default function Overview({ team, refreshKey, onNavigate }: { team: Team;
             </div>
           </div>
 
-          {/* aire (sin linea) entre las metricas y la tabla de nombres, igual que los separadores del header */}
+          {/* aire (sin linea) entre las tablas de info y la tabla de nombres: 3 separadores */}
+          <div style={{ height: 24 }} />
+          <div style={{ height: 24 }} />
           <div style={{ height: 24 }} />
 
           {groups ? (
