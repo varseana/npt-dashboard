@@ -96,7 +96,7 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
   const submitLabel = busy ? "Please wait..." : mode === "in" ? "\"Sign in\"" : "\"Create account\"";
 
   return (
-    <div style={{ position: "relative", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, overflow: "hidden" }}>
+    <div style={{ position: "relative", height: "100vh", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, overflow: "hidden" }}>
       <SwirlBackground dark={dark} />
 
       {/* boton de pantalla completa (gimmick), esquina sup-der de la pantalla. Con fondo para que se

@@ -341,7 +341,7 @@ function ConfirmedBanner({ onClose }: { onClose: () => void }) {
 
 function Centered({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+    <div style={{ minHeight: "100vh", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
       {children}
     </div>
   );
