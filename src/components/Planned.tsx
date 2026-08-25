@@ -10,6 +10,7 @@ import {
 import { InfoStar } from "./InfoStar";
 import { InlineEdit } from "./InlineEdit";
 import { Dropdown } from "./Dropdown";
+import { SearchInput } from "./Inputs";
 import { BlockSkeleton } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
@@ -27,6 +28,7 @@ export default function Planned({ team }: { team: Team }) {
   const [rows, setRows] = useState<PlannedRow[]>([]);
   const [budgetRows, setBudgetRows] = useState<{ week_key: string; planned_seconds: number }[]>([]);
   const [aliases, setAliases] = useState<string[]>([]);
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
 
   const scopeKey = scope === "standing" ? "" : weekKey;
@@ -62,6 +64,11 @@ export default function Planned({ team }: { team: Team }) {
   const overrides = useMemo(() => buildPlanOverrides(rows, scopeKey), [rows, scopeKey]);
   const ctx: PlanContext = { budgetSeconds, headcount, overrides };
   const fair = fairShareSeconds(ctx);
+  // el buscador SOLO filtra las filas visibles; headcount/fair share siguen usando el team completo
+  const shownAliases = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return q ? aliases.filter((a) => a.includes(q)) : aliases;
+  }, [aliases, query]);
 
   async function upsertOrDelete(alias: string, input: string) {
     const secs = parseDuration(input);
@@ -178,7 +185,20 @@ export default function Planned({ team }: { team: Team }) {
         {budgetSeconds == null && <div style={{ fontSize: 17, color: palette.textDim, marginTop: 8 }}>No budget set. Click above to give everyone a target.</div>}
       </div>
 
-      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19 }}>
+      {aliases.length > 0 && (
+        <div style={{ marginBottom: 10, maxWidth: 360 }}>
+          <SearchInput value={query} onChange={(e) => setQuery(e.target.value)}
+            placeholder="find a person to set a custom" aria-label="Search employees"
+            style={{ width: "100%", fontSize: 17, padding: "8px 12px", paddingLeft: 34 }} />
+        </div>
+      )}
+
+      <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19, tableLayout: "fixed" }}>
+        <colgroup>
+          <col />
+          <col style={{ width: 210 }} />
+          <col style={{ width: 210 }} />
+        </colgroup>
         <thead>
           <tr>
             <th style={{ ...th, textAlign: "left" }}>Employee</th>
@@ -193,12 +213,14 @@ export default function Planned({ team }: { team: Team }) {
         <tbody>
           {aliases.length === 0 ? (
             <tr><td colSpan={3} style={{ ...td, color: palette.textDim }}>No one on this team yet. Add employees or wait for uploads.</td></tr>
-          ) : aliases.map((a, i) => {
+          ) : shownAliases.length === 0 ? (
+            <tr><td colSpan={3} style={{ ...td, color: palette.textDim }}>No employees match "{query.trim()}".</td></tr>
+          ) : shownAliases.map((a, i) => {
             const eff = resolvePersonPlan(a, ctx);
             const isCustom = overrides.has(a);
             return (
               <tr key={a} style={{ background: i % 2 ? palette.panel : palette.panelAlt }}>
-                <td style={{ ...td, textAlign: "left", fontWeight: 600 }}>{a}</td>
+                <td style={{ ...td, textAlign: "left", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{a}</td>
                 <td style={{ ...td, textAlign: "center" }}>
                   <InlineEdit
                     value={(() => { const r = rows.find((x) => x.alias === a && x.week_key === scopeKey); return r ? fmtHms(r.planned_seconds) : ""; })()}
@@ -206,14 +228,14 @@ export default function Planned({ team }: { team: Team }) {
                     format={normalize}
                     placeholder={fair != null ? fmtHms(fair) : "H:MM"}
                     emptyHint={<span style={{ color: palette.textDim }}>{fair != null ? fmtHms(fair) : "-"}</span>}
-                    width={120}
+                    width={170}
                     align="center"
                     fontSize={19}
                     ariaLabel={`custom target for ${a}`}
                     inputMode="numeric"
                   />
                 </td>
-                <td style={{ ...td, textAlign: "center", color: eff != null ? palette.text : palette.textDim, fontWeight: isCustom ? 700 : 400 }}>
+                <td style={{ ...td, textAlign: "center", whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums", color: eff != null ? palette.text : palette.textDim, fontWeight: isCustom ? 700 : 400 }}>
                   {eff != null ? fmtHms(eff) : "no budget"}
                 </td>
               </tr>
