@@ -6,6 +6,7 @@ import { InfoStar } from "./InfoStar";
 import { TableSkeleton } from "./skeleton";
 import { AddButtonInput } from "./Inputs";
 import { IconCheck, IconX, IconMoveOut, IconUser } from "./icons";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 // highlight monocromatico dentro del texto del popover (bold en color de texto full)
@@ -41,10 +42,10 @@ const ACTIONS_LEGEND: React.ReactNode[] = [
   <>
     <div style={{ fontWeight: 700, color: palette.text, marginBottom: 8 }}>What each action does</div>
     <LegendRow icon={<IconCheck size={16} />} title="Confirm">this person already reports under your team; adds them to your roster so they count as expected (Unlisted becomes Connected).</LegendRow>
-    <LegendRow icon={<IconX size={15} />} title="Remove">takes them off your expected roster. It does not touch their NPT.</LegendRow>
+    <LegendRow icon={<IconX size={15} />} title="Untrack">takes them off your expected roster. It does not touch their NPT or their team.</LegendRow>
   </>,
   <>
-    <LegendRow icon={<IconMoveOut size={16} />} title="Move to Unassigned"><strong style={hi}>Admin only.</strong> Moves this person and their NPT history out of the team, into Access {"> "}Unassigned.</LegendRow>
+    <LegendRow icon={<IconMoveOut size={16} />} title="Remove from team">for someone who is not yours (e.g. joined with a shared code). Moves them and their NPT history into Access {"> "}Unassigned, where an admin reassigns them to the right team.</LegendRow>
     <div style={{ fontSize: 13, color: palette.textDim, marginTop: 4 }}>Only the icons that apply to a row are shown.</div>
   </>,
 ];
@@ -55,7 +56,7 @@ function parseAliases(raw: string): string[] {
   ));
 }
 
-export default function Employees({ team, refreshKey, isAdmin }: { team: Team; refreshKey?: number; isAdmin?: boolean }) {
+export default function Employees({ team, refreshKey }: { team: Team; refreshKey?: number }) {
   const [roster, setRoster] = useState<string[]>([]);
   const [data, setData] = useState<{ alias: string; work_date: string }[]>([]);
   const [single, setSingle] = useState("");
@@ -65,6 +66,7 @@ export default function Employees({ team, refreshKey, isAdmin }: { team: Team; r
   const [msg, setMsg] = useState("");
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState("");
+  const [confirmRelease, setConfirmRelease] = useState<string | null>(null);   // alias a expulsar al limbo
   const first = useRef(true);
 
   async function load() {
@@ -123,14 +125,15 @@ export default function Employees({ team, refreshKey, isAdmin }: { team: Team; r
     setSaving(false);
   }
 
-  // saca a alguien de este team: mueve su team_id (y su NPT historico) a Unassigned via RPC admin,
-  // y lo quita del roster de este team. Solo admin. Aparece en Access -> Unassigned para reasignar.
-  async function moveToUnassigned(alias: string) {
+  // expulsa a alguien de este team al limbo (Unassigned): la RPC mueve su team_id + NPT historico,
+  // escribe el override (para que no vuelva con el codigo compartido) y lo quita del roster, todo
+  // server-side. Permitida al manager del team (o admin). Aparece en Access -> Unassigned para que
+  // el admin lo reasigne al team correcto.
+  async function releaseToLimbo(alias: string) {
     setSaving(true); setMsg("");
-    const { error } = await supabase.rpc("admin_assign_alias", { p_alias: alias, p_team: UNASSIGNED_ID });
+    const { error } = await supabase.rpc("manager_release_alias", { p_alias: alias });
     if (error) { setMsg("Error: " + error.message); setSaving(false); return; }
-    await supabase.from("roster").delete().match({ team_id: team.id, alias });
-    setMsg(alias + " moved to Unassigned.");
+    setMsg(alias + " removed from the team (now in Unassigned).");
     await load();
     setSaving(false);
   }
@@ -196,13 +199,13 @@ export default function Employees({ team, refreshKey, isAdmin }: { team: Team; r
                     <span style={{ display: "inline-flex", gap: 22, justifyContent: "center", alignItems: "center" }}>
                       {p.expected
                         ? <button onClick={() => removeFromRoster(p.alias)} disabled={saving} className="npt-ico-act npt-ico-danger"
-                            aria-label={`Remove ${p.alias} from roster`} title="Remove (keeps their NPT)"><IconX size={17} /></button>
+                            aria-label={`Untrack ${p.alias}`} title="Untrack (remove from your expected list; keeps their NPT under the team)"><IconX size={17} /></button>
                         : <button onClick={() => add([p.alias])} disabled={saving} className="npt-ico-act"
                             aria-label={`Confirm ${p.alias} is on your team`} title="Confirm this person is on your team"><IconCheck size={18} /></button>}
-                      {isAdmin && p.connected && team.id !== UNASSIGNED_ID && (
-                        <button onClick={() => moveToUnassigned(p.alias)} disabled={saving} className="npt-ico-act npt-ico-danger"
-                          aria-label={`Move ${p.alias} to Unassigned`}
-                          title="Move to Unassigned (moves their NPT too)"><IconMoveOut size={18} /></button>
+                      {p.connected && team.id !== UNASSIGNED_ID && (
+                        <button onClick={() => setConfirmRelease(p.alias)} disabled={saving} className="npt-ico-act npt-ico-danger"
+                          aria-label={`Remove ${p.alias} from the team`}
+                          title="Remove from team (sends them and their NPT to Unassigned for reassignment)"><IconMoveOut size={18} /></button>
                       )}
                     </span>
                   </td>
@@ -211,6 +214,20 @@ export default function Employees({ team, refreshKey, isAdmin }: { team: Team; r
             </tbody>
           </table>
         </div>
+      )}
+
+      {confirmRelease && (
+        <ConfirmDialog
+          title="Remove from team?"
+          confirmLabel="Remove"
+          body={<>
+            <strong style={hi}>{confirmRelease}</strong> and their NPT history will move out of{" "}
+            <strong style={hi}>{team.name}</strong> into <strong style={hi}>Unassigned</strong>, where an admin
+            can reassign them to the right team. They stay there even if they keep using a shared enrollment code. Continue?
+          </>}
+          onCancel={() => setConfirmRelease(null)}
+          onConfirm={() => { const a = confirmRelease; setConfirmRelease(null); releaseToLimbo(a); }}
+        />
       )}
     </div>
   );
