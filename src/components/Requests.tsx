@@ -5,6 +5,7 @@ import { palette } from "../theme";
 import { InfoStar } from "./InfoStar";
 import { AddButtonInput, splitAliases } from "./Inputs";
 import { IconUser } from "./icons";
+import { ConfirmDialog } from "./ConfirmDialog";
 
 // highlight monocromatico dentro del texto del popover (bold en color de texto full)
 const hi = { color: palette.text, fontWeight: 700 } as React.CSSProperties;
@@ -30,6 +31,8 @@ interface AccessRequest {
   created_at: string;
   decided_at: string | null;
 }
+// pedidos dirigidos A MI, con el email del solicitante (via RPC requests_to_me, security definer)
+interface RichReq { id: string; req_alias: string; requester: string; requester_email: string; created_at: string; }
 
 // Etapa C: pedir acceso a ver el NPT de otra persona (compartir). El manager pide con un
 // click; el admin aprueba (crea el vinculo en manager_members) o deniega.
@@ -38,9 +41,11 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
   const [alias, setAlias] = useState("");
   const [notFound, setNotFound] = useState<string | null>(null);
   const [reqs, setReqs] = useState<AccessRequest[]>([]);
+  const [toMe, setToMe] = useState<RichReq[]>([]);   // pedidos hacia mi (con email del solicitante)
   const [managerEmails, setManagerEmails] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
+  const [confirmShare, setConfirmShare] = useState<RichReq | null>(null);
 
   async function load() {
     setLoading(true);
@@ -54,6 +59,10 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
       const map: Record<string, string> = {};
       for (const m of (mg as { user_id: string; email: string }[]) ?? []) map[m.user_id] = m.email;
       setManagerEmails(map);
+    } else {
+      // manager (no admin): trae los pedidos dirigidos a el CON el email del solicitante
+      const { data: tm } = await supabase.rpc("requests_to_me");
+      setToMe((tm as RichReq[]) ?? []);
     }
     setLoading(false);
   }
@@ -118,21 +127,19 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
   }
 
   // pedidos dirigidos A MI (soy el manager dueno de esa persona): apruebo/deniego via RPC
-  async function approveToMe(req: AccessRequest) {
+  async function approveToMe(id: string) {
     setMsg("");
-    const { error } = await supabase.rpc("approve_member_access", { p_request_id: req.id });
+    const { error } = await supabase.rpc("approve_member_access", { p_request_id: id });
     if (error) setMsg("Error: " + error.message); else await load();
   }
-  async function denyToMe(req: AccessRequest) {
+  async function denyToMe(id: string) {
     setMsg("");
-    const { error } = await supabase.rpc("deny_member_access", { p_request_id: req.id });
+    const { error } = await supabase.rpc("deny_member_access", { p_request_id: id });
     if (error) setMsg("Error: " + error.message); else await load();
   }
 
   const mine = reqs.filter((r) => r.requester === myUserId);
   const pending = reqs.filter((r) => r.status === "pending");
-  // dirigidos a mi y pendientes (para managers; el admin usa la cola global de abajo)
-  const toMe = reqs.filter((r) => r.target_manager === myUserId && r.status === "pending");
 
   return (
     <div>
@@ -183,14 +190,28 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
         <Section title={`Requests to me (${toMe.length})`}>
           {loading ? <Dim>Loading...</Dim> : toMe.length === 0 ? <Dim>No incoming requests. When another manager asks to see one of your team members, it shows up here.</Dim> : toMe.map((r) => (
             <Row key={r.id}>
-              <span>A manager wants access to <strong>{r.alias}</strong> (on your team)</span>
+              <span><strong>{r.requester_email}</strong> wants access to <strong>{r.req_alias}</strong> (on your team)</span>
               <span style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => approveToMe(r)} style={btn}>Approve</button>
-                <button onClick={() => denyToMe(r)} style={btnGhost}>Deny</button>
+                <button onClick={() => setConfirmShare(r)} style={btn}>Approve</button>
+                <button onClick={() => denyToMe(r.id)} style={btnGhost}>Deny</button>
               </span>
             </Row>
           ))}
         </Section>
+      )}
+
+      {confirmShare && (
+        <ConfirmDialog
+          title="Share this employee?"
+          confirmLabel="Share"
+          body={<>
+            You are about to give <strong style={hi}>{confirmShare.requester_email}</strong> access to{" "}
+            <strong style={hi}>{confirmShare.req_alias}</strong>. They will be able to see this person's
+            NPT, the target you set for them, and your team's available budget - until you revoke it. Continue?
+          </>}
+          onCancel={() => setConfirmShare(null)}
+          onConfirm={() => { const id = confirmShare.id; setConfirmShare(null); approveToMe(id); }}
+        />
       )}
 
       {isAdmin && (
