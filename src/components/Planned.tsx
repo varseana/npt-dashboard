@@ -164,9 +164,14 @@ export default function Planned({ team }: { team: Team }) {
         )}
       </div>
 
+      {/* Layout 2 columnas: IZQ = threshold card, DER = buscador + tabla. align-items:flex-start
+          => la card izquierda NO se estira cuando la tabla crece (si no, los brackets se rompen). */}
+      <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
+        {/* IZQUIERDA: threshold card. ancho acotado, no crece con la altura de la tabla */}
+        <div style={{ flex: "0 1 420px", minWidth: 300 }}>
       {/* UNICO input principal: el budget total del team. Sin caja: 4 marcos esquineros (mismo
           patron que el budget card de Dashboard > Summary). */}
-      <div style={{ position: "relative", background: "transparent", padding: "18px 22px", marginBottom: 16 }}>
+      <div style={{ position: "relative", background: "transparent", padding: "18px 22px" }}>
         <span className="npt-bracket tl" /><span className="npt-bracket tr" /><span className="npt-bracket bl" /><span className="npt-bracket br" />
         <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 2 }}>
           <div className="npt-title" style={{ fontWeight: 700, fontSize: 38, paddingLeft: 9 }}>
@@ -176,7 +181,7 @@ export default function Planned({ team }: { team: Team }) {
             ]} />
           </div>
           {budgetSeconds != null && (
-            <div style={{ fontSize: 18, color: palette.textDim, textAlign: "right", whiteSpace: "nowrap", lineHeight: 1.5 }}>
+            <div style={{ fontSize: 18, color: palette.textDim, textAlign: "left", whiteSpace: "nowrap", lineHeight: 1.5, marginTop: 6 }}>
               <div>
                 Fair share {refreshing
                   ? <Bar w={92} h={22} style={{ display: "inline-block", verticalAlign: "middle" }} />
@@ -214,7 +219,10 @@ export default function Planned({ team }: { team: Team }) {
         />
         {budgetSeconds == null && <div style={{ fontSize: 17, color: palette.textDim, marginTop: 8 }}>No threshold set. Click above to give everyone a target.</div>}
       </div>
+        </div>{/* /IZQUIERDA */}
 
+        {/* DERECHA: buscador + tabla de employees. flex:1 => usa el resto del ancho horizontal */}
+        <div style={{ flex: "1 1 520px", minWidth: 300 }}>
       {aliases.length > 0 && (
         <div style={{ marginBottom: 12 }}>
           <SearchInput value={query} onChange={(e) => setQuery(e.target.value)}
@@ -279,6 +287,8 @@ export default function Planned({ team }: { team: Team }) {
       <div style={{ marginTop: 14, fontSize: 16, color: palette.textDim }}>
         Changes save on their own. Click any threshold or custom value to edit it.
       </div>
+        </div>{/* /DERECHA */}
+      </div>{/* /flex 2 columnas */}
     </div>
   );
 }
