@@ -12,7 +12,7 @@ import { InlineEdit } from "./InlineEdit";
 import { Dropdown } from "./Dropdown";
 import { SearchInput } from "./Inputs";
 import WeekCountdown from "./WeekCountdown";
-import { BlockSkeleton, Bar } from "./skeleton";
+import { Bar, BracketFrame, TableSk } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 type Scope = "standing" | "week";
@@ -138,7 +138,7 @@ export default function Planned({ team }: { team: Team }) {
     await load(true);
   }
 
-  if (loading) return <BlockSkeleton />;
+  if (loading) return <PlannedSkeleton />;
 
   const scopeLabel = scope === "standing" ? "every week" : weekLabel(weekInfo(new Date(weekKey + "T12:00:00")));
 
@@ -295,6 +295,33 @@ export default function Planned({ team }: { team: Team }) {
       </div>
         </div>{/* /DERECHA */}
       </div>{/* /flex 2 columnas */}
+    </div>
+  );
+}
+
+// skeleton 1:1: dropdown "Applies to" -> 2 columnas (IZQ card threshold con brackets: titulo 2 lineas +
+// numero grande + fair share + unassigned; DER buscador + tabla de 3 columnas Employee/Custom/Target)
+function PlannedSkeleton() {
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", marginBottom: 16 }}>
+        <div><Bar w={70} h={14} style={{ marginBottom: 6 }} /><Bar w={200} h={40} /></div>
+      </div>
+      <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
+        <div style={{ flex: "0 1 420px", minWidth: 300 }}>
+          <BracketFrame>
+            <Bar w={190} h={30} style={{ marginBottom: 8 }} />
+            <Bar w={200} h={40} style={{ marginBottom: 16 }} />
+            <Bar w={220} h={48} style={{ marginBottom: 18 }} />
+            <Bar w={170} h={18} style={{ marginBottom: 8 }} />
+            <Bar w={170} h={18} />
+          </BracketFrame>
+        </div>
+        <div style={{ flex: "1 1 520px", minWidth: 300 }}>
+          <div style={{ marginBottom: 12 }}><Bar w={220} h={42} /></div>
+          <TableSk template="2fr 210px 210px" rows={6} />
+        </div>
+      </div>
     </div>
   );
 }

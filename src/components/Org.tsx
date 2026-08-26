@@ -8,7 +8,7 @@ import {
   type NptDailyRow, type NptStatus, type PlannedRow,
 } from "../lib/npt";
 import { StatusChip } from "./status";
-import { BlockSkeleton } from "./skeleton";
+import { Bar, TableSk } from "./skeleton";
 import { AddButtonInput, splitAliases } from "./Inputs";
 import { IconUser, IconTrash } from "./icons";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -89,7 +89,7 @@ export default function Org() {
     else await load();
   }
 
-  if (loading) return <BlockSkeleton />;
+  if (loading) return <OrgSkeleton />;
 
   const realManagers = managers.filter((m) => m.role === "manager");
 
@@ -173,6 +173,25 @@ export default function Org() {
           onCancel={() => setConfirmRemove(null)}
           onConfirm={() => { const c = confirmRemove; setConfirmRemove(null); removeMember(c.owner, c.alias); }} />
       )}
+    </div>
+  );
+}
+
+// skeleton 1:1: dropdown de semana + "N managers" -> cards por manager (header + tabla 6 cols + add input)
+function OrgSkeleton() {
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "flex-end", gap: 12, marginBottom: 16 }}>
+        <div><Bar w={40} h={14} style={{ marginBottom: 6 }} /><Bar w={260} h={42} /></div>
+        <Bar w={110} h={16} />
+      </div>
+      {Array.from({ length: 2 }).map((_, i) => (
+        <div key={i} style={{ border: `1px solid ${palette.border}`, borderRadius: 8, padding: "12px 14px", marginBottom: 14 }}>
+          <Bar w={260} h={18} style={{ marginBottom: 12 }} />
+          <TableSk template="2fr 1.2fr 1fr 1fr 90px 44px" rows={3} />
+          <div style={{ marginTop: 12 }}><Bar w={260} h={40} /></div>
+        </div>
+      ))}
     </div>
   );
 }

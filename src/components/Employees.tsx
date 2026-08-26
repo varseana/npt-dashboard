@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { InfoStar } from "./InfoStar";
-import { TableSkeleton } from "./skeleton";
+import { TableSk } from "./skeleton";
 import { AddButtonInput, SearchInput } from "./Inputs";
 import { IconCheck, IconX, IconMoveOut, IconUser } from "./icons";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -199,7 +199,7 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
         </div>
       )}
       {loading ? (
-        <TableSkeleton rows={6} cols={5} />
+        <TableSk template="40px 2fr 90px 90px 110px 90px" rows={6} boxed />
       ) : people.length === 0 ? (
         <div style={{ color: palette.textDim }}>No employees yet. Add them above.</div>
       ) : shown.length === 0 ? (

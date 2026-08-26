@@ -2,7 +2,7 @@ import * as React from "react";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
-import { TableSkeleton } from "./skeleton";
+import { Bar } from "./skeleton";
 import { InfoStar } from "./InfoStar";
 import { AddInput, AddButtonInput } from "./Inputs";
 import { IconPower, IconTrash, IconTag } from "./icons";
@@ -120,7 +120,7 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
     await load(false);
   }
 
-  if (loading) return <div><TableSkeleton rows={3} /></div>;
+  if (loading) return <TeamsSkeleton />;
 
   return (
     <div>
@@ -193,6 +193,30 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
           body={`This permanently deletes "${confirmTeam.name}". It only works if the team has no enrollment codes, members, or NPT data (delete its codes and move its people to Unassigned first). This cannot be undone.`}
           onCancel={() => setConfirmTeam(null)} onConfirm={() => deleteTeam(confirmTeam)} />
       )}
+    </div>
+  );
+}
+
+// skeleton 1:1: panel "New team" (inputs) -> cards por team (header con nombre+trash, body con codigos)
+function TeamsSkeleton() {
+  return (
+    <div>
+      <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "14px 16px", marginBottom: 20 }}>
+        <Bar w={160} h={26} style={{ marginBottom: 12 }} />
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><Bar w={340} h={40} /><Bar w={200} h={40} /><Bar w={120} h={40} /></div>
+      </div>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <div key={i} style={{ border: `1px solid ${palette.border}`, borderRadius: 8, marginBottom: 14 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", padding: "12px 14px" }}>
+            <Bar w={340} h={38} style={{ flex: 1 }} /><Bar w={22} h={22} />
+          </div>
+          <div style={{ borderTop: `1px solid ${palette.border}`, padding: "12px 14px" }}>
+            <Bar w={140} h={14} style={{ marginBottom: 10 }} />
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 10 }}><Bar w={120} h={20} /><Bar w={20} h={20} /><Bar w={20} h={20} /></div>
+            <Bar w={220} h={38} />
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

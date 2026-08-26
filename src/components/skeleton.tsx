@@ -12,31 +12,32 @@ export function Bar({ w = "100%", h = 14, style }: { w?: number | string; h?: nu
   return <div className="npt-sk" style={{ width: w, height: h, ...style }} />;
 }
 
-// esqueleto de tabla: unas filas de barras. cols controla cuantas columnas simular.
-export function TableSkeleton({ rows = 6, cols = 5 }: { rows?: number; cols?: number }) {
+// marco de esquinas (mismo patron .npt-bracket que las cards reales), para skeletons 1:1
+export function BracketFrame({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
   return (
-    <div>
-      <style>{CSS}</style>
-      <div style={{ display: "flex", gap: 12, marginBottom: 14 }}>
-        {Array.from({ length: cols }).map((_, i) => <Bar key={i} w={i === 1 ? 160 : 90} h={12} />)}
-      </div>
-      {Array.from({ length: rows }).map((_, r) => (
-        <div key={r} style={{ display: "flex", gap: 12, padding: "10px 0", borderBottom: "1px solid var(--border)" }}>
-          {Array.from({ length: cols }).map((_, i) => <Bar key={i} w={i === 1 ? 160 : 90} h={14} />)}
-        </div>
-      ))}
+    <div style={{ position: "relative", padding: "18px 22px", boxSizing: "border-box", ...style }}>
+      <span className="npt-bracket tl" /><span className="npt-bracket tr" /><span className="npt-bracket bl" /><span className="npt-bracket br" />
+      {children}
     </div>
   );
 }
 
-// bloque generico (para editores como Planned/Folders)
-export function BlockSkeleton() {
-  return (
-    <div style={{ maxWidth: 640 }}>
-      <style>{CSS}</style>
-      <Bar w="60%" h={16} style={{ marginBottom: 16 }} />
-      <Bar w={220} h={38} style={{ marginBottom: 16 }} />
-      {Array.from({ length: 5 }).map((_, i) => <Bar key={i} h={34} style={{ marginBottom: 8 }} />)}
+// tabla skeleton por COLUMNAS: `template` = gridTemplateColumns (mismas proporciones que la tabla
+// real, ej "40px 2fr 1fr 1fr 90px 40px"). header (barras finas) + N filas. boxed = con caja bordeada.
+export function TableSk({ template, rows = 6, boxed = false }: { template: string; rows?: number; boxed?: boolean }) {
+  const cols = template.trim().split(/\s+/).length;
+  const line = (h: number, w: number, key: React.Key) => (
+    <div key={key} style={{ display: "grid", gridTemplateColumns: template, gap: 12, padding: "11px 12px",
+      borderBottom: "1px solid var(--border)", alignItems: "center" }}>
+      {Array.from({ length: cols }).map((_, i) => <Bar key={i} w={`${w}%`} h={h} />)}
     </div>
   );
+  const inner = (
+    <div>
+      <style>{CSS}</style>
+      {line(12, 60, "h")}
+      {Array.from({ length: rows }).map((_, r) => line(16, 80, r))}
+    </div>
+  );
+  return boxed ? <div style={{ border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>{inner}</div> : inner;
 }

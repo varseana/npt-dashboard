@@ -9,7 +9,7 @@ import {
 } from "../lib/npt";
 import { StatusChip } from "./status";
 import { InfoStar } from "./InfoStar";
-import { TableSkeleton } from "./skeleton";
+import { TableSk } from "./skeleton";
 import WeekCountdown from "./WeekCountdown";
 import { Dropdown } from "./Dropdown";
 import { SearchInput } from "./Inputs";
@@ -154,7 +154,7 @@ export default function Distribution({ team, refreshKey, weekKey: weekKeyProp, o
 
       {err && <div style={{ color: palette.bad, marginBottom: 12 }}>{err}</div>}
       {loading ? (
-        <TableSkeleton rows={6} cols={8} />
+        <BreakdownSkeleton />
       ) : matrix.length === 0 ? (
         <div style={{ color: palette.textDim }}>No reported data for {weekLabel(sel)}.</div>
       ) : (
@@ -191,6 +191,12 @@ export default function Distribution({ team, refreshKey, weekKey: weekKeyProp, o
       )}
     </div>
   );
+}
+
+// skeleton 1:1 de Breakdown (los controles ya se renderizan arriba): tabla bordeada de 10 columnas
+// (Employee, Meeting, Training, Project, Personal, System, Planned, Total NPT, Remaining, Status)
+function BreakdownSkeleton() {
+  return <TableSk template="2fr 1fr 1fr 1fr 1fr 1fr 1fr 1.1fr 1fr 90px" rows={6} boxed />;
 }
 
 function remainingColor(s: NptStatus): string {

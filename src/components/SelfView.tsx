@@ -10,7 +10,7 @@ import {
 import { StatusChip } from "./status";
 import { InfoStar } from "./InfoStar";
 import { Dropdown } from "./Dropdown";
-import { BlockSkeleton } from "./skeleton";
+import { Bar, BracketFrame } from "./skeleton";
 
 // highlight monocromatico dentro del texto del popover (bold en color de texto full)
 const hi = { color: palette.text, fontWeight: 700 } as React.CSSProperties;
@@ -70,7 +70,7 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
   const remaining = plannedSec == null ? null : plannedSec - totalNpt;
   const status = statusFor(plannedSec, totalNpt);
 
-  if (loading) return <BlockSkeleton />;
+  if (loading) return <SelfViewSkeleton />;
 
   // sin data historica => probablemente no enrolado o typo en el email
   if (everReported === false) {
@@ -136,6 +136,33 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// skeleton 1:1 de SelfView: dropdown + "signed in as" -> 3 stat cards (Used/Planned/Remaining) ->
+// titulo Breakdown -> card de esquinas con 6 filas clave/valor (Meeting..System + Total NPT)
+function SelfViewSkeleton() {
+  return (
+    <div>
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16 }}>
+        <Bar w={260} h={42} /><Bar w={160} h={16} />
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12, marginBottom: 20 }}>
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="npt-card-cut"><div className="npt-card-cut-body" style={{ padding: "12px 16px" }}>
+            <Bar w={70} h={13} style={{ marginBottom: 10 }} /><Bar w={90} h={30} />
+          </div></div>
+        ))}
+      </div>
+      <Bar w={150} h={26} style={{ marginBottom: 12 }} />
+      <BracketFrame>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "9px 0", borderBottom: i < 5 ? "1px solid var(--border)" : "none" }}>
+            <Bar w={110} h={16} /><Bar w={90} h={16} />
+          </div>
+        ))}
+      </BracketFrame>
     </div>
   );
 }

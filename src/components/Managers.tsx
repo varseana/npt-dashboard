@@ -2,7 +2,7 @@ import * as React from "react";
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
-import { TableSkeleton } from "./skeleton";
+import { Bar } from "./skeleton";
 import { InfoStar } from "./InfoStar";
 import { IconAlert, IconTrash, IconKey, IconEye, IconEyeOff } from "./icons";
 import { SearchInput } from "./Inputs";
@@ -128,7 +128,7 @@ export default function Managers({ teams, myUserId, refreshKey }:
     };
   }, [query]);
 
-  if (loading) return <div><TableSkeleton rows={4} /></div>;
+  if (loading) return <ManagersSkeleton />;
 
   const list = arrange(byRole[roleTab]);
   const searching = query.trim().length > 0;
@@ -293,6 +293,26 @@ function PersonRow({ r, teams, isMe, matched, onRole, onTeam, onAlias, onDelete,
           title={isMe ? "You can't delete yourself" : "Delete account"} aria-label="Delete account">
           <IconTrash size={19} />
         </button>
+      </div>
+    </div>
+  );
+}
+
+// skeleton 1:1: buscador -> 4 tabs de rol -> titulo -> caja de filas (email, role dropdown, team, alias, acciones)
+function ManagersSkeleton() {
+  return (
+    <div>
+      <div style={{ marginBottom: 14 }}><Bar w={260} h={42} /></div>
+      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+        {Array.from({ length: 4 }).map((_, i) => <Bar key={i} w={90} h={34} />)}
+      </div>
+      <Bar w={220} h={24} style={{ marginBottom: 12 }} />
+      <div style={{ border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden" }}>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} style={{ display: "grid", gridTemplateColumns: "1.4fr 120px 1fr 1.3fr auto", gap: 12, alignItems: "center", padding: "12px 14px", borderBottom: i < 3 ? `1px solid ${palette.border}` : "none" }}>
+            <Bar w={200} h={16} /><Bar w={110} h={38} /><Bar w={120} h={16} /><Bar w={160} h={38} /><Bar w={60} h={20} />
+          </div>
+        ))}
       </div>
     </div>
   );

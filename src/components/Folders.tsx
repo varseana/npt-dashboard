@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { InfoStar } from "./InfoStar";
-import { BlockSkeleton } from "./skeleton";
+import { Bar } from "./skeleton";
 import { IconX, IconFolder, IconTrash } from "./icons";
 import { AddInput, AddButtonInput, splitAliases } from "./Inputs";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -123,7 +123,7 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
     });
   }
 
-  if (loading) return <BlockSkeleton />;
+  if (loading) return <FoldersSkeleton />;
 
   const otherManagers = managers
     .filter((m) => m.user_id !== myUserId && m.approved && (m.role === "manager" || m.role === "admin"))
@@ -200,6 +200,30 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
           onCancel={() => setConfirmFolder(null)}
           onConfirm={() => { const id = confirmFolder.id; setConfirmFolder(null); remove(id); }} />
       )}
+    </div>
+  );
+}
+
+// skeleton 1:1: input de crear folder -> grilla 3 columnas de cards (nombre + chips + add member)
+function FoldersSkeleton() {
+  return (
+    <div>
+      <div style={{ display: "flex", gap: 8, alignItems: "center", margin: "0 0 16px" }}>
+        <Bar w={300} h={40} /><Bar w={20} h={20} />
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 14 }}>
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} style={{ border: `1px solid ${palette.border}`, borderRadius: 10, padding: "12px 14px", background: palette.panel }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+              <Bar w={140} h={22} /><Bar w={18} h={18} />
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12 }}>
+              {Array.from({ length: 3 }).map((_, j) => <Bar key={j} w={70} h={22} style={{ borderRadius: 999 }} />)}
+            </div>
+            <Bar w="100%" h={34} />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

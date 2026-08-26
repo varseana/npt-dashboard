@@ -13,7 +13,7 @@ import { downloadEml, downloadTeamEml } from "../lib/reminder";
 import WeekCountdown from "./WeekCountdown";
 import { Dropdown } from "./Dropdown";
 import { IconMail, IconAlert, IconSearch, IconFolder, IconCheck } from "./icons";
-import { TableSkeleton } from "./skeleton";
+import { Bar, BracketFrame, TableSk } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 interface Folder { id: string; name: string; aliases: string[]; }
@@ -168,7 +168,7 @@ export default function Overview({ team, refreshKey, onNavigate, weekKey: weekKe
 
       {err && <div style={{ color: palette.bad, marginBottom: 12 }}>{err}</div>}
       {loading ? (
-        <TableSkeleton rows={6} cols={7} />
+        <SummarySkeleton />
       ) : users.length === 0 ? (
         <div style={{ color: palette.textDim }}>No reported data for {weekLabel(sel)}.</div>
       ) : (
@@ -484,6 +484,46 @@ function FolderToggle({ active, onToggle }: { active: boolean; onToggle: () => v
         </span>
       )}
     </button>
+  );
+}
+
+// skeleton 1:1 de Summary (el dropdown de semana ya se renderiza arriba, fuera del loading): budget
+// card (brackets) + stats 2x2 (brackets) -> fila buscador+email -> tabla de 9 columnas
+// (#, Employee, Days, Planned, Actual, %, Remaining, Status, accion)
+function SummarySkeleton() {
+  return (
+    <div>
+      <div style={{ height: 24 }} /><div style={{ height: 24 }} />
+      <div style={{ display: "flex", gap: "18px 0", marginBottom: 18, flexWrap: "wrap", alignItems: "stretch" }}>
+        <div style={{ flex: "1 1 480px", minWidth: 320 }}>
+          <BracketFrame style={{ height: "100%" }}>
+            <Bar w={320} h={24} style={{ marginBottom: 16 }} />
+            <div style={{ display: "flex", gap: 28, marginBottom: 14, flexWrap: "wrap" }}>
+              {[70, 50, 90].map((w, i) => (<div key={i}><Bar w={w} h={13} style={{ marginBottom: 6 }} /><Bar w={90} h={26} /></div>))}
+            </div>
+            <Bar w="100%" h={30} />
+            <div style={{ textAlign: "right", marginTop: 8 }}><Bar w={90} h={16} style={{ display: "inline-block" }} /></div>
+          </BracketFrame>
+        </div>
+        <div style={{ flex: "0.4 1 136px", minWidth: 24 }} aria-hidden="true" />
+        <div style={{ flex: "0.6 1 204px", minWidth: 260 }}>
+          <BracketFrame style={{ height: "100%" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12 }}>
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="npt-card-cut"><div className="npt-card-cut-body" style={{ padding: "12px 16px" }}>
+                  <Bar w={80} h={13} style={{ marginBottom: 10 }} /><Bar w={70} h={30} />
+                </div></div>
+              ))}
+            </div>
+          </BracketFrame>
+        </div>
+      </div>
+      <div style={{ height: 24 }} /><div style={{ height: 24 }} /><div style={{ height: 24 }} />
+      <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 12 }}>
+        <Bar w={220} h={42} /><div style={{ marginLeft: "auto" }}><Bar w={40} h={40} /></div>
+      </div>
+      <TableSk template="40px 2fr 60px 1fr 1.2fr 1.1fr 1fr 90px 44px" rows={6} />
+    </div>
   );
 }
 

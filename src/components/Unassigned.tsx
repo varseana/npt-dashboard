@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { computeDay, dedupePersonDay, fmtHms, type NptDailyRow } from "../lib/npt";
-import { TableSkeleton } from "./skeleton";
+import { Bar } from "./skeleton";
 import { Dropdown } from "./Dropdown";
 
 // UUID fijo del team Unassigned (igual que en el trigger set_team_from_code)
@@ -50,7 +50,7 @@ export default function Unassigned({ teams, refreshKey }: { teams: Team[]; refre
     setRows((rs) => rs.filter((r) => r.alias !== alias));   // ya salio de Unassigned
   }
 
-  if (loading) return <div style={{ maxWidth: 900 }}><TableSkeleton rows={4} /></div>;
+  if (loading) return <UnassignedSkeleton />;
 
   return (
     <div style={{ maxWidth: 900 }}>
@@ -74,6 +74,24 @@ export default function Unassigned({ teams, refreshKey }: { teams: Team[]; refre
               onChange={(v) => setPick((p) => ({ ...p, [r.alias]: v }))}
               options={[{ value: "", label: "Move to team..." }, ...targets.map((t) => ({ value: t.id, label: t.name }))]} />
             <button onClick={() => assign(r.alias)} disabled={!pick[r.alias]} style={btn}>Assign</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// skeleton 1:1: titulo + descripcion -> caja bordeada de filas (alias, stats, dropdown "move to team", boton assign)
+function UnassignedSkeleton() {
+  return (
+    <div style={{ maxWidth: 900 }}>
+      <Bar w={320} h={28} style={{ marginBottom: 10 }} />
+      <Bar w="90%" h={16} style={{ marginBottom: 6 }} />
+      <Bar w="70%" h={16} style={{ marginBottom: 16 }} />
+      <div style={{ border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden" }}>
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} style={{ display: "grid", gridTemplateColumns: "1.2fr auto 1fr auto", gap: 12, alignItems: "center", padding: "12px 14px", borderBottom: i < 3 ? `1px solid ${palette.border}` : "none" }}>
+            <Bar w={140} h={16} /><Bar w={120} h={14} /><Bar w={180} h={40} /><Bar w={80} h={38} />
           </div>
         ))}
       </div>

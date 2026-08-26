@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { InfoStar } from "./InfoStar";
-import { TableSkeleton } from "./skeleton";
+import { TableSk } from "./skeleton";
 import WeekCountdown from "./WeekCountdown";
 import { Dropdown } from "./Dropdown";
 import {
@@ -109,7 +109,7 @@ export default function SharedWithMe({ myUserId }: { myUserId: string }) {
       {msg && <div style={{ marginBottom: 12, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 18 }}>{msg}</div>}
 
       {loading ? (
-        <TableSkeleton rows={4} cols={9} />
+        <SharedSkeleton />
       ) : aliases.length === 0 ? (
         <div style={{ color: palette.textDim, fontSize: 18 }}>
           Nobody shared with you yet. When another manager approves your request (from a folder or Access &gt; Requests), that person appears here.
@@ -164,6 +164,12 @@ export default function SharedWithMe({ myUserId }: { myUserId: string }) {
       )}
     </div>
   );
+}
+
+// skeleton 1:1 (controles + titulo ya se renderizan arriba): tabla de 11 columnas sin caja
+// (Employee, Days, Meeting, Training, Project, Personal, System, NPT, Target, Team available, accion)
+function SharedSkeleton() {
+  return <TableSk template="2fr 60px 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1.2fr 44px" rows={4} />;
 }
 
 const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
