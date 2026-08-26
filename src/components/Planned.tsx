@@ -197,12 +197,12 @@ export default function Planned({ team }: { team: Team }) {
           value={(() => { const b = budgetRows.find((r) => r.week_key === scopeKey); return b ? fmtHms(b.planned_seconds) : ""; })()}
           onSave={onSaveBudget}
           format={normalize}
-          placeholder="H:MM (e.g. 10:00)"
+          placeholder="H:MM"
           emptyHint={<span style={{ color: palette.textDim }}>Set threshold</span>}
-          width={180}
+          width={360}
           align="left"
-          fontSize={19}
-          fontWeight={600}
+          fontSize={48}
+          fontWeight={700}
           ariaLabel="team weekly threshold"
           inputMode="numeric"
         />
