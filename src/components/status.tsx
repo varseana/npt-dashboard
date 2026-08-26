@@ -42,7 +42,7 @@ const StatusLoader = Math.random() < 0.5 ? DotmCircular4 : DotmCircular3;
 function DotCluster({ color }: { color: string }) {
   return (
     <span aria-hidden="true" style={{ display: "inline-flex", color }}>
-      <StatusLoader color={color} size={30} dotSize={4} />
+      <StatusLoader color={color} size={22} dotSize={3} />
     </span>
   );
 }
