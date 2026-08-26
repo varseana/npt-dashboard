@@ -38,7 +38,7 @@ export function IconLogout({ size = 16, style }: P) {
 export function IconX({ size = 16, style }: P) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={2.4} strokeLinecap="round" style={{ display: "block", ...style }} aria-hidden="true">
+      strokeWidth={2} strokeLinecap="round" style={{ display: "block", ...style }} aria-hidden="true">
       <path d="M18 6 6 18" /><path d="m6 6 12 12" />
     </svg>
   );
@@ -71,7 +71,7 @@ export function IconEyeOff({ size = 16, style }: P) {
 export function IconSearch({ size = 16, style }: P) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={2.2} strokeLinecap="round" style={{ display: "block", ...style }} aria-hidden="true">
+      strokeWidth={2} strokeLinecap="round" style={{ display: "block", ...style }} aria-hidden="true">
       <circle cx="11" cy="11" r="7" />
       <line x1="16.5" y1="16.5" x2="21" y2="21" />
     </svg>
@@ -82,7 +82,7 @@ export function IconSearch({ size = 16, style }: P) {
 export function IconPlus({ size = 16, style }: P) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={2.4} strokeLinecap="round" style={{ display: "block", ...style }} aria-hidden="true">
+      strokeWidth={2} strokeLinecap="round" style={{ display: "block", ...style }} aria-hidden="true">
       <line x1="12" y1="5" x2="12" y2="19" />
       <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
@@ -94,7 +94,7 @@ export function IconPlus({ size = 16, style }: P) {
 export function IconMoveOut({ size = 16, style }: P) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", ...style }} aria-hidden="true">
+      strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", ...style }} aria-hidden="true">
       <path d="M12 3v11" />
       <path d="M8 7l4-4 4 4" />
       <path d="M5 13v6h14v-6" />
@@ -106,7 +106,7 @@ export function IconMoveOut({ size = 16, style }: P) {
 export function IconExpand({ size = 16, style }: P) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", ...style }} aria-hidden="true">
+      strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", ...style }} aria-hidden="true">
       <path d="M8 3H3v5" />
       <path d="M16 3h5v5" />
       <path d="M8 21H3v-5" />
@@ -119,7 +119,7 @@ export function IconExpand({ size = 16, style }: P) {
 export function IconCompress({ size = 16, style }: P) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", ...style }} aria-hidden="true">
+      strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", ...style }} aria-hidden="true">
       <path d="M9 3v6H3" />
       <path d="M15 3v6h6" />
       <path d="M9 21v-6H3" />
@@ -132,7 +132,7 @@ export function IconCompress({ size = 16, style }: P) {
 export function IconPower({ size = 16, style }: P) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", ...style }} aria-hidden="true">
+      strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", ...style }} aria-hidden="true">
       <path d="M12 3v9" />
       <path d="M7.4 6.3a7 7 0 1 0 9.2 0" />
     </svg>
@@ -199,7 +199,7 @@ export function IconFolder({ size = 16, style }: P) {
 export function IconCheck({ size = 16, style }: P) {
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
-      strokeWidth={3} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", ...style }} aria-hidden="true">
+      strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" style={{ display: "block", ...style }} aria-hidden="true">
       <path d="M5 12.5l4.5 4.5L19 6.5" />
     </svg>
   );
