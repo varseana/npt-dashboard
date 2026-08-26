@@ -40,27 +40,15 @@ export default function WeekHeatmap({ teamId, weekKey, onSelectWeek, refreshKey 
   const [budget, setBudget] = useState<TeamBudgetRow[]>([]);
   const [tip, setTip] = useState<Tip>({ show: false, x: 0, y: 0, month: 0, wnum: 0 });
 
-  // ultimas 52 semanas (domingo-based), mas nueva al final
-  const weeks = useMemo<WeekCell[]>(() => {
-    const cur = weekInfo(new Date()).start;
-    const out: WeekCell[] = [];
-    for (let i = 51; i >= 0; i--) {
-      const d = new Date(cur); d.setDate(d.getDate() - i * 7);
-      const wi = weekInfo(d);
-      out.push({ key: wi.key, start: wi.start, wnum: wi.week, month: wi.start.getMonth() });
-    }
-    return out;
-  }, []);
-
+  // fetch de la data del team (rango amplio; el pilot es chico). la grilla se deriva de la data.
   useEffect(() => {
     if (!teamId) { setRows([]); setBudget([]); return; }
     let alive = true;
     (async () => {
-      const start = weeks[0].start;
-      const end = new Date(weeks[weeks.length - 1].start); end.setDate(end.getDate() + 6);
+      const lower = new Date(); lower.setFullYear(lower.getFullYear() - 2);
       const [{ data: d }, { data: b }] = await Promise.all([
         supabase.from("npt_daily").select("alias,work_date,aux_seconds")
-          .eq("team_id", teamId).gte("work_date", isoDate(start)).lte("work_date", isoDate(end)),
+          .eq("team_id", teamId).gte("work_date", isoDate(lower)),
         supabase.from("npt_team_budget").select("week_key,planned_seconds").eq("team_id", teamId),
       ]);
       if (!alive) return;
@@ -68,17 +56,38 @@ export default function WeekHeatmap({ teamId, weekKey, onSelectWeek, refreshKey 
       setBudget((b as TeamBudgetRow[]) ?? []);
     })();
     return () => { alive = false; };
-  }, [teamId, refreshKey, weeks]);
+  }, [teamId, refreshKey]);
 
-  // NPT usado por semana (dedup por alias+dia). presencia de la key = hubo data esa semana.
-  const usedByWeek = useMemo(() => {
+  // NPT usado por semana (dedup por alias+dia) + primera semana con data.
+  // presencia de la key = hubo data esa semana.
+  const { usedByWeek, firstWeekStart } = useMemo(() => {
     const m = new Map<string, number>();
+    let earliest: Date | null = null;
     for (const r of dedupePersonDay(rows)) {
-      const wk = weekInfo(new Date(r.work_date + "T12:00:00")).key;
-      m.set(wk, (m.get(wk) || 0) + computeDay(r.aux_seconds).nptSeconds);
+      const wi = weekInfo(new Date(r.work_date + "T12:00:00"));
+      m.set(wi.key, (m.get(wi.key) || 0) + computeDay(r.aux_seconds).nptSeconds);
+      if (!earliest || wi.start < earliest) earliest = wi.start;
     }
-    return m;
+    return { usedByWeek: m, firstWeekStart: earliest };
   }, [rows]);
+
+  // grilla horizontal: arranca en la PRIMERA semana con data (izquierda) y avanza hacia la derecha,
+  // dejando un buffer de semanas futuras vacias para que se vaya poblando con el avance del pilot.
+  // sin data todavia -> arranca en la semana actual.
+  const weeks = useMemo<WeekCell[]>(() => {
+    const cur = weekInfo(new Date()).start;
+    const startBase = firstWeekStart ? new Date(firstWeekStart) : new Date(cur);
+    const WEEKS_AHEAD = 8;
+    const elapsed = Math.max(0, Math.round((cur.getTime() - startBase.getTime()) / (7 * 864e5)));
+    const total = elapsed + 1 + WEEKS_AHEAD;
+    const out: WeekCell[] = [];
+    for (let i = 0; i < total; i++) {
+      const d = new Date(startBase); d.setDate(d.getDate() + i * 7);
+      const wi = weekInfo(d);
+      out.push({ key: wi.key, start: wi.start, wnum: wi.week, month: wi.start.getMonth() });
+    }
+    return out;
+  }, [firstWeekStart]);
 
   // agrupar semanas por mes -> columnas
   const { groups, maxRows } = useMemo(() => {
