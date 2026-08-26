@@ -71,15 +71,16 @@ export default function WeekHeatmap({ teamId, weekKey, onSelectWeek, refreshKey 
     return { usedByWeek: m, firstWeekStart: earliest };
   }, [rows]);
 
-  // grilla horizontal: arranca en la PRIMERA semana con data (izquierda) y avanza hacia la derecha,
-  // dejando un buffer de semanas futuras vacias para que se vaya poblando con el avance del pilot.
-  // sin data todavia -> arranca en la semana actual.
+  // grilla horizontal: arranca en la PRIMERA semana con data (izquierda) y se extiende un ANIO completo
+  // (52 semanas) hacia la derecha aunque no haya data aun, para que el dashboard se vea "lleno"/preparado
+  // y los cuadros futuros se vayan poblando con el avance del pilot. si el pilot supera el anio, sigue
+  // creciendo. sin data todavia -> arranca en la semana actual.
   const weeks = useMemo<WeekCell[]>(() => {
     const cur = weekInfo(new Date()).start;
     const startBase = firstWeekStart ? new Date(firstWeekStart) : new Date(cur);
-    const WEEKS_AHEAD = 8;
+    const FULL_YEAR = 52, WEEKS_AHEAD = 8;
     const elapsed = Math.max(0, Math.round((cur.getTime() - startBase.getTime()) / (7 * 864e5)));
-    const total = elapsed + 1 + WEEKS_AHEAD;
+    const total = Math.max(FULL_YEAR, elapsed + 1 + WEEKS_AHEAD);
     const out: WeekCell[] = [];
     for (let i = 0; i < total; i++) {
       const d = new Date(startBase); d.setDate(d.getDate() + i * 7);
