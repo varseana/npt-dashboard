@@ -167,8 +167,8 @@ export default function Planned({ team }: { team: Team }) {
           patron que el budget card de Dashboard > Summary). */}
       <div style={{ position: "relative", background: "transparent", padding: "18px 22px", marginBottom: 16 }}>
         <span className="npt-bracket tl" /><span className="npt-bracket tr" /><span className="npt-bracket bl" /><span className="npt-bracket br" />
-        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 8 }}>
-          <div className="npt-title" style={{ fontWeight: 700, fontSize: 28 }}>
+        <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 2 }}>
+          <div className="npt-title" style={{ fontWeight: 700, fontSize: 38, paddingLeft: 9 }}>
             Team weekly threshold<InfoStar pages={[
               <>The <strong style={hi}>total NPT the whole team can spend</strong> in a week (the number ops hands you). Everyone draws from it. Type hours like <strong style={hi}>10</strong> (= 10:00:00) or H:MM. Applies to <strong style={hi}>{scopeLabel}</strong>.</>,
               <><strong style={hi}>How it splits.</strong> Individual custom targets come <strong style={hi}>first</strong> and can never add up to more than the threshold. Whatever is left over becomes the <strong style={hi}>fair share</strong>, split equally among everyone without a custom. If <strong style={hi}>everyone</strong> has a custom, the remainder stays <strong style={hi}>unassigned</strong> (shown above the table). Example: threshold <strong style={hi}>10:00</strong>, one person set to <strong style={hi}>4:00</strong> leaves <strong style={hi}>6:00</strong> for the rest of the team.</>,
@@ -198,8 +198,8 @@ export default function Planned({ team }: { team: Team }) {
           onSave={onSaveBudget}
           format={normalize}
           placeholder="H:MM"
-          emptyHint={<span style={{ color: palette.textDim }}>Set threshold</span>}
-          width={360}
+          emptyHint={<span style={{ color: palette.textDim, fontSize: 26 }}>Set threshold</span>}
+          width={300}
           align="left"
           fontSize={48}
           fontWeight={700}
