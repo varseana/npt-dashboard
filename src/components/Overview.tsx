@@ -158,24 +158,12 @@ export default function Overview({ team, refreshKey, onNavigate, weekKey: weekKe
 
   return (
     <div>
-      <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", marginBottom: 16 }}>
-        <Field label={<span style={{ display: "inline-flex", gap: 6, alignItems: "baseline", flexWrap: "wrap" }}>Week <WeekCountdown start={sel.start} /></span>}>
-          <Dropdown value={weekKey} onChange={setWeekKey} minWidth={260} ariaLabel="Select week"
-            options={weeks.map((w) => ({ value: w.key, label: weekLabel(w) }))} />
-        </Field>
-        <div style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
-          <span style={{ position: "absolute", left: 10, display: "inline-flex", color: palette.textDim, pointerEvents: "none" }}>
-            <IconSearch size={17} />
-          </span>
-          <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="username" aria-label="Filter by username"
-            style={{ ...input, paddingLeft: 34, height: 42, boxSizing: "border-box" }} />
-        </div>
-        {/* misma altura (42) que los inputs y bottom-aligned -> el icono queda centrado con el textbox */}
-        <div style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", height: 42 }}>
-          <EmailAction icon={<IconAlert size={38} />} count={flagged.length} label="Email flagged" hoverClass="npt-hover-warn"
-            onClick={() => flagged.forEach(remind)}
-            info={<>Generates one reminder <strong style={hi}>.eml per person in yellow or red</strong> (near limit or over plan), each with their own weekly NPT summary. Opens as drafts in Outlook for you to review and send.</>} />
-        </div>
+      {/* dropdown de semana + timer a la derecha: "[dropdown] :: ends in ...". sin label "Week"
+          (el dropdown ya dice la semana, self-explanatory). */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
+        <Dropdown value={weekKey} onChange={setWeekKey} minWidth={260} ariaLabel="Select week"
+          options={weeks.map((w) => ({ value: w.key, label: weekLabel(w) }))} />
+        <span style={{ fontSize: 17 }}><WeekCountdown start={sel.start} sep=":: " /></span>
       </div>
 
       {err && <div style={{ color: palette.bad, marginBottom: 12 }}>{err}</div>}
@@ -227,6 +215,22 @@ export default function Overview({ team, refreshKey, onNavigate, weekKey: weekKe
           <div style={{ height: 24 }} />
           <div style={{ height: 24 }} />
           <div style={{ height: 24 }} />
+
+          {/* buscador de personas (izq) + Email flagged (der), justo ARRIBA de la tabla */}
+          <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 12 }}>
+            <div style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
+              <span style={{ position: "absolute", left: 10, display: "inline-flex", color: palette.textDim, pointerEvents: "none" }}>
+                <IconSearch size={17} />
+              </span>
+              <input value={filter} onChange={(e) => setFilter(e.target.value)} placeholder="username" aria-label="Filter by username"
+                style={{ ...input, paddingLeft: 34, height: 42, boxSizing: "border-box" }} />
+            </div>
+            <div style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", height: 42 }}>
+              <EmailAction icon={<IconAlert size={38} />} count={flagged.length} label="Email flagged" hoverClass="npt-hover-warn"
+                onClick={() => flagged.forEach(remind)}
+                info={<>Generates one reminder <strong style={hi}>.eml per person in yellow or red</strong> (near limit or over plan), each with their own weekly NPT summary. Opens as drafts in Outlook for you to review and send.</>} />
+            </div>
+          </div>
 
           {groups ? (
             groups.map((g) => (
@@ -432,14 +436,6 @@ function BudgetStat({ label, value, color, story }: { label: string; value: stri
   );
 }
 
-function Field({ label, children }: { label: React.ReactNode; children: React.ReactNode }) {
-  return (
-    <div>
-      <div style={{ fontSize: 16, color: palette.textDim, marginBottom: 4 }}>{label}</div>
-      {children}
-    </div>
-  );
-}
 
 function Stat({ label, value, tone, story, topRight }: { label: string; value: string; tone?: "ok" | "warn" | "bad"; story?: React.ReactNode; topRight?: React.ReactNode }) {
   const color = tone === "bad" ? palette.bad : tone === "warn" ? palette.warn : tone === "ok" ? palette.ok : palette.text;

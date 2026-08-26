@@ -6,8 +6,10 @@ import { palette } from "../theme";
 //  - EN CURSO: cuenta hasta el FIN (sabado medianoche = domingo 00:00), color texto ("ends in").
 //  - PASADA: no renderiza nada.
 // `standalone` quita el separador "·" del principio (para usarlo suelto, no despues de "Week").
+// `sep` reemplaza el separador (ej. ":: " para ponerlo a la derecha del dropdown). Si el timer no
+// aplica (semana pasada) NO renderiza nada, asi el separador nunca queda colgando solo.
 // compartido por Summary (Overview), Breakdown (Distribution) y ahora Planned (planear semana futura).
-export default function WeekCountdown({ start, standalone }: { start: Date; standalone?: boolean }) {
+export default function WeekCountdown({ start, standalone, sep }: { start: Date; standalone?: boolean; sep?: string }) {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
@@ -38,7 +40,7 @@ export default function WeekCountdown({ start, standalone }: { start: Date; stan
       title={future ? "Time until this week starts (Sunday 00:00)" : "Time left until this week ends (Saturday midnight)"}
       style={{ color: future ? palette.warn : palette.text, fontWeight: 600, fontVariantNumeric: "tabular-nums" }}
     >
-      {standalone ? "" : "· "}{future ? "starts in " : "ends in "}{clock}
+      {sep != null ? sep : standalone ? "" : "· "}{future ? "starts in " : "ends in "}{clock}
     </span>
   );
 }
