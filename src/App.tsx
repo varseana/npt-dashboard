@@ -255,10 +255,12 @@ export default function App() {
       {manager.role === "user" && <SelfView email={manager.email} aliasOverride={manager.alias} />}
 
       {isStaff && (<>
-      {/* nav (izquierda) + heatmap semanal (derecha, solo en Dashboard); separador full-width abajo */}
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 24,
+      {/* nav (izquierda) + heatmap semanal (derecha, solo en Dashboard); separador full-width abajo.
+          columnas con las MISMAS proporciones que la fila de metricas (480 / 340) para que el heatmap
+          quede centrado en X sobre el bloque de stats (Employees/Team NPT/Over/Near limit). */}
+      <div style={{ display: "flex", alignItems: "flex-start", gap: 24,
         flexWrap: "wrap", borderBottom: `1px solid ${palette.border}`, marginBottom: 18 }}>
-        <div style={{ flex: "1 1 auto", minWidth: 0 }}>
+        <div style={{ flex: "1 1 480px", minWidth: 0 }}>
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10, flexWrap: "wrap" }}>
         {teams.length > 1 && (
           <Dropdown value={teamId} onChange={setTeamId} minWidth={200} ariaLabel="Select team"
@@ -293,7 +295,7 @@ export default function App() {
       </div>
         </div>
         {section === "dashboard" && (
-          <div style={{ flex: "0 0 auto", paddingBottom: 10 }}>
+          <div style={{ flex: "1 1 340px", display: "flex", justifyContent: "center", paddingBottom: 10 }}>
             <WeekHeatmap teamId={team?.id} weekKey={dashWeekKey} onSelectWeek={setDashWeekKey} refreshKey={refreshTick} />
           </div>
         )}

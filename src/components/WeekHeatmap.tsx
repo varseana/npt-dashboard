@@ -7,7 +7,7 @@ import {
 } from "../lib/npt";
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-const CELL = 15, GAP = 3;
+const CELL = 15, GAP = 5;
 const FALLBACK_THRESHOLD = 10 * 3600;   // si el team no tiene threshold seteado esa semana
 
 interface WeekCell { key: string; start: Date; wnum: number; month: number; }
@@ -83,7 +83,8 @@ export default function WeekHeatmap({ teamId, weekKey, onSelectWeek, refreshKey 
 
   function onMove(e: React.MouseEvent) {
     const el = (e.target as HTMLElement).closest("[data-wk]") as HTMLElement | null;
-    if (!el) { setTip((t) => ({ ...t, show: false })); return; }
+    // sin data (o padding): no dice nada, no tooltip
+    if (!el || el.dataset.hasdata !== "1") { setTip((t) => ({ ...t, show: false })); return; }
     const r = el.getBoundingClientRect();
     setTip({ show: true, x: r.left + r.width / 2, y: r.top - 8, month: +el.dataset.mo!, wnum: +el.dataset.wn! });
   }
