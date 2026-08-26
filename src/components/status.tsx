@@ -2,6 +2,8 @@ import * as React from "react";
 import { palette } from "../theme";
 import type { NptStatus } from "../lib/npt";
 import { InfoStar } from "./InfoStar";
+import { DotmCircular3 } from "./dotmatrix/dotm-circular-3";   // Plasma Veil
+import { DotmCircular4 } from "./dotmatrix/dotm-circular-4";   // Radar Arc
 
 // estado con color semaforo. HIBRIDO minimalista (decidido por Sean): el critico "Over" va como chip
 // SOLIDO rojo (texto invertido) para que grite; el resto (On track / Near limit / No plan) va como
@@ -34,10 +36,13 @@ const DOT_COLOR: Record<NptStatus, string> = {
   ok: "var(--ok)", warn: "var(--warn)", bad: "var(--bad)", none: "var(--textDim)",
 };
 
+// loader dot-matrix del registry @dotmatrix, tenido por status. En cada CARGA de pagina sale uno de
+// los dos al azar (pick a nivel de modulo: estable durante la sesion, re-roll al recargar).
+const StatusLoader = Math.random() < 0.5 ? DotmCircular4 : DotmCircular3;
 function DotCluster({ color }: { color: string }) {
   return (
-    <span className="npt-dot-cluster" style={{ ["--status" as string]: color } as React.CSSProperties} aria-hidden="true">
-      {Array.from({ length: 9 }, (_, i) => <span key={i} className="npt-dot" />)}
+    <span aria-hidden="true" style={{ display: "inline-flex", color }}>
+      <StatusLoader color={color} size={30} dotSize={4} />
     </span>
   );
 }
