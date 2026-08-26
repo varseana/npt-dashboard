@@ -255,9 +255,9 @@ export default function App() {
       {manager.role === "user" && <SelfView email={manager.email} aliasOverride={manager.alias} />}
 
       {isStaff && (<>
-      {/* nav (izquierda) + heatmap semanal (derecha, solo en Dashboard); separador full-width abajo.
-          columnas con las MISMAS proporciones que la fila de metricas (480 / 340) para que el heatmap
-          quede centrado en X sobre el bloque de stats (Employees/Team NPT/Over/Near limit). */}
+      {/* nav (izquierda) + heatmap semanal (derecha, SIEMPRE visible para staff, en cualquier pestana);
+          separador full-width abajo. columnas con las MISMAS proporciones que la fila de metricas
+          (480 / 340) para que el heatmap quede centrado en X sobre el bloque de stats. */}
       <div style={{ display: "flex", alignItems: "flex-start", gap: 24,
         flexWrap: "wrap", borderBottom: `1px solid ${palette.border}`, marginBottom: 18 }}>
         <div style={{ flex: "1 1 480px", minWidth: 0 }}>
@@ -294,11 +294,11 @@ export default function App() {
         </>)}
       </div>
         </div>
-        {section === "dashboard" && (
-          <div style={{ flex: "1 1 340px", display: "flex", justifyContent: "center", paddingBottom: 10 }}>
-            <WeekHeatmap teamId={team?.id} weekKey={dashWeekKey} onSelectWeek={setDashWeekKey} refreshKey={refreshTick} />
-          </div>
-        )}
+        <div style={{ flex: "1 1 340px", display: "flex", justifyContent: "center", paddingBottom: 10 }}>
+          <WeekHeatmap teamId={team?.id} weekKey={dashWeekKey}
+            onSelectWeek={(k) => { setDashWeekKey(k); setSection("dashboard"); setDashView("summary"); }}
+            refreshKey={refreshTick} />
+        </div>
       </div>
 
       {section === "dashboard" && team && dashView === "summary" && <Overview team={team} refreshKey={refreshTick} onNavigate={goTo} weekKey={dashWeekKey} onWeekChange={setDashWeekKey} />}
