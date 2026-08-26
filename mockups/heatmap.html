@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>NPT Weekly Heatmap - prototype</title>
+<style>
+  /* ===== tokens (mismos que el dashboard: B&N + acentos Bauhaus) ===== */
+  :root {
+    --bg: #f7f7f5; --panel: #ffffff; --border: #e2e1de;
+    --text: #111111; --textDim: #767676;
+    --ok: #1c7f46; --warn: #ecc412; --bad: #b0232b; --blue: #0d5c9d;
+    --cell: 15px; --gap: 3px;
+  }
+  html.dark {
+    --bg: #000000; --panel: #171717; --border: #2b2b2b;
+    --text: #f4f4f2; --textDim: #9a9a9a;
+    --ok: #35b368; --warn: #ecc412; --bad: #e5484d; --blue: #4a9eda;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif; }
+  body { padding: 40px 32px; transition: background-color .25s ease, color .25s ease; }
+  .wrap { max-width: 720px; margin: 0 auto; }
+  h1 { font-weight: 700; font-size: 24px; letter-spacing: .04em; text-transform: uppercase; margin: 0 0 4px; }
+  .sub { color: var(--textDim); font-size: 15px; margin: 0 0 28px; }
+  .toggle { position: fixed; top: 16px; right: 16px; background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; cursor: pointer; font-size: 14px; }
+
+  /* ===== matriz estilo GitHub: rectangulo horizontal =====
+     meses = COLUMNAS (avanzan a la derecha, label arriba), semanas del mes = FILAS (bajan). */
+  .hm { display: inline-block; }
+  /* el mes ya no va como label arriba: vive en el tooltip. matriz compacta, tipo GitHub. */
+  .hm-matrix { display: grid; grid-template-columns: repeat(var(--cols), var(--cell));
+    grid-template-rows: repeat(var(--rows), var(--cell)); grid-auto-flow: column; gap: var(--gap); }
+
+  /* cuadro semana: reposo = casi invisible (borde tenue). el fill lo pone JS por nivel. */
+  .cell { width: var(--cell); height: var(--cell); border-radius: 3px;
+    background: transparent; border: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
+    cursor: pointer; transition: transform .08s ease, outline-color .12s ease;
+    outline: 2px solid transparent; outline-offset: 1px; }
+  .cell:hover { outline-color: var(--text); }
+  .cell.sel { outline-color: var(--blue); }
+  /* padding (semanas que no existen en ese mes): cierra el rectangulo, NO interactivo */
+  .cell.pad { border-color: color-mix(in srgb, var(--text) 4%, transparent); cursor: default; }
+  /* semana real SIN data (no reporto NPT): visible pero NO clickeable/highlightable */
+  .cell.nodata { cursor: default; }
+  .cell.pad:hover, .cell.nodata:hover { outline-color: transparent; }
+
+  /* leyenda Less -> More (elemento caracteristico de GitHub) */
+  .legend { display: flex; align-items: center; gap: 6px; justify-content: flex-end;
+    margin-top: 14px; font-size: 12px; color: var(--textDim); }
+  .legend .cell { cursor: default; }
+  .legend .cell:hover { outline-color: transparent; }
+
+  /* tooltip flotante (un solo nodo) */
+  .tip { position: fixed; z-index: 50; pointer-events: none; opacity: 0; text-align: center;
+    transform: translate(-50%, -100%); background: var(--text); color: var(--bg);
+    padding: 6px 10px; border-radius: 6px; line-height: 1.3; white-space: nowrap;
+    transition: opacity .1s ease; box-shadow: 0 4px 14px rgba(0,0,0,.25); }
+  .tip-mo { opacity: .55; font-size: 11px; letter-spacing: .08em; }
+  .tip-wk { font-weight: 700; font-size: 13px; }
+
+  .selinfo { margin-top: 20px; font-size: 15px; color: var(--textDim); }
+  .selinfo b { color: var(--text); }
+  .note { margin-top: 26px; font-size: 13px; color: var(--textDim); max-width: 620px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<button class="toggle" id="themeBtn">Toggle theme</button>
+<div class="wrap">
+  <h1>Weekly NPT</h1>
+  <p class="sub">One square per week, the whole year. Months run left to right; the weeks of each month stack downward (GitHub-style). Click a week to jump to it.</p>
+
+  <div class="hm">
+    <div class="hm-matrix" id="matrix"></div>
+  </div>
+
+  <div class="legend" id="legend"><span>Less</span><span>More</span></div>
+
+  <div class="selinfo" id="selinfo">Hover a week to preview - click to select.</div>
+
+  <p class="note">
+    Horizontal matrix like GitHub: each column is a month (left to right), each row a week within it stacking down;
+    empty padding squares close the rectangle. Levels are a continuous intensity ramp (not 3 flat colors): faint green
+    as the week fills toward its threshold, red once over, near-invisible with little/no NPT. Month names kept very faint.
+    Only real weeks with data are clickable; no-data weeks are shown but not clickable.
+  </p>
+</div>
+<div class="tip" id="tip"></div>
+
+<script>
+(function () {
+  var WEEKS = 52;
+  var MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+  var DAY = 86400000, THRESH = 10 * 3600;
+
+  function weekStart(d){ var x=new Date(d.getFullYear(),d.getMonth(),d.getDate()); x.setDate(x.getDate()-x.getDay()); return x; }
+  function weekNum(s){ var f=weekStart(new Date(s.getFullYear(),0,1)); return Math.floor((s-f)/(7*DAY))+1; }
+  function fmtHms(sec){ var n=sec<0; sec=Math.abs(Math.round(sec)); var h=Math.floor(sec/3600); sec-=h*3600; var m=Math.floor(sec/60); return (n?"-":"")+h+":"+String(m).padStart(2,"0"); }
+
+  // 52 semanas hacia atras (domingo-based), agrupadas por mes de inicio -> cada grupo = una COLUMNA
+  var cur = weekStart(new Date()), groups = [], byKey = {};
+  for (var i = WEEKS - 1; i >= 0; i--) {
+    var s = new Date(cur); s.setDate(s.getDate() - i * 7);
+    var key = s.getFullYear() + "-" + s.getMonth();
+    if (!byKey[key]) { byKey[key] = { label: MONTHS[s.getMonth()], weeks: [] }; groups.push(byKey[key]); }
+    byKey[key].weeks.push(s);
+  }
+  var nCols = groups.length;
+  var maxRows = groups.reduce(function (m, g) { return Math.max(m, g.weeks.length); }, 0);
+
+  // escala continua: dentro=verde por uso, sobre=rojo por overage. vacio=casi invisible
+  function fillFor(used) {
+    if (used == null || used === 0) return "";
+    var r = used / THRESH;
+    if (r <= 1) { var p=[12,24,38,54,72,92]; return "color-mix(in srgb, var(--ok) " + p[Math.min(5,Math.floor(r*6))] + "%, transparent)"; }
+    var o = Math.min(1, (r - 1) / 0.5);
+    return "color-mix(in srgb, var(--bad) " + (55 + Math.round(o * 45)) + "%, transparent)";
+  }
+
+  var matrix = document.getElementById("matrix");
+  matrix.style.setProperty("--cols", nCols);
+  matrix.style.setProperty("--rows", maxRows);
+
+  // matriz column-major (grid-auto-flow: column): por cada mes, maxRows celdas (reales + pad abajo)
+  var wFrag = document.createDocumentFragment(), all = [];
+  groups.forEach(function (g) {
+    for (var r = 0; r < maxRows; r++) {
+      var cell = document.createElement("div");
+      if (r < g.weeks.length) {
+        var start = g.weeks[r];
+        // sample: ~1 de cada 6 semanas sin data (no reporto NPT)
+        var used = (Math.random() < 0.16) ? null : Math.max(0, Math.round((Math.random() * 1.25) * THRESH));
+        cell.className = "cell" + (used == null ? " nodata" : "");
+        cell.dataset.i = all.length; all.push({ start: start, used: used });
+        var f = fillFor(used); if (f) { cell.style.background = f; cell.style.borderColor = "transparent"; }
+      } else {
+        cell.className = "cell pad";
+      }
+      wFrag.appendChild(cell);
+    }
+  });
+  matrix.appendChild(wFrag);
+
+  // leyenda: muestras de niveles
+  var legend = document.getElementById("legend");
+  var samples = ["", "color-mix(in srgb, var(--ok) 12%, transparent)", "color-mix(in srgb, var(--ok) 38%, transparent)",
+    "color-mix(in srgb, var(--ok) 72%, transparent)", "color-mix(in srgb, var(--ok) 92%, transparent)",
+    "color-mix(in srgb, var(--bad) 80%, transparent)"];
+  var more = legend.lastElementChild;
+  samples.forEach(function (bg) { var s = document.createElement("div"); s.className = "cell";
+    if (bg) { s.style.background = bg; s.style.borderColor = "transparent"; } legend.insertBefore(s, more); });
+
+  // tooltip + click (delegation)
+  var tip = document.getElementById("tip"), selinfo = document.getElementById("selinfo"), selected = null;
+  // tooltip minimalista, 2 lineas centradas: >>MES (gris) + ::Week N:: (negrita)
+  function tipText(d) {
+    return '<div class="tip-mo">&gt;&gt;' + MONTHS[d.start.getMonth()].toUpperCase() + '</div>' +
+           '<div class="tip-wk">::Week ' + weekNum(d.start) + '::</div>';
+  }
+  matrix.addEventListener("mousemove", function (e) {
+    var cell = e.target.closest(".cell"); if (!cell || cell.dataset.i == null) { tip.style.opacity = "0"; return; }
+    tip.innerHTML = tipText(all[+cell.dataset.i]); tip.style.opacity = "1";
+    var r = cell.getBoundingClientRect(); tip.style.left = (r.left + r.width / 2) + "px"; tip.style.top = (r.top - 8) + "px";
+  });
+  matrix.addEventListener("mouseleave", function () { tip.style.opacity = "0"; });
+  matrix.addEventListener("click", function (e) {
+    var cell = e.target.closest(".cell"); if (!cell || cell.dataset.i == null) return;
+    var d = all[+cell.dataset.i];
+    if (d.used == null) return;   // sin data: no clickeable ni highlight
+    if (selected) selected.classList.remove("sel"); cell.classList.add("sel"); selected = cell;
+    selinfo.innerHTML = "<b>::Week " + weekNum(d.start) + "::</b>";
+  });
+
+  document.getElementById("themeBtn").addEventListener("click", function () { document.documentElement.classList.toggle("dark"); });
+})();
+</script>
+</body>
+</html>

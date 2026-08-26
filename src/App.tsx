@@ -20,7 +20,9 @@ import Teams from "./components/Teams";
 import Unassigned from "./components/Unassigned";
 import CreateUsers from "./components/CreateUsers";
 import SetPassword from "./components/SetPassword";
+import WeekHeatmap from "./components/WeekHeatmap";
 import SelfView from "./components/SelfView";
+import { weekInfo } from "./lib/npt";
 import { IconLogout, IconMoon, IconSun, IconX } from "./components/icons";
 import Mascot from "./components/Mascot";
 import PullReveal from "./components/PullReveal";
@@ -55,6 +57,8 @@ export default function App() {
   const [dashView, setDashView] = useState<"summary" | "breakdown" | "shared">("summary");
   const [teamTab, setTeamTab] = useState<"employees" | "planned" | "folders">("employees");
   const [accessTab, setAccessTab] = useState<"requests" | "org" | "managers" | "teams" | "unassigned" | "create">("requests");
+  // semana del dashboard (compartida por el heatmap + Summary + Breakdown): click en el heatmap la cambia
+  const [dashWeekKey, setDashWeekKey] = useState(() => weekInfo(new Date()).key);
   const [askLogout, setAskLogout] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
   const [pendingReq, setPendingReq] = useState(0);   // access requests pendientes (badge en Access)
@@ -251,6 +255,10 @@ export default function App() {
       {manager.role === "user" && <SelfView email={manager.email} aliasOverride={manager.alias} />}
 
       {isStaff && (<>
+      {/* nav (izquierda) + heatmap semanal (derecha, solo en Dashboard); separador full-width abajo */}
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 24,
+        flexWrap: "wrap", borderBottom: `1px solid ${palette.border}`, marginBottom: 18 }}>
+        <div style={{ flex: "1 1 auto", minWidth: 0 }}>
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10, flexWrap: "wrap" }}>
         {teams.length > 1 && (
           <Dropdown value={teamId} onChange={setTeamId} minWidth={200} ariaLabel="Select team"
@@ -263,7 +271,7 @@ export default function App() {
         </nav>
       </div>
 
-      <div style={{ display: "flex", gap: 4, marginBottom: 18, borderBottom: `1px solid ${palette.border}` }}>
+      <div style={{ display: "flex", gap: 4, paddingBottom: 10 }}>
         {section === "dashboard" && (<>
           <SubBtn active={dashView === "summary"} onClick={() => setDashView("summary")}>Summary</SubBtn>
           <SubBtn active={dashView === "breakdown"} onClick={() => setDashView("breakdown")}>Breakdown</SubBtn>
@@ -283,9 +291,16 @@ export default function App() {
           {manager.role === "admin" && <SubBtn active={accessTab === "org"} onClick={() => setAccessTab("org")}>Org</SubBtn>}
         </>)}
       </div>
+        </div>
+        {section === "dashboard" && (
+          <div style={{ flex: "0 0 auto", paddingBottom: 10 }}>
+            <WeekHeatmap teamId={team?.id} weekKey={dashWeekKey} onSelectWeek={setDashWeekKey} refreshKey={refreshTick} />
+          </div>
+        )}
+      </div>
 
-      {section === "dashboard" && team && dashView === "summary" && <Overview team={team} refreshKey={refreshTick} onNavigate={goTo} />}
-      {section === "dashboard" && team && dashView === "breakdown" && <Distribution team={team} refreshKey={refreshTick} />}
+      {section === "dashboard" && team && dashView === "summary" && <Overview team={team} refreshKey={refreshTick} onNavigate={goTo} weekKey={dashWeekKey} onWeekChange={setDashWeekKey} />}
+      {section === "dashboard" && team && dashView === "breakdown" && <Distribution team={team} refreshKey={refreshTick} weekKey={dashWeekKey} onWeekChange={setDashWeekKey} />}
       {section === "dashboard" && dashView === "shared" && <SharedWithMe myUserId={manager.user_id} />}
       {section === "team" && team && teamTab === "employees" && <Employees team={team} refreshKey={refreshTick} />}
       {section === "team" && team && teamTab === "planned" && <Planned team={team} />}

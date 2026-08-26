@@ -31,9 +31,13 @@ interface Row {
 const STATUS_RANK: Record<NptStatus, number> = { bad: 0, warn: 1, ok: 2, none: 3 };
 
 // desglose por AUX de NPT (los 5 que cuentan), estilo Excel, con Planned/Actual/Remaining/status.
-export default function Distribution({ team, refreshKey }: { team: Team; refreshKey?: number }) {
+export default function Distribution({ team, refreshKey, weekKey: weekKeyProp, onWeekChange }:
+  { team: Team; refreshKey?: number; weekKey?: string; onWeekChange?: (k: string) => void }) {
   const weeks = useMemo(() => recentWeeks(new Date(), 16), []);
-  const [weekKey, setWeekKey] = useState(() => weekInfo(new Date()).key);
+  // semana controlada por App (sincroniza con el heatmap) o interna como fallback
+  const [weekKeyState, setWeekKeyState] = useState(() => weekInfo(new Date()).key);
+  const weekKey = weekKeyProp ?? weekKeyState;
+  const setWeekKey = onWeekChange ?? setWeekKeyState;
   const [rows, setRows] = useState<NptDailyRow[]>([]);
   const [planned, setPlanned] = useState<PlannedRow[]>([]);
   const [budget, setBudget] = useState<TeamBudgetRow[]>([]);

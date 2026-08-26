@@ -33,9 +33,13 @@ interface Row {
 
 const STATUS_RANK: Record<NptStatus, number> = { bad: 0, warn: 1, ok: 2, none: 3 };
 
-export default function Overview({ team, refreshKey, onNavigate }: { team: Team; refreshKey?: number; onNavigate?: (d: NavDest) => void }) {
+export default function Overview({ team, refreshKey, onNavigate, weekKey: weekKeyProp, onWeekChange }:
+  { team: Team; refreshKey?: number; onNavigate?: (d: NavDest) => void; weekKey?: string; onWeekChange?: (k: string) => void }) {
   const weeks = useMemo(() => recentWeeks(new Date(), 16), []);
-  const [weekKey, setWeekKey] = useState(() => weekInfo(new Date()).key);
+  // semana controlada por App (para sincronizar con el heatmap) o interna como fallback
+  const [weekKeyState, setWeekKeyState] = useState(() => weekInfo(new Date()).key);
+  const weekKey = weekKeyProp ?? weekKeyState;
+  const setWeekKey = onWeekChange ?? setWeekKeyState;
   const [rows, setRows] = useState<NptDailyRow[]>([]);
   const [planned, setPlanned] = useState<PlannedRow[]>([]);
   const [budget, setBudget] = useState<TeamBudgetRow[]>([]);
