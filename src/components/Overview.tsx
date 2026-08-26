@@ -254,14 +254,14 @@ export default function Overview({ team, refreshKey, onNavigate, weekKey: weekKe
 
 function UserTable({ rows, remind, teamBudget }: { rows: Row[]; remind: (u: Row) => void; teamBudget: number | null }) {
   // headers con asterisco FLAT (no gira) donde hace falta explicar; el copy sale del viejo footer.
-  const headers: { label: string; left?: boolean; right?: boolean; story?: React.ReactNode }[] = [
+  const headers: { label: string; left?: boolean; story?: React.ReactNode }[] = [
     { label: "#", left: true },
     { label: "Employee", left: true },
-    { label: "Days", right: true },
-    { label: "Planned", right: true, story: <>The employee's <strong style={hi}>weekly NPT target</strong>, set per person in the Planned tab. Shown in Hh:mm:ss.</> },
-    { label: "Actual NPT", right: true, story: <>Total NPT this week / <strong style={hi}>Meeting + Training + Project + Personal + System</strong> / sourced from STAR Tracker uploads. Shown in Hh:mm:ss.</> },
-    { label: "% of threshold", right: true, story: <>This employee's <strong style={hi}>share of the team's total weekly threshold</strong>.</> },
-    { label: "Remaining", right: true, story: <><strong style={hi}>Remaining = Planned - Actual</strong>. Positive means plan left, negative means over. Shown in Hh:mm:ss.</> },
+    { label: "Days" },
+    { label: "Planned", story: <>The employee's <strong style={hi}>weekly NPT target</strong>, set per person in the Planned tab. Shown in Hh:mm:ss.</> },
+    { label: "Actual NPT", story: <>Total NPT this week / <strong style={hi}>Meeting + Training + Project + Personal + System</strong> / sourced from STAR Tracker uploads. Shown in Hh:mm:ss.</> },
+    { label: "% of threshold", story: <>This employee's <strong style={hi}>share of the team's total weekly threshold</strong>.</> },
+    { label: "Remaining", story: <><strong style={hi}>Remaining = Planned - Actual</strong>. Positive means plan left, negative means over. Shown in Hh:mm:ss.</> },
     { label: "Status", story: <>On track / <strong style={hi}>Near limit</strong> is one hour or less remaining / <strong style={hi}>Over</strong> is past the plan.</> },
   ];
   return (
@@ -269,7 +269,7 @@ function UserTable({ rows, remind, teamBudget }: { rows: Row[]; remind: (u: Row)
       <thead>
         <tr>
           {headers.map((h) => (
-            <th key={h.label} style={{ ...th, textAlign: h.left ? "left" : h.right ? "right" : "center" }}>
+            <th key={h.label} style={{ ...th, textAlign: h.left ? "left" : "center" }}>
               {h.label}{h.story && <InfoStar spin={false}>{h.story}</InfoStar>}
             </th>
           ))}
@@ -281,13 +281,13 @@ function UserTable({ rows, remind, teamBudget }: { rows: Row[]; remind: (u: Row)
           <tr key={u.alias} style={{ background: i % 2 ? palette.panel : palette.panelAlt }}>
             <td style={{ ...td, color: palette.textDim }}>{i + 1}</td>
             <td style={{ ...td, fontWeight: 600 }}>{u.alias}</td>
-            <td style={{ ...td, textAlign: "right" }}>{u.daysReported}</td>
-            <td style={{ ...td, textAlign: "right", color: palette.textDim }}>{u.planned != null ? fmtHms(u.planned) : "-"}</td>
-            <td style={{ ...td, textAlign: "right", fontWeight: 600 }}>{fmtHms(u.nptSeconds)}</td>
-            <td style={{ ...td, textAlign: "right", color: palette.textDim }}>
+            <td style={{ ...td, textAlign: "center" }}>{u.daysReported}</td>
+            <td style={{ ...td, textAlign: "center", color: palette.textDim }}>{u.planned != null ? fmtHms(u.planned) : "-"}</td>
+            <td style={{ ...td, textAlign: "center", fontWeight: 600 }}>{fmtHms(u.nptSeconds)}</td>
+            <td style={{ ...td, textAlign: "center", color: palette.textDim }}>
               {teamBudget ? (u.nptSeconds / teamBudget * 100).toFixed(1) + "%" : "-"}
             </td>
-            <td style={{ ...td, textAlign: "right", color: remainingColor(u.status) }}>{u.remaining != null ? fmtHms(u.remaining) : "-"}</td>
+            <td style={{ ...td, textAlign: "center", color: remainingColor(u.status) }}>{u.remaining != null ? fmtHms(u.remaining) : "-"}</td>
             <td style={{ ...td, textAlign: "center" }}><StatusChip status={u.status} /></td>
             <td style={{ ...td, textAlign: "center" }}>
               <button onClick={() => remind(u)} disabled={u.status === "none"} title="Send reminder .eml" aria-label="Send reminder email"

@@ -61,6 +61,12 @@ export default function App() {
   const [dashWeekKey, setDashWeekKey] = useState(() => weekInfo(new Date()).key);
   const [askLogout, setAskLogout] = useState(false);
   const [refreshTick, setRefreshTick] = useState(0);
+  const bumpTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // coalesce rafagas de eventos realtime (ej. varias subidas de NPT juntas) en UN solo refetch
+  function scheduleBump() {
+    if (bumpTimer.current) clearTimeout(bumpTimer.current);
+    bumpTimer.current = setTimeout(() => setRefreshTick((t) => t + 1), 1500);
+  }
   const [pendingReq, setPendingReq] = useState(0);   // access requests pendientes (badge en Access)
   const [showConfirmed, setShowConfirmed] = useState(emailConfirmed);   // banner al aterrizar del link de confirmacion
 
@@ -91,10 +97,11 @@ export default function App() {
     setPendingReq(count ?? 0);
   }
 
-  // auto-refresco: cada 15s bumpea el tick y las vistas re-consultan (sin recargar la pagina)
+  // fallback LENTO (60s): el refresco principal ahora es event-driven via realtime (ver abajo).
+  // este interval solo cubre el caso de realtime apagado/perdido, sin martillar Supabase cada 15s.
   useEffect(() => {
-    const id = setInterval(() => setRefreshTick((t) => t + 1), 15000);
-    return () => clearInterval(id);
+    const id = setInterval(() => setRefreshTick((t) => t + 1), 60000);
+    return () => { clearInterval(id); if (bumpTimer.current) clearTimeout(bumpTimer.current); };
   }, []);
 
   useEffect(() => {
@@ -175,6 +182,22 @@ export default function App() {
     return () => { supabase.removeChannel(ch); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
+
+  // realtime sobre las tablas de DATOS del team (scoped por team_id): en vez de re-consultar TODO
+  // cada 15s, refrescamos SOLO cuando algo cambia. debounce (scheduleBump) coalesce rafagas.
+  // si estas tablas no estan en la publicacion supabase_realtime, no llegan eventos y el interval
+  // de 60s de arriba cubre igual (degrada elegante).
+  useEffect(() => {
+    if (!session || !teamId) return;
+    const flt = "team_id=eq." + teamId;
+    let ch = supabase.channel("team-data-" + teamId);
+    for (const t of ["npt_daily", "npt_planned", "npt_team_budget", "roster", "manager_folders"]) {
+      ch = ch.on("postgres_changes", { event: "*", schema: "public", table: t, filter: flt }, scheduleBump);
+    }
+    ch.subscribe();
+    return () => { supabase.removeChannel(ch); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [session, teamId]);
 
   // fallback: refrescar el conteo pendiente en cada tick (por si el realtime no esta ON)
   useEffect(() => { if (session) loadPending(); /* eslint-disable-next-line */ }, [refreshTick]);
