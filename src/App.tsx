@@ -282,7 +282,7 @@ export default function App() {
           separador full-width abajo. columnas con las MISMAS proporciones que la fila de metricas
           (480 / 340) para que el heatmap quede centrado en X sobre el bloque de stats. */}
       <div style={{ display: "flex", alignItems: "flex-start", gap: 24,
-        flexWrap: "wrap", borderBottom: `1px solid ${palette.border}`, marginBottom: 18 }}>
+        flexWrap: "wrap", marginBottom: 18 }}>
         <div style={{ flex: "1 1 480px", minWidth: 0 }}>
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 10, flexWrap: "wrap" }}>
         {teams.length > 1 && (
