@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Dot status (pulsing) - prototype</title>
+<style>
+  :root {
+    --bg: #f7f7f5; --panel: #ffffff; --border: #e2e1de;
+    --text: #111111; --textDim: #767676;
+    --ok: #1c7f46; --warn: #ecc412; --bad: #b0232b; --blue: #0d5c9d;
+  }
+  html.dark {
+    --bg: #000000; --panel: #171717; --border: #2b2b2b;
+    --text: #f4f4f2; --textDim: #9a9a9a;
+    --ok: #35b368; --warn: #ecc412; --bad: #e5484d; --blue: #4a9eda;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, Roboto, Helvetica, Arial, sans-serif; }
+  body { padding: 48px 32px; transition: background-color .25s ease, color .25s ease; }
+  .wrap { max-width: 760px; margin: 0 auto; }
+  h1 { font-weight: 700; font-size: 22px; letter-spacing: .04em; text-transform: uppercase; margin: 0 0 4px; }
+  .sub { color: var(--textDim); font-size: 15px; margin: 0 0 30px; }
+  .toggle { position: fixed; top: 16px; right: 16px; background: var(--panel); color: var(--text);
+    border: 1px solid var(--border); border-radius: 8px; padding: 7px 12px; cursor: pointer; font-size: 14px; }
+
+  .card-title { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+  .ttl { font-weight: 700; font-size: 26px; letter-spacing: .06em; text-transform: uppercase; }
+  .sep { color: var(--textDim); font-weight: 700; font-size: 26px; letter-spacing: .06em; }
+
+  /* ===== indicador: cluster de 9 puntos que laten (tiempos escalonados), color = estado ===== */
+  .dot-status { position: relative; display: inline-flex; align-items: center; cursor: default; }
+  /* nudge 2px hacia abajo: el texto en MAYUSCULAS tiene su centro optico arriba del centro de su
+     caja, asi que bajamos el cluster para que quede centrado con las letras. */
+  .cluster { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; width: 18px;
+    position: relative; top: 2px; }
+  .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--status, var(--ok)); margin: 1px; opacity: .6; }
+  .dot:nth-child(1) { animation: dotPulse 1.5s infinite; }
+  .dot:nth-child(2) { animation: dotPulse 1.3s infinite; }
+  .dot:nth-child(3) { animation: dotPulse 1.7s infinite; }
+  .dot:nth-child(4) { animation: dotPulse 1.1s infinite; }
+  .dot:nth-child(5) { animation: dotPulse 0.9s infinite; }
+  .dot:nth-child(6) { animation: dotPulse 0.7s infinite; }
+  .dot:nth-child(7) { animation: dotPulse 0.5s infinite; }
+  .dot:nth-child(8) { animation: dotPulse 1.3s infinite; }
+  .dot:nth-child(9) { animation: dotPulse 1.5s infinite; }
+  @keyframes dotPulse {
+    0%   { transform: scale(1);   opacity: .6; }
+    50%  { transform: scale(1.5); opacity: 1;  }
+    100% { transform: scale(1);   opacity: .6; }
+  }
+  /* accesibilidad: sin movimiento si el usuario lo pide */
+  @media (prefers-reduced-motion: reduce) { .dot { animation: none !important; opacity: .9; } }
+
+  /* banner al hover: carta habitual (cuadrada, borde, sin sombra) */
+  .legend { position: absolute; top: calc(100% + 8px); left: 0; z-index: 20;
+    background: var(--panel); border: 1px solid var(--border); border-radius: 0; padding: 12px 14px;
+    width: 260px; opacity: 0; pointer-events: none; transform: translateY(-3px);
+    transition: opacity .14s ease, transform .14s ease; }
+  .dot-status:hover .legend, .dot-status:focus-within .legend { opacity: 1; transform: translateY(0); }
+  .legend-h { font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--textDim); margin-bottom: 10px; }
+  .legend-row { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 9px; }
+  .legend-row:last-child { margin-bottom: 0; }
+  .mini-dot { width: 9px; height: 9px; border-radius: 50%; margin-top: 3px; flex: 0 0 auto; }
+  .lb { font-weight: 700; text-transform: uppercase; letter-spacing: .04em; font-size: 13px; }
+  .ds { display: block; color: var(--textDim); font-size: 12.5px; line-height: 1.4; margin-top: 1px; }
+
+  .controls { margin-top: 40px; display: flex; gap: 8px; flex-wrap: wrap; }
+  .controls button { background: var(--panel); color: var(--text); border: 1px solid var(--border);
+    border-radius: 8px; padding: 8px 14px; font-size: 14px; cursor: pointer; }
+  .controls button.on { background: var(--text); color: var(--bg); border-color: var(--text); }
+  .note { margin-top: 30px; font-size: 13px; color: var(--textDim); max-width: 620px; line-height: 1.6; }
+</style>
+</head>
+<body>
+<button class="toggle" id="themeBtn">Toggle theme</button>
+<div class="wrap">
+  <h1>Dot status (pulsing)</h1>
+  <p class="sub">A little cluster of dots that gently pulses, colored by status. No text - hover it for the legend.</p>
+
+  <div class="card-title">
+    <span class="ttl">"Team" // weekly NPT threshold</span>
+    <span class="sep">//</span>
+    <span class="dot-status" id="ind" tabindex="0" aria-label="Team status">
+      <span class="cluster" id="cluster">
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+        <span class="dot"></span><span class="dot"></span><span class="dot"></span>
+      </span>
+      <div class="legend" role="tooltip">
+        <div class="legend-h">What the color means</div>
+        <div class="legend-row">
+          <span class="mini-dot" style="background:var(--ok)"></span>
+          <span><span class="lb" style="color:var(--ok)">On track</span><span class="ds">The team is comfortably within its weekly NPT threshold.</span></span>
+        </div>
+        <div class="legend-row">
+          <span class="mini-dot" style="background:var(--warn)"></span>
+          <span><span class="lb" style="color:var(--warn)">Near limit</span><span class="ds">Close to the threshold. Keep an eye on non-essential NPT.</span></span>
+        </div>
+        <div class="legend-row">
+          <span class="mini-dot" style="background:var(--bad)"></span>
+          <span><span class="lb" style="color:var(--bad)">Over</span><span class="ds">The team has gone over its weekly threshold.</span></span>
+        </div>
+      </div>
+    </span>
+  </div>
+
+  <div class="controls">
+    <button data-s="ok" class="on">On track</button>
+    <button data-s="warn">Near limit</button>
+    <button data-s="bad">Over</button>
+  </div>
+
+  <p class="note">
+    9 dots in a small cluster, each pulsing with a different infinite duration (staggered, like the loader).
+    Color = status (green ok / yellow warn / red over) via a single CSS var so all dots share it. Respects
+    reduced-motion. Hover for the color legend (usual card, colored labels).
+  </p>
+</div>
+
+<script>
+(function () {
+  var COLORS = { ok: "var(--ok)", warn: "var(--warn)", bad: "var(--bad)" };
+  var cluster = document.getElementById("cluster");
+  function setState(s) {
+    cluster.style.setProperty("--status", COLORS[s]);
+    document.querySelectorAll(".controls button").forEach(function (b) { b.classList.toggle("on", b.dataset.s === s); });
+  }
+  document.querySelectorAll(".controls button").forEach(function (b) {
+    b.addEventListener("click", function () { setState(b.dataset.s); });
+  });
+  setState("ok");
+  document.getElementById("themeBtn").addEventListener("click", function () { document.documentElement.classList.toggle("dark"); });
+})();
+</script>
+</body>
+</html>

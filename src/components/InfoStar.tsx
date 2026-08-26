@@ -43,8 +43,8 @@ export function StoryLink({ onClick, children }: { onClick: () => void; children
 // interaccion: HOVER lo muestra y al salir se quita al instante; CLICK en el asterisco lo FIJA
 // (queda abierto aunque saques el hover) y otro click lo cierra; la X del cuadro tambien lo cierra.
 // el cuadro se reubica solo (flip vertical + clamp horizontal) para no salirse NUNCA del viewport.
-export function InfoStar({ children, size = 11, spin = true, pages }:
-  { children?: React.ReactNode; size?: number; spin?: boolean; pages?: React.ReactNode[] }) {
+export function InfoStar({ children, size = 11, spin = true, pages, trigger }:
+  { children?: React.ReactNode; size?: number; spin?: boolean; pages?: React.ReactNode[]; trigger?: React.ReactNode }) {
   const [open, setOpen] = useState(false);
   const [locked, setLocked] = useState(false);   // fijado por click: ignora el hover-out
   const [page, setPage] = useState(0);            // pagina actual (solo si se pasan `pages`)
@@ -117,9 +117,11 @@ export function InfoStar({ children, size = 11, spin = true, pages }:
       onBlur={onLeave}
       onClick={(e) => { e.stopPropagation(); toggle(); }}
       onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } }}
-      style={{ display: "inline-block", verticalAlign: "super", marginLeft: 3, cursor: "pointer", lineHeight: 0 }}
+      style={trigger
+        ? { display: "inline-flex", alignItems: "center", cursor: "pointer", lineHeight: 0 }
+        : { display: "inline-block", verticalAlign: "super", marginLeft: 3, cursor: "pointer", lineHeight: 0 }}
     >
-      <AsterMark size={size} active={open} spin={spin} />
+      {trigger ?? <AsterMark size={size} active={open} spin={spin} />}
       {open && createPortal(
         <div
           ref={boxRef}

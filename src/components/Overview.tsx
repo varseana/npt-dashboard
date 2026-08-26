@@ -7,7 +7,7 @@ import {
   weekInfo, weekLabel, weekRangeLabel, recentWeeks, isoDate,
   type NptDailyRow, type NptStatus, type PlannedRow, type TeamBudgetRow, type PlanContext,
 } from "../lib/npt";
-import { StatusChip } from "./status";
+import { StatusChip, DotStatus } from "./status";
 import { InfoStar, StoryLink } from "./InfoStar";
 import { downloadEml, downloadTeamEml } from "../lib/reminder";
 import WeekCountdown from "./WeekCountdown";
@@ -311,7 +311,7 @@ function TeamBudgetCard({ budget, used, remaining, status, users, onNavigate, on
         {budget != null && (
           <>
             <span className="npt-title" style={{ fontWeight: 700, fontSize: 28, letterSpacing: "0.06em", color: palette.textDim }}>//</span>
-            <span style={{ textTransform: "uppercase" }}><StatusChip status={status} /></span>
+            <DotStatus status={status} />
           </>
         )}
         {budget != null && onEmailTeam && (
