@@ -193,8 +193,10 @@ export default function Overview({ team, refreshKey, onNavigate, weekKey: weekKe
             <div style={{ flex: "1 1 480px", minWidth: 320 }}>
               <TeamBudgetCard budget={teamBudget} used={teamNpt} remaining={teamRemaining} status={teamStatus} users={users} onNavigate={onNavigate} onEmailTeam={emailTeam} emailCount={teamRecipients.length} />
             </div>
-            {/* mismos marcos esquineros que la budget card, envolviendo los 4 stats como un solo rectangulo */}
-            <div style={{ flex: "1 1 340px", position: "relative", padding: "18px 22px", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {/* divisor vertical entre el card de threshold (izq, sin cambios) y el de stats */}
+            <div style={{ width: 1, alignSelf: "stretch", flex: "0 0 auto", background: palette.border }} />
+            {/* stats: ~60% de su ancho anterior (no crece) => el threshold lo empuja a la derecha */}
+            <div style={{ flex: "0 1 380px", minWidth: 260, position: "relative", padding: "18px 22px", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <span className="npt-bracket tl" /><span className="npt-bracket tr" /><span className="npt-bracket bl" /><span className="npt-bracket br" />
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12, width: "100%", alignContent: "center" }}>
               <Stat label="Employees" value={String(users.length)}
