@@ -297,6 +297,25 @@ export function fairShareSeconds(ctx: PlanContext): number | null {
   return Math.max(0, Math.round((ctx.budgetSeconds - sum) / rest));
 }
 
+// resumen de asignacion del budget para la UI. leftover = lo que sobra tras los customs (lo reparte
+// el fair share). unassigned = la parte SIN dueno: 0 mientras haya alguien en fair share (ellos la
+// absorben), = leftover solo cuando TODOS tienen custom. leftover/unassigned null si no hay budget.
+export interface PlanSummary {
+  fair: number | null;        // fair share por persona sin custom (0 si no hay ninguna)
+  allocated: number;          // suma de customs
+  leftover: number | null;    // budget - suma de customs (>= 0)
+  unassigned: number | null;  // budget sin dueno: leftover si nadie va al fair share, si no 0
+  restCount: number;          // personas sin custom
+}
+export function planSummary(ctx: PlanContext): PlanSummary {
+  let allocated = 0;
+  for (const v of ctx.overrides.values()) allocated += v;
+  const restCount = ctx.headcount - ctx.overrides.size;
+  const leftover = ctx.budgetSeconds == null ? null : Math.max(0, ctx.budgetSeconds - allocated);
+  const unassigned = leftover == null ? null : (restCount <= 0 ? leftover : 0);
+  return { fair: fairShareSeconds(ctx), allocated, leftover, unassigned, restCount };
+}
+
 // planned de una persona: su custom si lo tiene, si no el fair share. null si no hay budget.
 export function resolvePersonPlan(alias: string, ctx: PlanContext): number | null {
   if (ctx.budgetSeconds == null) return null;

@@ -3,7 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import {
-  parseDuration, fmtHms, resolveTeamBudget, buildPlanOverrides, fairShareSeconds, resolvePersonPlan,
+  parseDuration, fmtHms, resolveTeamBudget, buildPlanOverrides, planSummary, resolvePersonPlan,
   weekInfo, weekLabel, weeksAround,
   type PlannedRow, type PlanContext,
 } from "../lib/npt";
@@ -68,7 +68,7 @@ export default function Planned({ team }: { team: Team }) {
   const budgetSeconds = resolveTeamBudget(budgetRows, scopeKey);
   const overrides = useMemo(() => buildPlanOverrides(rows, scopeKey), [rows, scopeKey]);
   const ctx: PlanContext = { budgetSeconds, headcount, overrides };
-  const fair = fairShareSeconds(ctx);
+  const { fair, allocated, leftover, unassigned, restCount } = planSummary(ctx);
   // el buscador SOLO filtra las filas visibles; headcount/fair share siguen usando el team completo
   const shownAliases = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -171,15 +171,25 @@ export default function Planned({ team }: { team: Team }) {
           <div className="npt-title" style={{ fontWeight: 700, fontSize: 28 }}>
             Team weekly threshold<InfoStar pages={[
               <>The <strong style={hi}>total NPT the whole team can spend</strong> in a week (the number ops hands you). Everyone draws from it. Type hours like <strong style={hi}>10</strong> (= 10:00:00) or H:MM. Applies to <strong style={hi}>{scopeLabel}</strong>.</>,
-              <><strong style={hi}>How it splits.</strong> Individual custom targets come <strong style={hi}>first</strong> and can never add up to more than the threshold. Whatever is left over becomes the <strong style={hi}>fair share</strong>, split equally among everyone without a custom. Example: threshold <strong style={hi}>10:00</strong>, one person set to <strong style={hi}>4:00</strong> leaves <strong style={hi}>6:00</strong> for the rest of the team.</>,
+              <><strong style={hi}>How it splits.</strong> Individual custom targets come <strong style={hi}>first</strong> and can never add up to more than the threshold. Whatever is left over becomes the <strong style={hi}>fair share</strong>, split equally among everyone without a custom. If <strong style={hi}>everyone</strong> has a custom, the remainder stays <strong style={hi}>unassigned</strong> (shown above the table). Example: threshold <strong style={hi}>10:00</strong>, one person set to <strong style={hi}>4:00</strong> leaves <strong style={hi}>6:00</strong> for the rest of the team.</>,
             ]} />
           </div>
-          {budgetSeconds != null && fair != null && (
-            <div style={{ fontSize: 18, color: palette.textDim, whiteSpace: "nowrap" }}>
-              Fair share <strong style={{ color: palette.text }}>{fmtHms(fair)}</strong>
-              <InfoStar spin={false}>{
-                <>What each person without a custom gets: <strong style={hi}>{fmtHms(budgetSeconds)}</strong> / {headcount} {headcount === 1 ? "person" : "people"}{overrides.size ? <>, after <strong style={hi}>{overrides.size}</strong> custom</> : null}.</>
-              }</InfoStar>
+          {budgetSeconds != null && (
+            <div style={{ fontSize: 18, color: palette.textDim, textAlign: "right", whiteSpace: "nowrap", lineHeight: 1.5 }}>
+              <div>
+                Fair share <strong style={{ color: palette.text }}>{fmtHms(fair ?? 0)}</strong>
+                <InfoStar spin={false}>{
+                  restCount > 0
+                    ? <>What each of the <strong style={hi}>{restCount}</strong> {restCount === 1 ? "person" : "people"} without a custom gets: <strong style={hi}>{fmtHms(leftover ?? 0)}</strong> left over, split evenly.</>
+                    : <>Everyone has a custom target, so <strong style={hi}>no one</strong> is on the fair share right now.</>
+                }</InfoStar>
+              </div>
+              <div>
+                Unassigned <strong style={{ color: palette.text }}>{fmtHms(unassigned ?? 0)}</strong>
+                <InfoStar spin={false}>{
+                  <>Budget with <strong style={hi}>no owner</strong>: the threshold <strong style={hi}>{fmtHms(budgetSeconds)}</strong> minus every custom target{overrides.size ? <> (<strong style={hi}>{fmtHms(allocated)}</strong>)</> : null}. It stays <strong style={hi}>0</strong> while anyone is on the fair share (they absorb the rest), and only grows when <strong style={hi}>everyone</strong> has a custom that totals less than the threshold.</>
+                }</InfoStar>
+              </div>
             </div>
           )}
         </div>
