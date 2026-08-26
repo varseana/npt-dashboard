@@ -223,6 +223,14 @@
       .npt-bracket.tr { top: 0; right: 0; border-top: 3px solid var(--textDim); border-right: 3px solid var(--textDim); }
       .npt-bracket.bl { bottom: 0; left: 0; border-bottom: 3px solid var(--textDim); border-left: 3px solid var(--textDim); }
       .npt-bracket.br { bottom: 0; right: 0; border-bottom: 3px solid var(--textDim); border-right: 3px solid var(--textDim); }
+      /* colapso suave (expandir/contraer) via grid-rows 0fr->1fr: la altura anima sola, asi la card
+         crece de a poco y sus esquinas de abajo (brackets bl/br, ancladas a bottom) se deslizan hacia
+         abajo. el contenido ademas hace fade. usado en el "Bulk add" de Employees. */
+      .npt-collapse { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .32s ease; }
+      .npt-collapse[data-open="true"] { grid-template-rows: 1fr; }
+      .npt-collapse > .npt-collapse-inner { overflow: hidden; opacity: 0; transition: opacity .32s ease; }
+      .npt-collapse[data-open="true"] > .npt-collapse-inner { opacity: 1; }
+      @media (prefers-reduced-motion: reduce) { .npt-collapse, .npt-collapse > .npt-collapse-inner { transition: none; } }
       /* ===== heatmap semanal (estilo GitHub) ===== cuadros casi invisibles, escala de intensidad,
          solo semanas con data clickeables. columnas=meses, filas=semanas del mes. */
       .npt-hm { display: inline-block; }

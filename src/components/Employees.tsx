@@ -4,7 +4,7 @@ import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { InfoStar } from "./InfoStar";
 import { TableSkeleton } from "./skeleton";
-import { AddButtonInput } from "./Inputs";
+import { AddButtonInput, SearchInput } from "./Inputs";
 import { IconCheck, IconX, IconMoveOut, IconUser } from "./icons";
 import { ConfirmDialog } from "./ConfirmDialog";
 
@@ -60,6 +60,7 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
   const [roster, setRoster] = useState<string[]>([]);
   const [data, setData] = useState<{ alias: string; work_date: string }[]>([]);
   const [single, setSingle] = useState("");
+  const [query, setQuery] = useState("");
   const [bulk, setBulk] = useState("");
   const [showBulk, setShowBulk] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -106,6 +107,12 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
     out.sort((a, b) => RANK[a.status] - RANK[b.status] || a.alias.localeCompare(b.alias));
     return out;
   }, [roster, data]);
+
+  // el buscador solo filtra las filas visibles (no cambia conteos ni el add)
+  const shown = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return q ? people.filter((p) => p.alias.includes(q)) : people;
+  }, [people, query]);
 
   async function add(aliases: string[]) {
     if (!aliases.length) return;
@@ -160,19 +167,24 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
             containerStyle={{ width: 300 }} />
           <button onClick={() => setShowBulk((v) => !v)} style={btnGhost}>{showBulk ? "Hide bulk" : "Bulk add"}</button>
         </div>
-        {showBulk && (
-          <div style={{ marginTop: 10 }}>
-            <textarea value={bulk} onChange={(e) => setBulk(e.target.value)} rows={5}
-              placeholder="One username per line (or comma/space separated)"
-              style={{ ...input, width: "100%", fontFamily: "monospace", resize: "vertical" }} />
-            <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6 }}>
-              <button onClick={() => add(parseAliases(bulk))} disabled={saving || !bulk.trim()} style={btn}>
-                Add {parseAliases(bulk).length || ""} in bulk
-              </button>
-              <span style={{ color: palette.textDim, fontSize: 17 }}>{parseAliases(bulk).length} usernames detected</span>
+        {/* colapso animado: siempre montado, la altura + fade animan al abrir/cerrar (esquinas de
+            abajo de la card se deslizan solas porque estan ancladas a bottom). */}
+        <div className="npt-collapse" data-open={showBulk}>
+          <div className="npt-collapse-inner">
+            <div style={{ marginTop: 10 }}>
+              <textarea value={bulk} onChange={(e) => setBulk(e.target.value)} rows={5}
+                tabIndex={showBulk ? 0 : -1} aria-hidden={!showBulk}
+                placeholder="One username per line (or comma/space separated)"
+                style={{ ...input, width: "100%", fontFamily: "monospace", resize: "vertical" }} />
+              <div style={{ display: "flex", gap: 8, alignItems: "center", marginTop: 6 }}>
+                <button onClick={() => add(parseAliases(bulk))} disabled={saving || !bulk.trim()} tabIndex={showBulk ? 0 : -1} style={btn}>
+                  Add {parseAliases(bulk).length || ""} in bulk
+                </button>
+                <span style={{ color: palette.textDim, fontSize: 17 }}>{parseAliases(bulk).length} usernames detected</span>
+              </div>
             </div>
           </div>
-        )}
+        </div>
         {msg && <div style={{ marginTop: 10, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 18 }}>{msg}</div>}
       </div>
         </div>{/* /IZQUIERDA (add employees) */}
@@ -180,10 +192,18 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
         {/* DERECHA: tabla de usuarios. usa el resto del ancho horizontal */}
         <div style={{ flex: "1 1 560px", minWidth: 320 }}>
       {err && <div style={{ color: palette.bad, marginBottom: 12 }}>{err}</div>}
+      {people.length > 0 && (
+        <div style={{ marginBottom: 12 }}>
+          <SearchInput value={query} onChange={(e) => setQuery(e.target.value)}
+            placeholder="username" aria-label="Search employees" />
+        </div>
+      )}
       {loading ? (
         <TableSkeleton rows={6} cols={5} />
       ) : people.length === 0 ? (
         <div style={{ color: palette.textDim }}>No employees yet. Add them above.</div>
+      ) : shown.length === 0 ? (
+        <div style={{ color: palette.textDim }}>No employees match "{query.trim()}".</div>
       ) : (
         <div style={{ border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19 }}>
@@ -198,7 +218,7 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
               </tr>
             </thead>
             <tbody>
-              {people.map((p, i) => (
+              {shown.map((p, i) => (
                 <tr key={p.alias} style={{ background: i % 2 ? palette.panelAlt : palette.panel }}>
                   <td style={{ ...td, color: palette.textDim }}>{i + 1}</td>
                   <td style={{ ...td, fontWeight: 600 }}>{p.alias}</td>

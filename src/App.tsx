@@ -280,8 +280,8 @@ export default function App() {
           <SubBtn active={dashView === "shared"} onClick={() => setDashView("shared")}>Shared with me</SubBtn>
         </>)}
         {section === "team" && (<>
-          <SubBtn active={teamTab === "employees"} onClick={() => setTeamTab("employees")}>Employees</SubBtn>
           <SubBtn active={teamTab === "planned"} onClick={() => setTeamTab("planned")}>Planned</SubBtn>
+          <SubBtn active={teamTab === "employees"} onClick={() => setTeamTab("employees")}>Employees</SubBtn>
           <SubBtn active={teamTab === "folders"} onClick={() => setTeamTab("folders")}>Folders</SubBtn>
         </>)}
         {section === "access" && (<>
