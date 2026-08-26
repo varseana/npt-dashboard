@@ -140,7 +140,14 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
 
   return (
     <div>
-      <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "14px 16px", marginBottom: 16 }}>
+      {/* Layout 2 columnas: IZQ = add employees (card sin caja, 4 marcos esquineros - patron del
+          proyecto, igual que Planned), DER = tabla. align-items:flex-start => la card izquierda NO
+          crece con la altura de la tabla. */}
+      <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
+        {/* IZQUIERDA: add employees (ancho acotado, no crece) */}
+        <div style={{ flex: "0 1 400px", minWidth: 300 }}>
+      <div style={{ position: "relative", background: "transparent", padding: "18px 22px" }}>
+        <span className="npt-bracket tl" /><span className="npt-bracket tr" /><span className="npt-bracket bl" /><span className="npt-bracket br" />
         <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, marginBottom: 10 }}>
           Add employees<InfoStar>{
             <>Pre-list the people you expect on <strong style={hi}>{team.name}</strong>. Until someone connects through STAR Tracker and uploads, they show as <strong style={hi}>Pending</strong>, so you can spot who has not started yet. It does <strong style={hi}>not</strong> change anyone's numbers.</>
@@ -168,7 +175,10 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
         )}
         {msg && <div style={{ marginTop: 10, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 18 }}>{msg}</div>}
       </div>
+        </div>{/* /IZQUIERDA (add employees) */}
 
+        {/* DERECHA: tabla de usuarios. usa el resto del ancho horizontal */}
+        <div style={{ flex: "1 1 560px", minWidth: 320 }}>
       {err && <div style={{ color: palette.bad, marginBottom: 12 }}>{err}</div>}
       {loading ? (
         <TableSkeleton rows={6} cols={5} />
@@ -215,6 +225,8 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
           </table>
         </div>
       )}
+        </div>{/* /DERECHA (tabla) */}
+      </div>{/* /flex 2 columnas */}
 
       {confirmRelease && (
         <ConfirmDialog
