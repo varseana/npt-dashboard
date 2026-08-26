@@ -131,6 +131,31 @@
       }
       .npt-inline-input:focus { border-color: var(--text); }
       .npt-inline-input:disabled { opacity: .6; }
+      /* ===== tilde de guardado ===== ✓ verde (var(--ok), se acopla a light/dark) con splash de
+         particulas (filtro goo global #npt-goo). aparece al guardar un inline field y se desvanece
+         a los ~0.8s. reduce-motion: solo el ✓, sin burst. */
+      .npt-savecheck { position: absolute; right: 2px; top: 50%; width: 24px; height: 24px;
+        margin-top: -12px; pointer-events: none; z-index: 3; animation: npt-save-life .8s ease forwards; }
+      .npt-savecheck-circle { position: absolute; inset: 0; border-radius: 50%; background: var(--ok);
+        filter: url(#npt-goo); animation: npt-save-splash .6s ease forwards; }
+      .npt-savecheck-tick { position: absolute; top: 5px; left: 4px; z-index: 1; }
+      .npt-savecheck-tick path { fill: none; stroke: #fff; stroke-width: 3; stroke-linecap: round;
+        stroke-linejoin: round; stroke-dasharray: 19; stroke-dashoffset: 19;
+        animation: npt-save-draw .3s ease .15s forwards; }
+      @keyframes npt-save-life { 0% { opacity: 0; transform: scale(.8); } 18% { opacity: 1; transform: scale(1); }
+        68% { opacity: 1; } 100% { opacity: 0; } }
+      @keyframes npt-save-draw { to { stroke-dashoffset: 0; } }
+      @keyframes npt-save-splash {
+        40% { box-shadow: 0 -18px 0 -8px var(--ok), 16px -8px 0 -8px var(--ok), 16px 8px 0 -8px var(--ok),
+          0 18px 0 -8px var(--ok), -16px 8px 0 -8px var(--ok), -16px -8px 0 -8px var(--ok); }
+        100% { box-shadow: 0 -36px 0 -10px transparent, 32px -16px 0 -10px transparent,
+          32px 16px 0 -10px transparent, 0 36px 0 -10px transparent,
+          -32px 16px 0 -10px transparent, -32px -16px 0 -10px transparent; } }
+      @media (prefers-reduced-motion: reduce) {
+        .npt-savecheck { animation: none; }
+        .npt-savecheck-circle { animation: none; filter: none; }
+        .npt-savecheck-tick path { animation: none; stroke-dashoffset: 0; }
+      }
       /* ===== nav tabs (Dashboard/Team/Access): estilo B1 ===== solido, cero radius, esquina sup-der
          recortada (chaflan 12px). el clip va en el INNER para no recortar el badge (que vive afuera).
          texto corrido 3px a la izquierda (padding left 15 / right 21). */
@@ -300,6 +325,16 @@
     </script>
   </head>
   <body>
+    <!-- filtro goo (una sola vez, global) usado por el tilde de guardado .npt-savecheck -->
+    <svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden" focusable="false">
+      <defs>
+        <filter id="npt-goo">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"></feGaussianBlur>
+          <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -7" result="goo"></feColorMatrix>
+          <feBlend in="SourceGraphic" in2="goo"></feBlend>
+        </filter>
+      </defs>
+    </svg>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

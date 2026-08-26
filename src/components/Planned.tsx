@@ -205,6 +205,7 @@ export default function Planned({ team }: { team: Team }) {
           fontWeight={700}
           ariaLabel="team weekly threshold"
           inputMode="numeric"
+          saveFeedback
         />
         {budgetSeconds == null && <div style={{ fontSize: 17, color: palette.textDim, marginTop: 8 }}>No threshold set. Click above to give everyone a target.</div>}
       </div>
@@ -256,6 +257,7 @@ export default function Planned({ team }: { team: Team }) {
                     fontSize={19}
                     ariaLabel={`custom target for ${a}`}
                     inputMode="numeric"
+                    saveFeedback
                   />
                 </td>
                 <td style={{ ...td, textAlign: "center", whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums", color: eff != null ? palette.text : palette.textDim, fontWeight: isCustom ? 700 : 400 }}>

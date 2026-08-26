@@ -27,19 +27,27 @@ interface Props {
   fontWeight?: number;
   ariaLabel?: string;
   inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
+  saveFeedback?: boolean;                          // muestra un tilde verde con splash al guardar OK
 }
 
 export function InlineEdit({
   value, onSave, format, render, emptyHint, placeholder,
   width = 140, align = "left", fontSize = 19, fontWeight = 400, ariaLabel, inputMode,
+  saveFeedback = false,
 }: Props) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   const [optimistic, setOptimistic] = useState<string | null>(null);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [saved, setSaved] = useState(false);       // tilde de guardado visible
+  const [saveTick, setSaveTick] = useState(0);      // key para reiniciar la animacion en cada guardado
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const cancelRef = useRef(false);   // Escape marca este flag antes del blur para descartar
+
+  // limpia el timer del tilde al desmontar
+  useEffect(() => () => { if (savedTimer.current) clearTimeout(savedTimer.current); }, []);
 
   // cuando el padre actualiza value (tras guardar + recargar), soltamos el optimista
   useEffect(() => { setOptimistic(null); }, [value]);
@@ -58,6 +66,12 @@ export function InlineEdit({
     try {
       await onSave(next);
       setErr("");
+      if (saveFeedback) {                              // tilde verde + splash, se auto-oculta a ~0.8s
+        if (savedTimer.current) clearTimeout(savedTimer.current);
+        setSaveTick((t) => t + 1);
+        setSaved(true);
+        savedTimer.current = setTimeout(() => setSaved(false), 800);
+      }
     } catch (e: any) {
       setOptimistic(null);                             // rollback del display al valor original
       setErr(e?.message || String(e));
@@ -109,10 +123,18 @@ export function InlineEdit({
             : (render ? render(shown) : shown)}
         </div>
       )}
-      {!editing && (
+      {!editing && !saved && (
         <span className="npt-inline-pencil" aria-hidden="true"
           style={{ position: "absolute", right: 6, top: "50%", transform: "translateY(-50%)", pointerEvents: "none", display: "inline-flex" }}>
           <IconPencil size={13} />
+        </span>
+      )}
+      {saveFeedback && saved && (
+        <span className="npt-savecheck" key={saveTick} aria-hidden="true">
+          <span className="npt-savecheck-circle" />
+          <svg className="npt-savecheck-tick" width="15" height="14" viewBox="0 0 15 14">
+            <path d="M2 8.36364L6.23077 12L13 2" />
+          </svg>
         </span>
       )}
       {err && (
