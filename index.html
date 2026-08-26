@@ -156,6 +156,12 @@
         .npt-savecheck-circle { animation: none; filter: none; }
         .npt-savecheck-tick path { animation: none; stroke-dashoffset: 0; }
       }
+      /* skeleton shimmer global (mismo que skeleton.tsx) para mostrar barras sueltas <Bar> al
+         re-consultar tras guardar, sin remontar toda la vista. */
+      .npt-sk { background: linear-gradient(90deg, var(--skel1) 25%, var(--skel2) 37%, var(--skel1) 63%);
+        background-size: 400% 100%; animation: npt-sk 1.4s ease infinite; border-radius: 6px; }
+      @keyframes npt-sk { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+      @media (prefers-reduced-motion: reduce) { .npt-sk { animation: none; } }
       /* ===== nav tabs (Dashboard/Team/Access): estilo B1 ===== solido, cero radius, esquina sup-der
          recortada (chaflan 12px). el clip va en el INNER para no recortar el badge (que vive afuera).
          texto corrido 3px a la izquierda (padding left 15 / right 21). */

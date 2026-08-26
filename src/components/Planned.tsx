@@ -12,7 +12,7 @@ import { InlineEdit } from "./InlineEdit";
 import { Dropdown } from "./Dropdown";
 import { SearchInput } from "./Inputs";
 import WeekCountdown from "./WeekCountdown";
-import { BlockSkeleton } from "./skeleton";
+import { BlockSkeleton, Bar } from "./skeleton";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 type Scope = "standing" | "week";
@@ -34,7 +34,8 @@ export default function Planned({ team }: { team: Team }) {
   const [budgetRows, setBudgetRows] = useState<{ week_key: string; planned_seconds: number }[]>([]);
   const [aliases, setAliases] = useState<string[]>([]);
   const [query, setQuery] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);      // carga inicial: skeleton de toda la vista
+  const [refreshing, setRefreshing] = useState(false); // re-consulta tras guardar: skeleton solo en los numeros
 
   const scopeKey = scope === "standing" ? "" : weekKey;
 
@@ -42,8 +43,8 @@ export default function Planned({ team }: { team: Team }) {
   // numero suelto = horas. deja el texto igual si esta vacio o es invalido.
   const normalize = (v: string) => { const s = parseDuration(v); return s == null ? v : fmtHms(s); };
 
-  async function load() {
-    setLoading(true);
+  async function load(silent = false) {
+    if (silent) setRefreshing(true); else setLoading(true);
     const [{ data: p }, { data: b }, { data: d }, { data: r }] = await Promise.all([
       supabase.from("npt_planned").select("alias,week_key,planned_seconds").eq("team_id", team.id),
       supabase.from("npt_team_budget").select("week_key,planned_seconds").eq("team_id", team.id),
@@ -59,7 +60,7 @@ export default function Planned({ team }: { team: Team }) {
     for (const x of (d as { alias: string }[]) ?? []) set.add(x.alias);
     for (const x of planned) if (x.alias) set.add(x.alias);
     setAliases(Array.from(set).sort());
-    setLoading(false);
+    if (silent) setRefreshing(false); else setLoading(false);
   }
 
   useEffect(() => { load(); /* eslint-disable-next-line */ }, [team.id]);
@@ -119,7 +120,7 @@ export default function Planned({ team }: { team: Team }) {
       if (sum > secs) throw new Error(`Custom targets add up to ${fmtHms(sum)}, more than this threshold ${fmtHms(secs)}. Lower them first.`);
     }
     await upsertOrDeleteBudget(next);
-    await load();
+    await load(true);
   }
 
   // guardado inline de un custom. valida que la suma de todos los customs no pase el budget.
@@ -134,7 +135,7 @@ export default function Planned({ team }: { team: Team }) {
       if (sum > budgetSecs) throw new Error(`Custom targets would total ${fmtHms(sum)}, over the threshold ${fmtHms(budgetSecs)}.`);
     }
     await upsertOrDelete(alias, next);
-    await load();
+    await load(true);
   }
 
   if (loading) return <BlockSkeleton />;
@@ -177,7 +178,9 @@ export default function Planned({ team }: { team: Team }) {
           {budgetSeconds != null && (
             <div style={{ fontSize: 18, color: palette.textDim, textAlign: "right", whiteSpace: "nowrap", lineHeight: 1.5 }}>
               <div>
-                Fair share <strong style={{ color: palette.text }}>{fmtHms(fair ?? 0)}</strong>
+                Fair share {refreshing
+                  ? <Bar w={92} h={22} style={{ display: "inline-block", verticalAlign: "middle" }} />
+                  : <strong style={{ color: palette.text }}>{fmtHms(fair ?? 0)}</strong>}
                 <InfoStar spin={false}>{
                   restCount > 0
                     ? <>What each of the <strong style={hi}>{restCount}</strong> {restCount === 1 ? "person" : "people"} without a custom gets: <strong style={hi}>{fmtHms(leftover ?? 0)}</strong> left over, split evenly.</>
@@ -185,7 +188,9 @@ export default function Planned({ team }: { team: Team }) {
                 }</InfoStar>
               </div>
               <div>
-                Unassigned <strong style={{ color: palette.text }}>{fmtHms(unassigned ?? 0)}</strong>
+                Unassigned {refreshing
+                  ? <Bar w={92} h={22} style={{ display: "inline-block", verticalAlign: "middle" }} />
+                  : <strong style={{ color: palette.text }}>{fmtHms(unassigned ?? 0)}</strong>}
                 <InfoStar spin={false}>{
                   <>Budget with <strong style={hi}>no owner</strong>: the threshold <strong style={hi}>{fmtHms(budgetSeconds)}</strong> minus every custom target{overrides.size ? <> (<strong style={hi}>{fmtHms(allocated)}</strong>)</> : null}. It stays <strong style={hi}>0</strong> while anyone is on the fair share (they absorb the rest), and only grows when <strong style={hi}>everyone</strong> has a custom that totals less than the threshold.</>
                 }</InfoStar>
@@ -261,7 +266,9 @@ export default function Planned({ team }: { team: Team }) {
                   />
                 </td>
                 <td style={{ ...td, textAlign: "center", whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums", color: eff != null ? palette.text : palette.textDim, fontWeight: isCustom ? 700 : 400 }}>
-                  {eff != null ? fmtHms(eff) : "no threshold"}
+                  {refreshing
+                    ? <Bar w={72} h={16} style={{ display: "inline-block" }} />
+                    : (eff != null ? fmtHms(eff) : "no threshold")}
                 </td>
               </tr>
             );
