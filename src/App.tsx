@@ -55,7 +55,7 @@ export default function App() {
   // nav de 2 niveles (progressive disclosure): 3 secciones arriba, sub-nav adentro
   const [section, setSection] = useState<"dashboard" | "team" | "access">("dashboard");
   const [dashView, setDashView] = useState<"summary" | "breakdown" | "shared">("summary");
-  const [teamTab, setTeamTab] = useState<"employees" | "planned" | "folders">("employees");
+  const [teamTab, setTeamTab] = useState<"employees" | "planned" | "folders">("planned");
   const [accessTab, setAccessTab] = useState<"requests" | "org" | "managers" | "teams" | "unassigned" | "create">("requests");
   // semana del dashboard (compartida por el heatmap + Summary + Breakdown): click en el heatmap la cambia
   const [dashWeekKey, setDashWeekKey] = useState(() => weekInfo(new Date()).key);
@@ -111,7 +111,7 @@ export default function App() {
         setAskLogout(false);
         setSection("dashboard");
         setDashView("summary");
-        setTeamTab("employees");
+        setTeamTab("planned");
         setAccessTab("requests");
       }
     });

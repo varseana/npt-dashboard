@@ -176,10 +176,10 @@ export default function Planned({ team }: { team: Team }) {
         {/* titulo en 2 lineas: "Team weekly" / "Threshold". "Threshold" va mas grande para quedar
             (aprox) tan ancho como "Team weekly" y verse parejo. El asterisco va al lado, fuera de las
             lineas, para no afectar el ancho del texto. */}
-        <div style={{ display: "flex", alignItems: "flex-start", gap: 6, marginBottom: 10 }}>
+        <div style={{ display: "flex", alignItems: "flex-start", gap: 2, marginBottom: 10 }}>
           <div className="npt-title" style={{ fontWeight: 700, lineHeight: 1.0, paddingLeft: 9 }}>
             <span style={{ display: "block", fontSize: 34 }}>Team weekly</span>
-            <span style={{ display: "block", fontSize: 48 }}>Threshold</span>
+            <span style={{ display: "block", fontSize: 44 }}>Threshold</span>
           </div>
           <InfoStar pages={[
             <>The <strong style={hi}>total NPT the whole team can spend</strong> in a week (the number ops hands you). Everyone draws from it. Type hours like <strong style={hi}>10</strong> (= 10:00:00) or H:MM. Applies to <strong style={hi}>{scopeLabel}</strong>.</>,

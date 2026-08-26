@@ -36,9 +36,12 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
   const [allFolders, setAllFolders] = useState<AdminFolder[]>([]);
   const [managers, setManagers] = useState<ManagerLite[]>([]);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const first = useRef(true);   // solo la carga inicial muestra el skeleton completo
 
   async function load() {
-    setLoading(true);
+    // refresco silencioso tras crear/renombrar/borrar: NO remontar toda la vista (si no, mata el
+    // tilde de guardado y hace parpadear el segmento). solo la 1a carga usa el skeleton global.
+    if (first.current) setLoading(true);
     const [{ data: f }, { data: r }, { data: d }] = await Promise.all([
       supabase.from("manager_folders").select("id,name,aliases").eq("team_id", team.id).order("created_at"),
       supabase.from("roster").select("alias").eq("team_id", team.id),
@@ -58,6 +61,7 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
       setAllFolders((af as AdminFolder[]) ?? []);
       setManagers((mg as ManagerLite[]) ?? []);
     }
+    first.current = false;
     setLoading(false);
   }
 
@@ -266,7 +270,7 @@ function FolderCard({ folder, teamAliases, onRemoveMember, onAddTeamMember, onRe
         <div style={{ flex: 1, minWidth: 0 }}>
           <InlineEdit value={folder.name} onSave={onRename} format={(v) => v.trim()}
             width="100%" align="left" fontSize={20} fontWeight={700}
-            placeholder="Folder name" ariaLabel="folder name" />
+            placeholder="Folder name" ariaLabel="folder name" saveFeedback />
         </div>
         <button onClick={onDelete} className="npt-ico-act npt-ico-danger" title="Delete folder" aria-label="Delete folder"><IconTrash size={17} /></button>
       </div>
