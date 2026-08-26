@@ -126,7 +126,7 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
     <div>
       {msg && <div style={{ marginBottom: 12, color: msg.startsWith("Error") ? palette.bad : palette.warn, fontSize: 18 }}>{msg}</div>}
 
-      <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "14px 16px", marginBottom: 20 }}>
+      <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 0, padding: "14px 16px", marginBottom: 20 }}>
         <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, marginBottom: 10 }}>
           New team<InfoStar spin={false} pages={[
             <>Create a team and, optionally, its <strong style={hi}>enrollment code</strong>. The team's weekly NPT target is its <strong style={hi}>threshold</strong>, set by its manager in Team {"->"} Planned.</>,
@@ -148,7 +148,7 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
         : teams.map((t) => {
           const tCodes = codes.filter((c) => c.team_id === t.id);
           return (
-            <div key={t.id} style={{ border: `1px solid ${palette.border}`, borderRadius: 8, marginBottom: 14, overflow: "hidden" }}>
+            <div key={t.id} style={{ border: `1px solid ${palette.border}`, borderRadius: 0, marginBottom: 14, overflow: "hidden" }}>
               <div style={{ display: "flex", gap: 10, alignItems: "center", padding: "12px 14px", background: palette.panel, flexWrap: "wrap" }}>
                 <input defaultValue={t.name}
                   onBlur={(e) => { const v = e.target.value.trim(); if (v && v !== t.name) saveTeam(t, { name: v }); }}
@@ -201,12 +201,12 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
 function TeamsSkeleton() {
   return (
     <div>
-      <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "14px 16px", marginBottom: 20 }}>
+      <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 0, padding: "14px 16px", marginBottom: 20 }}>
         <Bar w={160} h={26} style={{ marginBottom: 12 }} />
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}><Bar w={340} h={40} /><Bar w={200} h={40} /><Bar w={120} h={40} /></div>
       </div>
       {Array.from({ length: 3 }).map((_, i) => (
-        <div key={i} style={{ border: `1px solid ${palette.border}`, borderRadius: 8, marginBottom: 14 }}>
+        <div key={i} style={{ border: `1px solid ${palette.border}`, borderRadius: 0, marginBottom: 14 }}>
           <div style={{ display: "flex", gap: 8, alignItems: "center", padding: "12px 14px" }}>
             <Bar w={340} h={38} style={{ flex: 1 }} /><Bar w={22} h={22} />
           </div>
@@ -222,14 +222,14 @@ function TeamsSkeleton() {
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
-  return <div style={{ padding: "12px 14px", color: palette.textDim, fontSize: 18, border: `1px solid ${palette.border}`, borderRadius: 8 }}>{children}</div>;
+  return <div style={{ padding: "12px 14px", color: palette.textDim, fontSize: 18, border: `1px solid ${palette.border}`, borderRadius: 0 }}>{children}</div>;
 }
 
 // modal de confirmacion para el borrado destructivo de un team.
 function Confirm({ title, body, onCancel, onConfirm }: { title: string; body: string; onCancel: () => void; onConfirm: () => void }) {
   return (
     <div onClick={onCancel} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 24 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: 24, width: 420, maxWidth: "90vw" }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 0, padding: 24, width: 420, maxWidth: "90vw" }}>
         <h2 style={{ margin: "0 0 8px", fontSize: 29, color: palette.text }}>{title}</h2>
         <p style={{ margin: "0 0 20px", color: palette.textDim, fontSize: 19 }}>{body}</p>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
@@ -243,13 +243,13 @@ function Confirm({ title, body, onCancel, onConfirm }: { title: string; body: st
 
 const input: React.CSSProperties = {
   background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
-  borderRadius: 8, padding: "8px 10px", fontSize: 19, boxSizing: "border-box",
+  borderRadius: 0, padding: "8px 10px", fontSize: 19, boxSizing: "border-box",
 };
 const btn: React.CSSProperties = {
-  background: palette.accent, color: palette.accentText, border: "none", borderRadius: 8,
+  background: palette.accent, color: palette.accentText, border: "none", borderRadius: 0,
   padding: "8px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600,
 };
 const btnGhost: React.CSSProperties = {
   background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
-  borderRadius: 8, padding: "6px 12px", fontSize: 18, cursor: "pointer",
+  borderRadius: 0, padding: "6px 12px", fontSize: 18, cursor: "pointer",
 };

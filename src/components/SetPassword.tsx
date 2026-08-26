@@ -76,5 +76,5 @@ export default function SetPassword({ email, onDone }: { email: string; onDone: 
 const label: React.CSSProperties = { display: "block", fontSize: 17, color: palette.textDim, margin: "10px 0 4px" };
 const input: React.CSSProperties = {
   width: "100%", boxSizing: "border-box", background: palette.bg, color: palette.text,
-  border: `1px solid ${palette.border}`, borderRadius: 8, padding: "9px 10px", fontSize: 19,
+  border: `1px solid ${palette.border}`, borderRadius: 0, padding: "9px 10px", fontSize: 19,
 };

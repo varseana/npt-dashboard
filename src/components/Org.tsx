@@ -112,7 +112,7 @@ export default function Org() {
         const mine = members.filter((m) => m.manager_owner === mgr.user_id);
         const teamNpt = mine.reduce((a, m) => a + (nptByAlias.get(m.alias) || 0), 0);
         return (
-          <div key={mgr.user_id} style={{ border: `1px solid ${palette.border}`, borderRadius: 8, padding: "12px 14px", marginBottom: 14 }}>
+          <div key={mgr.user_id} style={{ border: `1px solid ${palette.border}`, borderRadius: 0, padding: "12px 14px", marginBottom: 14 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
               <div style={{ fontWeight: 700 }}>{mgr.email} <span style={{ color: palette.textDim, fontWeight: 400, fontSize: 18 }}>({mine.length} members, NPT {fmtHms(teamNpt)})</span></div>
             </div>
@@ -186,7 +186,7 @@ function OrgSkeleton() {
         <Bar w={110} h={16} />
       </div>
       {Array.from({ length: 2 }).map((_, i) => (
-        <div key={i} style={{ border: `1px solid ${palette.border}`, borderRadius: 8, padding: "12px 14px", marginBottom: 14 }}>
+        <div key={i} style={{ border: `1px solid ${palette.border}`, borderRadius: 0, padding: "12px 14px", marginBottom: 14 }}>
           <Bar w={260} h={18} style={{ marginBottom: 12 }} />
           <TableSk template="2fr 1.2fr 1fr 1fr 90px 44px" rows={3} />
           <div style={{ marginTop: 12 }}><Bar w={260} h={40} /></div>
@@ -201,4 +201,4 @@ function remainColor(s: NptStatus): string {
 }
 
 const th: React.CSSProperties = { textAlign: "center", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
-const td: React.CSSProperties = { textAlign: "center", padding: "8px 10px", borderBottom: `1px solid ${palette.border}` };
+const td: React.CSSProperties = { textAlign: "center", padding: "8px 10px", borderBottom: `1px solid ${palette.border}`, fontVariantNumeric: "tabular-nums" };

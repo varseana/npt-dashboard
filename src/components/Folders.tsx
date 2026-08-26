@@ -172,7 +172,7 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
             const mf = allFolders.filter((f) => f.owner === m.user_id);
             const open = expanded.has(m.user_id);
             return (
-              <div key={m.user_id} style={{ border: `1px solid ${palette.border}`, borderRadius: 8, marginBottom: 8 }}>
+              <div key={m.user_id} style={{ border: `1px solid ${palette.border}`, borderRadius: 0, marginBottom: 8 }}>
                 <button onClick={() => toggleExpand(m.user_id)}
                   style={{ width: "100%", textAlign: "left", background: "transparent", border: "none", cursor: "pointer", padding: "10px 12px", color: palette.text, fontSize: 18, display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                   <span>{open ? "▾" : "▸"} {m.email} <span style={{ color: palette.textDim }}>({mf.length})</span></span>
@@ -213,7 +213,7 @@ function FoldersSkeleton() {
       </div>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 14 }}>
         {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} style={{ border: `1px solid ${palette.border}`, borderRadius: 10, padding: "12px 14px", background: palette.panel }}>
+          <div key={i} style={{ border: `1px solid ${palette.border}`, borderRadius: 0, padding: "12px 14px", background: palette.panel }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
               <Bar w={140} h={22} /><Bar w={18} h={18} />
             </div>
@@ -289,7 +289,7 @@ function FolderCard({ folder, teamAliases, onRemoveMember, onAddTeamMember, onRe
   }
 
   return (
-    <div style={{ border: `1px solid ${palette.border}`, borderRadius: 10, padding: "12px 14px", background: palette.panel, display: "flex", flexDirection: "column" }}>
+    <div style={{ border: `1px solid ${palette.border}`, borderRadius: 0, padding: "12px 14px", background: palette.panel, display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, marginBottom: 10 }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <InlineEdit value={folder.name} onSave={onRename} format={(v) => v.trim()}
@@ -331,7 +331,7 @@ function FolderCard({ folder, teamAliases, onRemoveMember, onAddTeamMember, onRe
           style={{ width: "100%", fontSize: 16, padding: "6px 9px", paddingLeft: 32 }}
         />
         {open && sugg.length > 0 && (
-          <div style={{ position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4, background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden", zIndex: 20, maxHeight: 240, overflowY: "auto" }}>
+          <div style={{ position: "absolute", top: "100%", left: 0, right: 0, marginTop: 4, background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 0, overflow: "hidden", zIndex: 20, maxHeight: 240, overflowY: "auto" }}>
             {sugg.map((a) => {
               const onTeam = teamAliases.includes(a);
               return (

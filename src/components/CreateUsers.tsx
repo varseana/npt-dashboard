@@ -78,7 +78,7 @@ export default function CreateUsers({ teams }: { teams: Team[] }) {
         <InfoStar>{story}</InfoStar>
       </div>
 
-      <div style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: 18 }}>
+      <div style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 0, padding: 18 }}>
         <label style={label}>Usernames</label>
         <textarea
           value={bulk} onChange={(e) => setBulk(e.target.value)}
@@ -123,7 +123,7 @@ export default function CreateUsers({ teams }: { teams: Team[] }) {
               options={[{ value: "", label: "No team" }, ...teams.map((t) => ({ value: t.id, label: t.name }))]} />
           </div>
           <button onClick={create} disabled={busy || !usernames.length || password.length < 6}
-            style={{ background: palette.accent, color: palette.accentText, border: "none", borderRadius: 8, padding: "10px 18px", fontSize: 17, fontWeight: 600, cursor: (busy || !usernames.length || password.length < 6) ? "default" : "pointer", opacity: (busy || !usernames.length || password.length < 6) ? 0.5 : 1, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+            style={{ background: palette.accent, color: palette.accentText, border: "none", borderRadius: 0, padding: "10px 18px", fontSize: 17, fontWeight: 600, cursor: (busy || !usernames.length || password.length < 6) ? "default" : "pointer", opacity: (busy || !usernames.length || password.length < 6) ? 0.5 : 1, textTransform: "uppercase", letterSpacing: "0.05em" }}>
             {busy ? "Creating..." : `Create ${usernames.length || ""}`.trim()}
           </button>
         </div>

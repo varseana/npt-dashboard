@@ -158,7 +158,7 @@ export default function Distribution({ team, refreshKey, weekKey: weekKeyProp, o
       ) : matrix.length === 0 ? (
         <div style={{ color: palette.textDim }}>No reported data for {weekLabel(sel)}.</div>
       ) : (
-        <div style={{ overflowX: "auto", border: `1px solid ${palette.border}`, borderRadius: 8 }}>
+        <div style={{ overflowX: "auto", border: `1px solid ${palette.border}`, borderRadius: 0 }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 18, whiteSpace: "nowrap" }}>
             <thead>
               <tr>

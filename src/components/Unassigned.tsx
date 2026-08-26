@@ -53,7 +53,7 @@ export default function Unassigned({ teams, refreshKey }: { teams: Team[]; refre
   if (loading) return <UnassignedSkeleton />;
 
   return (
-    <div style={{ maxWidth: 900 }}>
+    <div>
       <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
         "Unassigned" // no manager ({rows.length})
       </div>
@@ -63,7 +63,7 @@ export default function Unassigned({ teams, refreshKey }: { teams: Team[]; refre
       </div>
       {msg && <div style={{ marginBottom: 12, color: msg.startsWith("Error") ? palette.bad : palette.warn, fontSize: 18 }}>{msg}</div>}
 
-      <div style={{ border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden" }}>
+      <div style={{ border: `1px solid ${palette.border}`, borderRadius: 0, overflow: "hidden" }}>
         {rows.length === 0 ? (
           <div style={{ padding: "12px 14px", color: palette.textDim, fontSize: 18 }}>Nobody is unassigned. </div>
         ) : rows.map((r) => (
@@ -84,11 +84,11 @@ export default function Unassigned({ teams, refreshKey }: { teams: Team[]; refre
 // skeleton 1:1: titulo + descripcion -> caja bordeada de filas (alias, stats, dropdown "move to team", boton assign)
 function UnassignedSkeleton() {
   return (
-    <div style={{ maxWidth: 900 }}>
+    <div>
       <Bar w={320} h={28} style={{ marginBottom: 10 }} />
       <Bar w="90%" h={16} style={{ marginBottom: 6 }} />
       <Bar w="70%" h={16} style={{ marginBottom: 16 }} />
-      <div style={{ border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden" }}>
+      <div style={{ border: `1px solid ${palette.border}`, borderRadius: 0, overflow: "hidden" }}>
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} style={{ display: "grid", gridTemplateColumns: "1.2fr auto 1fr auto", gap: 12, alignItems: "center", padding: "12px 14px", borderBottom: i < 3 ? `1px solid ${palette.border}` : "none" }}>
             <Bar w={140} h={16} /><Bar w={120} h={14} /><Bar w={180} h={40} /><Bar w={80} h={38} />
@@ -100,6 +100,6 @@ function UnassignedSkeleton() {
 }
 
 const btn: React.CSSProperties = {
-  background: palette.accent, color: palette.accentText, border: "none", borderRadius: 8,
+  background: palette.accent, color: palette.accentText, border: "none", borderRadius: 0,
   padding: "7px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600,
 };

@@ -5,7 +5,7 @@ import { IconSearch, IconPlus } from "./icons";
 // estilo base compartido de todos los inputs del dashboard (antes copy-pasteado en cada componente).
 export const baseInput: React.CSSProperties = {
   background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
-  borderRadius: 8, padding: "8px 10px", fontSize: 19, boxSizing: "border-box",
+  borderRadius: 0, padding: "8px 10px", fontSize: 19, boxSizing: "border-box",
 };
 
 type IconInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
@@ -55,7 +55,7 @@ type AddButtonInputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, "on
 };
 export function AddButtonInput({ onSubmit, icon, buttonDisabled, containerStyle, iconSize = 18, style, onKeyDown, ...rest }: AddButtonInputProps) {
   return (
-    <div style={{ display: "flex", alignItems: "stretch", height: 38, width: 260, border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden", background: palette.panel, ...containerStyle }}>
+    <div style={{ display: "flex", alignItems: "stretch", height: 38, width: 260, border: `1px solid ${palette.border}`, borderRadius: 0, overflow: "hidden", background: palette.panel, ...containerStyle }}>
       <div style={{ position: "relative", display: "flex", alignItems: "center", flex: 1, minWidth: 0 }}>
         <span style={{ position: "absolute", left: 10, display: "inline-flex", color: palette.textDim, pointerEvents: "none" }}>
           {icon ?? <IconPlus size={iconSize} />}

@@ -164,7 +164,7 @@ export default function Managers({ teams, myUserId, refreshKey }:
               background: on ? palette.accent : palette.panel,
               color: on ? palette.accentText : palette.text,
               border: `1px solid ${on ? palette.accent : warn ? "color-mix(in srgb, var(--warn) 50%, transparent)" : palette.border}`,
-              borderRadius: 8, padding: "7px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600,
+              borderRadius: 0, padding: "7px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600,
               display: "inline-flex", alignItems: "center", gap: 8,
             }}>
               {ROLE_TAB_LABEL[role]}
@@ -180,7 +180,7 @@ export default function Managers({ teams, myUserId, refreshKey }:
         <InfoStar spin={false}>{ROLE_HINT[roleTab]}</InfoStar>
       </div>
 
-      <div style={{ border: `1px solid ${roleTab === "standby" && warnStandby ? "color-mix(in srgb, var(--warn) 40%, transparent)" : palette.border}`, borderRadius: 8, overflow: "hidden", background: roleTab === "standby" && warnStandby ? palette.warnBg : palette.panel }}>
+      <div style={{ border: `1px solid ${roleTab === "standby" && warnStandby ? "color-mix(in srgb, var(--warn) 40%, transparent)" : palette.border}`, borderRadius: 0, overflow: "hidden", background: roleTab === "standby" && warnStandby ? palette.warnBg : palette.panel }}>
         {list.length === 0
           ? <Empty>{searching ? "No matches." : `No ${ROLE_TAB_LABEL[roleTab].toLowerCase()} yet.`}</Empty>
           : list.map((r) => <PersonRow key={r.user_id} {...rowProps(r)} />)}
@@ -220,7 +220,7 @@ function ResetDialog({ email, onCancel, onConfirm }: {
   const valid = pw.length >= 6;
   return (
     <div onClick={onCancel} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 60, padding: 24 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: 24, width: 420, maxWidth: "90vw" }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 0, padding: 24, width: 420, maxWidth: "90vw" }}>
         <h2 style={{ margin: "0 0 8px", fontSize: 27, color: palette.text }}>Reset password</h2>
         <p style={{ margin: "0 0 16px", color: palette.textDim, fontSize: 18, lineHeight: 1.5 }}>
           Set a temporary password for <strong style={{ color: palette.text }}>{email}</strong> and give it to them.
@@ -229,16 +229,16 @@ function ResetDialog({ email, onCancel, onConfirm }: {
         <div style={{ position: "relative", marginBottom: 20 }}>
           <input value={pw} onChange={(e) => setPw(e.target.value)} type={show ? "text" : "password"}
             placeholder="temporary password (min 6)" autoFocus
-            style={{ width: "100%", boxSizing: "border-box", background: palette.bg, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "9px 40px 9px 10px", fontSize: 18 }} />
+            style={{ width: "100%", boxSizing: "border-box", background: palette.bg, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 0, padding: "9px 40px 9px 10px", fontSize: 18 }} />
           <button type="button" className="npt-eye" onClick={() => setShow((s) => !s)}
             aria-label={show ? "Hide" : "Show"} style={{ position: "absolute", right: 8, top: "50%", transform: "translateY(-50%)", background: "transparent", border: "none", padding: 2, cursor: "pointer", display: "inline-flex" }}>
             {show ? <IconEyeOff size={18} /> : <IconEye size={18} />}
           </button>
         </div>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
-          <button onClick={onCancel} style={{ background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 14px", fontSize: 17, cursor: "pointer" }}>Cancel</button>
+          <button onClick={onCancel} style={{ background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 0, padding: "8px 14px", fontSize: 17, cursor: "pointer" }}>Cancel</button>
           <button disabled={!valid || busy} onClick={async () => { setBusy(true); await onConfirm(pw); setBusy(false); }}
-            style={{ background: palette.accent, color: palette.accentText, border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 17, cursor: valid && !busy ? "pointer" : "default", opacity: valid && !busy ? 1 : 0.5, fontWeight: 600 }}>
+            style={{ background: palette.accent, color: palette.accentText, border: "none", borderRadius: 0, padding: "8px 14px", fontSize: 17, cursor: valid && !busy ? "pointer" : "default", opacity: valid && !busy ? 1 : 0.5, fontWeight: 600 }}>
             {busy ? "Resetting..." : "Reset"}
           </button>
         </div>
@@ -307,7 +307,7 @@ function ManagersSkeleton() {
         {Array.from({ length: 4 }).map((_, i) => <Bar key={i} w={90} h={34} />)}
       </div>
       <Bar w={220} h={24} style={{ marginBottom: 12 }} />
-      <div style={{ border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden" }}>
+      <div style={{ border: `1px solid ${palette.border}`, borderRadius: 0, overflow: "hidden" }}>
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} style={{ display: "grid", gridTemplateColumns: "1.4fr 120px 1fr 1.3fr auto", gap: 12, alignItems: "center", padding: "12px 14px", borderBottom: i < 3 ? `1px solid ${palette.border}` : "none" }}>
             <Bar w={200} h={16} /><Bar w={110} h={38} /><Bar w={120} h={16} /><Bar w={160} h={38} /><Bar w={60} h={20} />
@@ -339,7 +339,7 @@ function Confirm({ title, body, confirmLabel, danger, onCancel, onConfirm }: {
     <div onClick={onCancel}
       style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 24 }}>
       <div onClick={(e) => e.stopPropagation()}
-        style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: 24, width: 400, maxWidth: "90vw" }}>
+        style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 0, padding: 24, width: 400, maxWidth: "90vw" }}>
         <h2 style={{ margin: "0 0 8px", fontSize: 29, color: palette.text }}>{title}</h2>
         <p style={{ margin: "0 0 20px", color: palette.textDim, fontSize: 19 }}>{body}</p>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
@@ -353,13 +353,13 @@ function Confirm({ title, body, confirmLabel, danger, onCancel, onConfirm }: {
 
 const cell: React.CSSProperties = {
   background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
-  borderRadius: 8, padding: "7px 8px", fontSize: 18, width: "100%", boxSizing: "border-box",
+  borderRadius: 0, padding: "7px 8px", fontSize: 18, width: "100%", boxSizing: "border-box",
 };
 const btn: React.CSSProperties = {
-  background: palette.accent, color: palette.accentText, border: "none", borderRadius: 8,
+  background: palette.accent, color: palette.accentText, border: "none", borderRadius: 0,
   padding: "7px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600,
 };
 const btnGhost: React.CSSProperties = {
   background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`,
-  borderRadius: 8, padding: "7px 12px", fontSize: 18, cursor: "pointer",
+  borderRadius: 0, padding: "7px 12px", fontSize: 18, cursor: "pointer",
 };

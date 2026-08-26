@@ -39,5 +39,5 @@ export function TableSk({ template, rows = 6, boxed = false }: { template: strin
       {Array.from({ length: rows }).map((_, r) => line(16, 80, r))}
     </div>
   );
-  return boxed ? <div style={{ border: "1px solid var(--border)", borderRadius: 8, overflow: "hidden" }}>{inner}</div> : inner;
+  return boxed ? <div style={{ border: "1px solid var(--border)", borderRadius: 0, overflow: "hidden" }}>{inner}</div> : inner;
 }

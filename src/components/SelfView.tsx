@@ -184,5 +184,5 @@ function Stat({ label, value, extra, story }: { label: string; value: string; ex
 }
 
 const card: React.CSSProperties = {
-  background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: 20,
+  background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 0, padding: 20,
 };

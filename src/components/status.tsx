@@ -22,7 +22,7 @@ export function StatusChip({ status }: { status: NptStatus }) {
     return (
       <span style={{
         display: "inline-block", fontSize: 17, fontWeight: 700,
-        padding: "2px 10px", borderRadius: 6, color: "#ffffff", background: s.fg,
+        padding: "2px 10px", borderRadius: 0, color: "#ffffff", background: s.fg,
       }}>{s.label}</span>
     );
   }

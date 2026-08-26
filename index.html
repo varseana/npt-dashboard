@@ -45,7 +45,8 @@
         --clock: #4a9eda;   /* azul Bauhaus para el LCD del reloj en dark (antes verde casio) */
         --skel1: #1c1c1c; --skel2: #262626;
       }
-      html, body { margin: 0; background: var(--bg); color: var(--text); }
+      html, body { margin: 0; background: var(--bg); color: var(--text);
+        -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
       /* ===== theme toggle animado (View Transitions API) ===== el reveal en estrella lo maneja
          lib/themeTransition.ts; aca se apaga la animacion default del VT y se scopea la duracion +
          el clip inicial SOLO mientras el toggle esta en vuelo (data-vt="active"), sin afectar nada mas. */
@@ -65,15 +66,20 @@
       textarea, .npt-inline-input {
         cursor: url("/cursor-text.svg") 16 16, text !important;
       }
-      /* transicion suave y profesional al cambiar de tema (colores/bordes, no layout) */
+      /* transicion suave al cambiar de tema (colores/bordes, no layout). sin box-shadow (nada anima
+         sombras) y apagada en reduce-motion. */
       *, *::before, *::after {
-        transition: background-color .28s ease, color .28s ease, border-color .28s ease, box-shadow .28s ease;
+        transition: background-color .28s ease, color .28s ease, border-color .28s ease;
       }
+      @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition: none; } }
+      /* legibilidad: balancear titulos multi-linea y evitar orphans en parrafos (solo render, owner-safe) */
+      h1, h2, h3, .npt-title { text-wrap: balance; }
+      p, li { text-wrap: pretty; }
 
       /* botones destructivos: hover con transicion suave */
       .npt-btn-remove {
         background: var(--panel); color: var(--bad); border: 1px solid color-mix(in srgb, var(--bad) 33%, transparent);
-        border-radius: 8px; padding: 6px 10px; font-size: 17px; cursor: pointer; font-weight: 600;
+        border-radius: 0; padding: 6px 10px; font-size: 17px; cursor: pointer; font-weight: 600;
         transition: background .2s ease, color .2s ease, border-color .2s ease;
       }
       .npt-btn-remove:hover:not(:disabled) { background: var(--bad); color: #ffffff; border-color: var(--bad); }
@@ -106,6 +112,12 @@
       .npt-add-plus { transition: color .2s ease; }
       .npt-add-plus:hover:not(:disabled) { color: var(--ok); }
       html.dark .npt-add-plus:hover:not(:disabled) { color: var(--blue); }
+      /* hit-area >=40x40 para iconos borderless (touch/accesibilidad) SIN cambiar el tamaño visual.
+         se excluyen .npt-eye/.npt-add-plus porque viven dentro de inputs y robarian clicks al campo. */
+      .npt-ico-act, .npt-logout, .npt-close, .npt-hit { position: relative; }
+      .npt-ico-act::after, .npt-logout::after, .npt-close::after, .npt-hit::after {
+        content: ""; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        width: 40px; height: 40px; }
       /* iconos de accion borderless con hover de color Bauhaus (azul / amarillo). el color base va en la
          CLASE (no inline) porque un color inline le GANARIA al :hover del stylesheet. */
       .npt-hover-blue { color: var(--text); transition: color .2s ease; }
@@ -116,7 +128,7 @@
       /* ===== edicion inline ===== lectura = texto con lapiz al hover; input = MISMO box, solo el
          borde pasa de transparente a visible. zero layout shift (misma metrica en ambos modos). */
       .npt-inline-field .npt-inline-read {
-        box-sizing: border-box; margin: 0; border: 1px solid transparent; border-radius: 8px;
+        box-sizing: border-box; margin: 0; border: 1px solid transparent; border-radius: 0;
         background: transparent; cursor: text; font-family: inherit; color: var(--text);
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
         transition: background .15s ease, border-color .15s ease;
@@ -126,7 +138,7 @@
       .npt-inline-pencil { opacity: 0; color: var(--textDim); transition: opacity .15s ease; }
       .npt-inline-field:hover .npt-inline-pencil { opacity: 1; }
       .npt-inline-input {
-        box-sizing: border-box; margin: 0; border: 1px solid var(--border); border-radius: 8px;
+        box-sizing: border-box; margin: 0; border: 1px solid var(--border); border-radius: 0;
         background: var(--panel); color: var(--text); font-family: inherit; outline: none;
       }
       .npt-inline-input:focus { border-color: var(--text); }
@@ -159,7 +171,7 @@
       /* skeleton shimmer global (mismo que skeleton.tsx) para mostrar barras sueltas <Bar> al
          re-consultar tras guardar, sin remontar toda la vista. */
       .npt-sk { background: linear-gradient(90deg, var(--skel1) 25%, var(--skel2) 37%, var(--skel1) 63%);
-        background-size: 400% 100%; animation: npt-sk 1.4s ease infinite; border-radius: 6px; }
+        background-size: 400% 100%; animation: npt-sk 1.4s ease infinite; border-radius: 0; }
       @keyframes npt-sk { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
       @media (prefers-reduced-motion: reduce) { .npt-sk { animation: none; } }
       /* ===== nav tabs (Dashboard/Team/Access): estilo B1 ===== solido, cero radius, esquina sup-der
@@ -234,7 +246,7 @@
       /* ===== heatmap semanal (estilo GitHub) ===== cuadros casi invisibles, escala de intensidad,
          solo semanas con data clickeables. columnas=meses, filas=semanas del mes. */
       .npt-hm { display: inline-block; }
-      .npt-hm-cell { width: 15px; height: 15px; border-radius: 3px; background: transparent;
+      .npt-hm-cell { width: 15px; height: 15px; border-radius: 0; background: transparent;
         border: 1px solid color-mix(in srgb, var(--text) 8%, transparent);
         outline: 2px solid transparent; outline-offset: 1px; cursor: pointer;
         transition: outline-color .12s ease; }
@@ -245,7 +257,7 @@
       .npt-hm-cell.pad:hover, .npt-hm-cell.nodata:hover { outline-color: transparent; }
       /* tooltip minimalista 2 lineas centradas: >>MES (gris) + ::Week N:: (negrita) */
       .npt-hm-tip { z-index: 60; pointer-events: none; text-align: center; white-space: nowrap;
-        background: var(--text); color: var(--bg); padding: 6px 10px; border-radius: 6px; line-height: 1.3;
+        background: var(--text); color: var(--bg); padding: 6px 10px; border-radius: 0; line-height: 1.3;
         box-shadow: 0 4px 14px rgba(0,0,0,.25); }
       .npt-hm-tip-mo { opacity: .55; font-size: 11px; letter-spacing: .08em; }
       .npt-hm-tip-wk { font-weight: 700; font-size: 13px; }

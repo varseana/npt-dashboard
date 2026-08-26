@@ -145,7 +145,7 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
     <div>
       {/* usa el ancho: izquierda pedir acceso, derecha mis requests (colapsa a 1 col en pantallas chicas) */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(340px, 1fr))", gap: 18, alignItems: "start", marginBottom: 18 }}>
-        <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "14px 16px" }}>
+        <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 0, padding: "14px 16px" }}>
           <div className="npt-title" style={{ fontWeight: 700, fontSize: 22, marginBottom: 10 }}>
             Request access<InfoStar pages={[
               <>Ask to view another employee's NPT, e.g. someone who is <strong style={hi}>also on your project</strong>. Type their username and send it.</>,
@@ -172,7 +172,7 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
 
         <div style={{ paddingTop: 13 }}>
           <div className="npt-title" style={{ fontWeight: 700, fontSize: 22, marginBottom: 10 }}>My requests</div>
-          <div style={{ border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden" }}>
+          <div style={{ border: `1px solid ${palette.border}`, borderRadius: 0, overflow: "hidden" }}>
             {loading ? <Dim>Loading...</Dim> : mine.length === 0 ? <Dim>No requests yet.</Dim> : mine.map((r) => (
               <Row key={r.id}>
                 <span><strong>{r.alias}</strong></span>
@@ -237,14 +237,14 @@ function StatusPill({ status }: { status: AccessRequest["status"] }) {
     approved: { fg: palette.ok, bg: palette.okBg, label: "Approved" },
     denied: { fg: palette.bad, bg: palette.badBg, label: "Denied" },
   }[status];
-  return <span style={{ fontSize: 17, fontWeight: 600, padding: "2px 10px", borderRadius: 6, color: map.fg, background: map.bg, border: `1px solid color-mix(in srgb, ${map.fg} 28%, transparent)` }}>{map.label}</span>;
+  return <span style={{ fontSize: 17, fontWeight: 600, padding: "2px 10px", borderRadius: 0, color: map.fg, background: map.bg, border: `1px solid color-mix(in srgb, ${map.fg} 28%, transparent)` }}>{map.label}</span>;
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div style={{ marginBottom: 18 }}>
       <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, marginBottom: 8 }}>{title}</div>
-      <div style={{ border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden" }}>{children}</div>
+      <div style={{ border: `1px solid ${palette.border}`, borderRadius: 0, overflow: "hidden" }}>{children}</div>
     </div>
   );
 }
@@ -255,5 +255,5 @@ function Dim({ children }: { children: React.ReactNode }) {
   return <div style={{ padding: "10px 12px", color: palette.textDim, fontSize: 18 }}>{children}</div>;
 }
 
-const btn: React.CSSProperties = { background: palette.accent, color: palette.accentText, border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600 };
-const btnGhost: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 12px", fontSize: 18, cursor: "pointer" };
+const btn: React.CSSProperties = { background: palette.accent, color: palette.accentText, border: "none", borderRadius: 0, padding: "8px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600 };
+const btnGhost: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 0, padding: "8px 12px", fontSize: 18, cursor: "pointer" };

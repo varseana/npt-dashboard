@@ -291,7 +291,7 @@ function UserTable({ rows, remind, teamBudget }: { rows: Row[]; remind: (u: Row)
             <td style={{ ...td, textAlign: "center" }}><StatusChip status={u.status} /></td>
             <td style={{ ...td, textAlign: "center" }}>
               <button onClick={() => remind(u)} disabled={u.status === "none"} title="Send reminder .eml" aria-label="Send reminder email"
-                className="npt-hover-blue"
+                className="npt-hover-blue npt-hit"
                 style={{ background: "transparent", border: "none", padding: 2, cursor: "pointer", display: "inline-flex", alignItems: "center", lineHeight: 0 }}>
                 <IconMail size={17} />
               </button>
@@ -445,7 +445,7 @@ function Stat({ label, value, tone, story, topRight }: { label: string; value: s
         <div style={{ fontSize: 17, color: palette.textDim }}>{label}{story && <InfoStar>{story}</InfoStar>}</div>
         {/* numero full-izquierda, toggle (si hay) full-derecha, en la misma linea */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-          <div style={{ fontSize: 31, fontWeight: 700, color }}>{value}</div>
+          <div style={{ fontSize: 31, fontWeight: 700, color, fontVariantNumeric: "tabular-nums" }}>{value}</div>
           {topRight}
         </div>
       </div>
@@ -461,7 +461,7 @@ function EmailAction({ icon, count, label, onClick, info, hoverClass = "npt-hove
     <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
       {/* asterisco (InfoStar) ARRIBA A LA DERECHA del icono; el contador queda AL LADO del icono */}
       <span style={{ position: "relative", display: "inline-flex" }}>
-        <button onClick={onClick} disabled={!count} aria-label={label} title={label} className={hoverClass} style={iconBtn}>{icon}</button>
+        <button onClick={onClick} disabled={!count} aria-label={label} title={label} className={hoverClass + " npt-hit"} style={iconBtn}>{icon}</button>
         <span style={{ position: "absolute", top: -3, right: -3 }}><InfoStar>{info}</InfoStar></span>
       </span>
       {count > 0 && <span style={{ fontSize: 15, color: palette.textDim, fontVariantNumeric: "tabular-nums" }}>{count}</span>}
@@ -473,7 +473,7 @@ function EmailAction({ icon, count, label, onClick, info, hoverClass = "npt-hove
 // full + check en la esquina superior derecha; inactivo = folder tenue y sin check.
 function FolderToggle({ active, onToggle }: { active: boolean; onToggle: () => void }) {
   return (
-    <button onClick={onToggle} aria-pressed={active}
+    <button onClick={onToggle} aria-pressed={active} className="npt-hit"
       title={active ? "Grouping by folder (on)" : "Group by folder (off)"}
       style={{ ...iconBtn, position: "relative", color: active ? palette.text : palette.textDim }}>
       <IconFolder size={24} />
@@ -528,7 +528,7 @@ function SummarySkeleton() {
 }
 
 const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
-const td: React.CSSProperties = { padding: "8px 10px", borderBottom: `1px solid ${palette.border}` };
-const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "7px 9px", fontSize: 19 };
+const td: React.CSSProperties = { padding: "8px 10px", borderBottom: `1px solid ${palette.border}`, fontVariantNumeric: "tabular-nums" };
+const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 0, padding: "7px 9px", fontSize: 19 };
 // boton sin chrome: transparente, sin borde, solo el icono. hereda color de texto (currentColor).
 const iconBtn: React.CSSProperties = { background: "transparent", border: "none", padding: 2, cursor: "pointer", display: "inline-flex", alignItems: "center", lineHeight: 0 };

@@ -205,7 +205,7 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
       ) : shown.length === 0 ? (
         <div style={{ color: palette.textDim }}>No employees match "{query.trim()}".</div>
       ) : (
-        <div style={{ border: `1px solid ${palette.border}`, borderRadius: 8, overflow: "hidden" }}>
+        <div style={{ border: `1px solid ${palette.border}`, borderRadius: 0, overflow: "hidden" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19 }}>
             <thead>
               <tr>
@@ -279,6 +279,6 @@ function ConnChip({ status }: { status: ConnStatus }) {
 
 const th: React.CSSProperties = { textAlign: "left", padding: "9px 12px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
 const td: React.CSSProperties = { textAlign: "left", padding: "9px 12px", borderBottom: `1px solid ${palette.border}` };
-const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 10px", fontSize: 19 };
-const btn: React.CSSProperties = { background: palette.accent, color: palette.accentText, border: "none", borderRadius: 8, padding: "8px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600 };
-const btnGhost: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 8, padding: "8px 12px", fontSize: 18, cursor: "pointer" };
+const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 0, padding: "8px 10px", fontSize: 19 };
+const btn: React.CSSProperties = { background: palette.accent, color: palette.accentText, border: "none", borderRadius: 0, padding: "8px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600 };
+const btnGhost: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 0, padding: "8px 12px", fontSize: 18, cursor: "pointer" };

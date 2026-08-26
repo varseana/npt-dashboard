@@ -241,7 +241,7 @@ export default function App() {
         {/* toggle de tema a la IZQUIERDA del tiempo, centrado con la linea del LCD (24px) */}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>
           <div style={{ display: "flex", alignItems: "center", height: 24 }}>
-            <button onClick={() => runThemeToggle(!dark, () => setDark(!dark))}
+            <button onClick={() => runThemeToggle(!dark, () => setDark(!dark))} className="npt-hit"
               title={dark ? "Switch to light mode" : "Switch to dark mode"} aria-label="Toggle theme"
               style={{ background: "transparent", border: "none", padding: 2, cursor: "pointer",
                 color: palette.textDim, display: "inline-flex", alignItems: "center" }}>
@@ -340,7 +340,7 @@ function ConfirmModal({ title, body, confirmLabel, onCancel, onConfirm }:
     <div onClick={onCancel}
       style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 24 }}>
       <div onClick={(e) => e.stopPropagation()}
-        style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 12, padding: 24, width: 380, maxWidth: "90vw", boxShadow: "0 12px 40px rgba(0,0,0,.18)" }}>
+        style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 0, padding: 24, width: 380, maxWidth: "90vw", boxShadow: "0 12px 40px rgba(0,0,0,.18)" }}>
         <h2 style={{ margin: "0 0 8px", fontSize: 29, color: palette.text }}>{title}</h2>
         <p style={{ margin: "0 0 20px", color: palette.textDim, fontSize: 19 }}>{body}</p>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
@@ -425,7 +425,7 @@ const btn: React.CSSProperties = {
   background: palette.panel,
   color: palette.text,
   border: `1px solid ${palette.border}`,
-  borderRadius: 8,
+  borderRadius: 0,
   padding: "8px 14px",
   cursor: "pointer",
   fontSize: 19,
