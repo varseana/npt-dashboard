@@ -189,14 +189,16 @@ export default function Overview({ team, refreshKey, onNavigate, weekKey: weekKe
           <div style={{ height: 24 }} />
           <div style={{ height: 24 }} />
           {/* dos segmentos lado a lado: budget (angosto) izquierda // stats 2x2 derecha */}
-          <div style={{ display: "flex", gap: 24, marginBottom: 18, flexWrap: "wrap", alignItems: "stretch" }}>
+          <div style={{ display: "flex", gap: "18px 0", marginBottom: 18, flexWrap: "wrap", alignItems: "stretch" }}>
             <div style={{ flex: "1 1 480px", minWidth: 320 }}>
               <TeamBudgetCard budget={teamBudget} used={teamNpt} remaining={teamRemaining} status={teamStatus} users={users} onNavigate={onNavigate} onEmailTeam={emailTeam} emailCount={teamRecipients.length} />
             </div>
-            {/* divisor vertical entre el card de threshold (izq, sin cambios) y el de stats */}
-            <div style={{ width: 1, alignSelf: "stretch", flex: "0 0 auto", background: palette.border }} />
-            {/* stats: ~60% de su ancho anterior (no crece) => el threshold lo empuja a la derecha */}
-            <div style={{ flex: "0 1 380px", minWidth: 260, position: "relative", padding: "18px 22px", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            {/* espaciador INVISIBLE (sin linea): empuja el card de stats a la derecha SIN mover el de la
+                izquierda. la region derecha (espaciador + stats) mantiene grow 1 / basis 340 como antes,
+                repartida 40% espaciador + 60% stats => el card izquierdo conserva su ancho original. */}
+            <div style={{ flex: "0.4 1 136px", minWidth: 24 }} aria-hidden="true" />
+            {/* stats: 60% de la region derecha */}
+            <div style={{ flex: "0.6 1 204px", minWidth: 260, position: "relative", padding: "18px 22px", boxSizing: "border-box", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <span className="npt-bracket tl" /><span className="npt-bracket tr" /><span className="npt-bracket bl" /><span className="npt-bracket br" />
               <div style={{ display: "grid", gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 12, width: "100%", alignContent: "center" }}>
               <Stat label="Employees" value={String(users.length)}
