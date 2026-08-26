@@ -13,13 +13,22 @@ const FALLBACK_THRESHOLD = 10 * 3600;   // si el team no tiene threshold seteado
 interface WeekCell { key: string; start: Date; wnum: number; month: number; }
 interface Tip { show: boolean; x: number; y: number; month: number; wnum: number; }
 
-// escala continua (misma que el mockup): dentro=verde por uso, sobre=rojo, vacio=casi invisible.
+// escala de MATIZ (color pleno, no opacidad): sano=verde y se mantiene verde hasta ~medio budget,
+// de ahi vira a amarillo al acercarse al limite; pasado el limite -> rojo; muy pasado -> rojo oscuro.
+// (celdas sin data se pintan negras via CSS .nodata, no pasan por aca)
 function fillFor(used: number, threshold: number): string {
-  if (used <= 0 || threshold <= 0) return "";
+  if (threshold <= 0) return "var(--ok)";
   const r = used / threshold;
-  if (r <= 1) { const p = [12, 24, 38, 54, 72, 92]; return `color-mix(in srgb, var(--ok) ${p[Math.min(5, Math.floor(r * 6))]}%, transparent)`; }
-  const o = Math.min(1, (r - 1) / 0.5);
-  return `color-mix(in srgb, var(--bad) ${55 + Math.round(o * 45)}%, transparent)`;
+  if (r <= 1) {                                             // dentro del budget: verde -> amarillo
+    const t = Math.round(Math.max(0, (r - 0.5) / 0.5) * 100);
+    return `color-mix(in srgb, var(--warn) ${t}%, var(--ok))`;
+  }
+  if (r <= 1.5) {                                           // pasado el budget: amarillo -> rojo pleno a 1.5x
+    const t = Math.round(((r - 1) / 0.5) * 100);
+    return `color-mix(in srgb, var(--bad) ${t}%, var(--warn))`;
+  }
+  const t = Math.round(Math.min(1, (r - 1.5) / 1) * 100);   // muy pasado: rojo -> rojo oscuro a 2.5x
+  return `color-mix(in srgb, var(--bad2) ${t}%, var(--bad))`;
 }
 
 // Heatmap semanal (estilo GitHub, horizontal): 1 cuadro por semana del ultimo anio. Columnas = meses

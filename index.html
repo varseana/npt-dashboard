@@ -27,7 +27,7 @@
         /* paleta Bauhaus (rojo/amarillo/azul/verde) con hex EXACTOS de Sean. Nota: el amarillo ECC412
            como TEXTO sobre off-white tiene contraste bajo (Sean lo prefiere asi vs el dorado que se veia
            "cafe"). azul = token nuevo, disponible aunque no se use aun. */
-        --ok: #1c7f46; --okBg: #e4f1e9; --warn: #ecc412; --warnBg: #fbf1cc; --bad: #b0232b; --badBg: #f7e2e4;
+        --ok: #1c7f46; --okBg: #e4f1e9; --warn: #ecc412; --warnBg: #fbf1cc; --bad: #b0232b; --bad2: #6e1319; --badBg: #f7e2e4;
         --blue: #0d5c9d; --blueBg: #e3ecf4;
         --clock: #111111;
         --skel1: #e9e8e5; --skel2: #f4f3f1;
@@ -40,7 +40,7 @@
         --accent-text: #0d0d0d;   /* texto negro sobre botones blancos */
         /* Bauhaus adaptado a fondo negro: el amarillo va exacto (ECC412 brilla en dark); rojo/verde/azul
            se aclaran respecto al hex de light para tener contraste sobre negro (mismos matices Bauhaus). */
-        --ok: #35b368; --okBg: #12261a; --warn: #ecc412; --warnBg: #2b2410; --bad: #e5484d; --badBg: #35191a;
+        --ok: #35b368; --okBg: #12261a; --warn: #ecc412; --warnBg: #2b2410; --bad: #e5484d; --bad2: #8f1a20; --badBg: #35191a;
         --blue: #4a9eda; --blueBg: #10263a;
         --clock: #4a9eda;   /* azul Bauhaus para el LCD del reloj en dark (antes verde casio) */
         --skel1: #1c1c1c; --skel2: #262626;
@@ -202,7 +202,7 @@
       .npt-hm-cell:hover { outline-color: var(--text); }
       .npt-hm-cell.sel { outline-color: var(--blue); }
       .npt-hm-cell.pad { border-color: color-mix(in srgb, var(--text) 4%, transparent); cursor: default; }
-      .npt-hm-cell.nodata { cursor: default; }
+      .npt-hm-cell.nodata { background: #000; border-color: color-mix(in srgb, var(--text) 6%, transparent); cursor: default; }
       .npt-hm-cell.pad:hover, .npt-hm-cell.nodata:hover { outline-color: transparent; }
       /* tooltip minimalista 2 lineas centradas: >>MES (gris) + ::Week N:: (negrita) */
       .npt-hm-tip { z-index: 60; pointer-events: none; text-align: center; white-space: nowrap;
