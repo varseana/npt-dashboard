@@ -184,7 +184,7 @@ export default function Login({ dark, onToggleTheme }: { dark: boolean; onToggle
 const label: React.CSSProperties = { display: "block", fontSize: 17, color: palette.textDim, margin: "10px 0 4px" };
 const input: React.CSSProperties = {
   width: "100%", boxSizing: "border-box", background: palette.bg, color: palette.text,
-  border: `1px solid ${palette.border}`, borderRadius: 0, padding: "9px 10px", fontSize: 19,
+  border: `1px solid ${palette.border}`, borderRadius: 8, padding: "9px 10px", fontSize: 19,
 };
 const submit_: React.CSSProperties = {
   width: "100%", marginTop: 18, background: palette.accent, color: palette.accentText, border: "none",
@@ -198,6 +198,6 @@ const linkBtn: React.CSSProperties = {
 // boton de pantalla completa: esquina sup-der, con fondo panel para verse sobre el remolino.
 const cornerBtn: React.CSSProperties = {
   position: "absolute", top: 18, right: 18, zIndex: 2,
-  background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 0,
+  background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 8,
   padding: 7, cursor: "pointer", color: palette.text, display: "inline-flex", alignItems: "center",
 };

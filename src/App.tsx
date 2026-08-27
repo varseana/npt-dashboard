@@ -25,6 +25,7 @@ import SelfView from "./components/SelfView";
 import { weekInfo } from "./lib/npt";
 import { IconLogout, IconMoon, IconSun, IconX } from "./components/icons";
 import Mascot from "./components/Mascot";
+import DigitalRain from "./components/AsciiRain";
 import PullReveal from "./components/PullReveal";
 import ScrambleText from "./components/ScrambleText";
 
@@ -239,6 +240,12 @@ export default function App() {
 
   return (
     <>
+    {/* ASCII Rain como fondo del DASHBOARD (solo autenticado; el login NO lo lleva). capa fixed a
+        viewport, z-index -1 detras del contenido, sin capturar clicks; el canvas es transparente
+        => el --bg negro sigue siendo el fondo real y la lluvia queda de textura. */}
+    <div aria-hidden="true" style={{ position: "fixed", inset: 0, zIndex: -1, pointerEvents: "none" }}>
+      <DigitalRain style={{ width: "100%", height: "100%" }} />
+    </div>
     <PullReveal pageRef={pageRef} />
     <div ref={pageRef} style={{ maxWidth: "min(2100px, 97vw)", margin: "0 auto", padding: "24px 32px" }}>
       {showConfirmed && <ConfirmedBanner onClose={() => setShowConfirmed(false)} />}
