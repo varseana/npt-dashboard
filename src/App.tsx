@@ -312,7 +312,6 @@ export default function App() {
         {section === "dashboard" && (<>
           <SubBtn active={dashView === "summary"} onClick={() => setDashView("summary")}>Summary</SubBtn>
           <SubBtn active={dashView === "breakdown"} onClick={() => setDashView("breakdown")}>Breakdown</SubBtn>
-          <SubBtn active={dashView === "self"} onClick={() => setDashView("self")}>My NPT</SubBtn>
           <SubBtn active={dashView === "shared"} onClick={() => setDashView("shared")}>Shared with me</SubBtn>
         </>)}
         {section === "team" && (<>
