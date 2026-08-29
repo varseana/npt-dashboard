@@ -91,7 +91,13 @@ export default function Org() {
 
   if (loading) return <OrgSkeleton />;
 
-  const realManagers = managers.filter((m) => m.role === "manager");
+  // managers reales + admins que TAMBIEN actuan como manager (tienen team asignado o miembros
+  // vinculados). asi un admin como alexcamo sigue apareciendo con su team; un admin "puro" sin
+  // team ni grants no ensucia la lista.
+  const realManagers = managers.filter((m) =>
+    m.role === "manager" ||
+    (m.role === "admin" && (!!m.team_id || members.some((x) => x.manager_owner === m.user_id))),
+  );
 
   return (
     <div>

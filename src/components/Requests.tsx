@@ -54,15 +54,16 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
       .select("id,requester,alias,status,target_manager,created_at,decided_at")
       .order("created_at", { ascending: false });
     setReqs((data as AccessRequest[]) ?? []);
+    // pedidos dirigidos a MI como manager destino: aplica a manager Y admin (un admin que tambien
+    // maneja un team, ej. alexcamo, recibe pedidos dirigidos a el). requests_to_me es security
+    // definer y solo devuelve target_manager = auth.uid(), asi que para un admin puro sale vacio.
+    const { data: tm } = await supabase.rpc("requests_to_me");
+    setToMe((tm as RichReq[]) ?? []);
     if (isAdmin) {
       const { data: mg } = await supabase.from("managers").select("user_id,email");
       const map: Record<string, string> = {};
       for (const m of (mg as { user_id: string; email: string }[]) ?? []) map[m.user_id] = m.email;
       setManagerEmails(map);
-    } else {
-      // manager (no admin): trae los pedidos dirigidos a el CON el email del solicitante
-      const { data: tm } = await supabase.rpc("requests_to_me");
-      setToMe((tm as RichReq[]) ?? []);
     }
     setLoading(false);
   }
@@ -186,7 +187,7 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
         </div>
       </div>
 
-      {!isAdmin && role === "manager" && (
+      {(role === "manager" || (isAdmin && toMe.length > 0)) && (
         <Section title={`Requests to me (${toMe.length})`}>
           {loading ? <Dim>Loading...</Dim> : toMe.length === 0 ? <Dim>No incoming requests. When another manager asks to see one of your team members, it shows up here.</Dim> : toMe.map((r) => (
             <Row key={r.id}>

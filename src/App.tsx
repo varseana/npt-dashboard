@@ -55,7 +55,7 @@ export default function App() {
   const [teamId, setTeamId] = useState<string>("");
   // nav de 2 niveles (progressive disclosure): 3 secciones arriba, sub-nav adentro
   const [section, setSection] = useState<"dashboard" | "team" | "access">("dashboard");
-  const [dashView, setDashView] = useState<"summary" | "breakdown" | "shared">("summary");
+  const [dashView, setDashView] = useState<"summary" | "breakdown" | "shared" | "self">("summary");
   const [teamTab, setTeamTab] = useState<"employees" | "planned" | "folders">("planned");
   const [accessTab, setAccessTab] = useState<"requests" | "org" | "managers" | "teams" | "unassigned" | "create">("requests");
   // semana del dashboard (compartida por el heatmap + Summary + Breakdown): click en el heatmap la cambia
@@ -93,7 +93,11 @@ export default function App() {
     // el badge cuenta SOLO lo entrante que requiere tu accion, NUNCA tus propios pedidos salientes:
     // admin -> pedidos en la cola del admin (sin manager destino); manager -> pedidos dirigidos a el.
     let q = supabase.from("access_requests").select("*", { count: "exact", head: true }).eq("status", "pending");
-    q = m.role === "admin" ? q.is("target_manager", null) : q.eq("target_manager", m.user_id);
+    // admin ve la cola del admin (sin manager destino) MAS los pedidos dirigidos a el como manager;
+    // un manager solo ve los dirigidos a el. (admin = superconjunto de manager)
+    q = m.role === "admin"
+      ? q.or(`target_manager.is.null,target_manager.eq.${m.user_id}`)
+      : q.eq("target_manager", m.user_id);
     const { count } = await q;
     setPendingReq(count ?? 0);
   }
@@ -307,6 +311,7 @@ export default function App() {
         {section === "dashboard" && (<>
           <SubBtn active={dashView === "summary"} onClick={() => setDashView("summary")}>Summary</SubBtn>
           <SubBtn active={dashView === "breakdown"} onClick={() => setDashView("breakdown")}>Breakdown</SubBtn>
+          <SubBtn active={dashView === "self"} onClick={() => setDashView("self")}>My NPT</SubBtn>
           <SubBtn active={dashView === "shared"} onClick={() => setDashView("shared")}>Shared with me</SubBtn>
         </>)}
         {section === "team" && (<>
@@ -333,6 +338,7 @@ export default function App() {
 
       {section === "dashboard" && team && dashView === "summary" && <Overview team={team} refreshKey={refreshTick} onNavigate={goTo} weekKey={dashWeekKey} onWeekChange={setDashWeekKey} />}
       {section === "dashboard" && team && dashView === "breakdown" && <Distribution team={team} refreshKey={refreshTick} weekKey={dashWeekKey} onWeekChange={setDashWeekKey} />}
+      {section === "dashboard" && dashView === "self" && <SelfView email={manager.email} aliasOverride={manager.alias} />}
       {section === "dashboard" && dashView === "shared" && <SharedWithMe myUserId={manager.user_id} />}
       {section === "team" && team && teamTab === "employees" && <Employees team={team} refreshKey={refreshTick} />}
       {section === "team" && team && teamTab === "planned" && <Planned team={team} />}

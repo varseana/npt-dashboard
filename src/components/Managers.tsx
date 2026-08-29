@@ -266,12 +266,15 @@ function PersonRow({ r, teams, isMe, matched, onRole, onTeam, onAlias, onDelete,
         onChange={(v) => onRole(r, v as Role)}
         options={[{ value: "standby", label: "Standby" }, { value: "user", label: "User" }, { value: "manager", label: "Manager" }, { value: "admin", label: "Admin" }]} />
 
-      {r.role === "manager"
+      {r.role === "manager" || r.role === "admin"
         ? (
-          <Dropdown fill value={r.team_id ?? ""} onChange={onTeam} title="Team" ariaLabel="Team"
-            options={[{ value: "", label: "No team" }, ...teams.map((t) => ({ value: t.id, label: t.name }))]} />
+          // el admin ve TODOS los teams (is_manager_of); su team_id es su "home team" = default al
+          // entrar + lo que lo hace aparecer como manager en Org. "" = sin team (all teams).
+          <Dropdown fill value={r.team_id ?? ""} onChange={onTeam} ariaLabel="Team"
+            title={r.role === "admin" ? "Home team (admin sees all teams; sets default view and Org listing)" : "Team"}
+            options={[{ value: "", label: r.role === "admin" ? "All teams" : "No team" }, ...teams.map((t) => ({ value: t.id, label: t.name }))]} />
         )
-        : <span style={{ fontSize: 17, color: palette.textDim }}>{r.role === "admin" ? "All teams" : "-"}</span>}
+        : <span style={{ fontSize: 17, color: palette.textDim }}>-</span>}
 
       {showAlias
         ? (
