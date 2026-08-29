@@ -23,8 +23,9 @@ import SetPassword from "./components/SetPassword";
 import WeekHeatmap from "./components/WeekHeatmap";
 import SelfView from "./components/SelfView";
 import { weekInfo } from "./lib/npt";
-import { IconLogout, IconMoon, IconSun, IconX } from "./components/icons";
+import { IconMoon, IconSun, IconX } from "./components/icons";
 import Mascot from "./components/Mascot";
+import ProfileMenu from "./components/ProfileMenu";
 import DigitalRain from "./components/AsciiRain";
 import PullReveal from "./components/PullReveal";
 import ScrambleText from "./components/ScrambleText";
@@ -237,7 +238,7 @@ export default function App() {
   // navegacion disparada desde las cards del dashboard (los hyperlinks de storytelling)
   function goTo(dest: { section: "dashboard" | "team" | "access"; tab?: string }) {
     setSection(dest.section);
-    if (dest.section === "dashboard" && dest.tab) setDashView(dest.tab as "summary" | "breakdown");
+    if (dest.section === "dashboard" && dest.tab) setDashView(dest.tab as "summary" | "breakdown" | "shared" | "self");
     if (dest.section === "team" && dest.tab) setTeamTab(dest.tab as "employees" | "planned" | "folders");
     if (dest.section === "access" && dest.tab) setAccessTab(dest.tab as "requests" | "org" | "managers" | "teams" | "unassigned" | "create");
   }
@@ -265,12 +266,12 @@ export default function App() {
             </h1>
             <Mascot inline onNavigate={goTo} size={88} />
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6 }}>
-            <span style={{ color: palette.textDim, fontSize: 18 }}>{manager.email} <span style={{ color: palette.blue, fontWeight: 600 }}>({manager.role})</span></span>
-            <button onClick={() => setAskLogout(true)} title="Log out" aria-label="Log out" className="npt-logout">
-              <IconLogout size={15} />
-            </button>
-          </div>
+          <ProfileMenu
+            email={manager.email}
+            role={manager.role}
+            onMyNpt={() => goTo({ section: "dashboard", tab: "self" })}
+            onLogout={() => setAskLogout(true)}
+          />
         </div>
         {/* toggle de tema a la IZQUIERDA del tiempo, centrado con la linea del LCD (24px) */}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 10 }}>

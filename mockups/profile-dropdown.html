@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>STAR :: Profile dropdown mockup</title>
+<style>
+  /* tokens (espejo de index.html :root / html.dark) --------------------------------- */
+  :root{
+    --bg:#f7f7f5; --panel:#ffffff; --panelAlt:#f0f0ee;
+    --text:#111111; --textDim:#6b6b6b; --border:#d9d9d6;
+    --accent:#111111; --accent-text:#ffffff;
+    --blue:#0d5c9d; --bad:#b0232b; --badBg:#f7e2e4;
+  }
+  html.dark{
+    --bg:#000000; --panel:#171717; --panelAlt:#1f1f1f;
+    --text:#f2f2f2; --textDim:#8a8a8a; --border:#2c2c2c;
+    --accent:#ffffff; --accent-text:#0d0d0d;
+    --blue:#4a9eda; --bad:#e5484d; --badBg:#35191a;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100vh; background:var(--bg); color:var(--text);
+    font-family:"Outfit Variable",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    transition:background .28s, color .28s;
+    padding:40px 48px;
+  }
+  header{position:relative; min-height:80px}
+  h1{margin:0; font-size:44px; line-height:1.02; letter-spacing:.01em}
+  h1 .sub{display:block; font-size:24px; color:var(--textDim)}
+  .hint{color:var(--textDim); font-size:16px; margin-top:26px; max-width:640px; line-height:1.5}
+
+  /* la esquina sup-der del header: theme toggle + el perfil (absolute => al crecer NO reflowea) */
+  .topright{position:absolute; top:0; right:0; display:flex; align-items:flex-start; gap:18px}
+  .themebtn{background:transparent; border:none; color:var(--textDim); cursor:pointer; font-size:22px; padding:6px; line-height:1}
+
+  /* ============================ PROFILE = un solo frame de 4 esquinas que CRECE ============ */
+  .profile{
+    position:relative; padding:11px 16px; min-width:250px;
+    background:transparent;                          /* en reposo: sin caja, solo las esquinas */
+    transition:background .22s ease;
+  }
+  .profile[data-open="true"]{ background:var(--panel); }  /* al abrir se llena para tapar lo de atras */
+
+  /* corner brackets (identicos a .npt-bracket del dashboard). bl/br anclados al borde INFERIOR
+     del frame => cuando el frame crece con las opciones, las esquinas de abajo BAJAN solas. */
+  .npt-bracket{position:absolute; width:15px; height:15px; border:0 solid var(--textDim);
+    pointer-events:none; transition:border-color .15s ease}
+  .npt-bracket.tl{top:0; left:0; border-left-width:3px; border-top-width:3px}
+  .npt-bracket.tr{top:0; right:0; border-right-width:3px; border-top-width:3px}
+  .npt-bracket.bl{bottom:0; left:0; border-left-width:3px; border-bottom-width:3px}
+  .npt-bracket.br{bottom:0; right:0; border-right-width:3px; border-bottom-width:3px}
+  /* afordancia: al pasar el mouse por el chip, las esquinas se marcan (de textDim -> text) para
+     que se lea "esto hace algo" sin ser un boton. */
+  .profile:has(.trigger:hover) .npt-bracket{border-color:var(--text)}
+
+  /* trigger: texto plano, NO boton (sin borde, sin fondo, sin chaflan) --------------------- */
+  .trigger{
+    display:flex; align-items:center; gap:10px; width:100%;
+    background:transparent; border:none; padding:0; cursor:pointer; font-family:inherit;
+    color:var(--text); font-size:17px; line-height:1.2;
+  }
+  .trigger .email{font-weight:600}
+  .trigger .role{color:var(--blue); font-weight:600}
+  /* la senal de "clickeable": un chevron fino en textDim (no boxed). rota al abrir. */
+  .trigger .chev{margin-left:auto; color:var(--textDim); flex:0 0 auto;
+    transition:transform .3s cubic-bezier(.22,1,.36,1), color .15s}
+  .trigger:hover .chev{color:var(--text)}
+  .profile[data-open="true"] .trigger .chev{transform:rotate(180deg)}
+
+  /* collapse: mismo patron que .npt-collapse (grid-rows 0fr -> 1fr). ESTO agranda el frame y
+     empuja las esquinas de abajo hacia abajo. */
+  .collapse{display:grid; grid-template-rows:0fr; transition:grid-template-rows .4s cubic-bezier(.22,1,.36,1)}
+  .profile[data-open="true"] .collapse{grid-template-rows:1fr}
+  .collapse>.inner{overflow:hidden; min-height:0}
+  .menuwrap{padding-top:10px; margin-top:10px; border-top:1px solid var(--border)}
+
+  /* items -------------------------------------------------------------------------- */
+  .item{
+    display:flex; align-items:center; gap:12px; width:100%;
+    background:transparent; border:none; color:var(--text); cursor:pointer;
+    font-family:inherit; font-size:17px; text-align:left; padding:10px 8px;
+    transition:background .12s, color .12s;
+  }
+  .item:hover{background:var(--panelAlt)}
+  .item .ico{display:inline-flex; color:var(--textDim); flex:0 0 auto}
+  .item:hover .ico{color:var(--text)}
+  .item .label{font-variant-ligatures:none; white-space:pre; letter-spacing:.01em}
+
+  /* logout: monocromatico por defecto (como cualquier item); SOLO en hover se vuelve rojo */
+  .item.danger:hover{background:var(--badBg); color:var(--bad)}
+  .item.danger:hover .ico{color:var(--bad)}
+
+  /* ------------------------------------------------------------------ confirm modal (logout) */
+  .overlay{position:fixed; inset:0; background:rgba(0,0,0,.35); display:none;
+    align-items:center; justify-content:center; z-index:60; padding:24px}
+  .overlay[data-open="true"]{display:flex}
+  .modal{background:var(--panel); border:1px solid var(--border); padding:24px; width:380px; max-width:90vw;
+    box-shadow:0 12px 40px rgba(0,0,0,.18)}
+  .modal h2{margin:0 0 8px; font-size:26px}
+  .modal p{margin:0 0 20px; color:var(--textDim); font-size:17px}
+  .modal .row{display:flex; justify-content:flex-end; gap:8px}
+  .btn{background:var(--panel); color:var(--text); border:1px solid var(--border); padding:8px 14px; cursor:pointer; font-size:16px; font-family:inherit}
+  .btn.confirm{background:var(--bad); color:#fff; border:none}
+
+  @media (prefers-reduced-motion: reduce){
+    .collapse, .profile, .trigger .chev, .npt-bracket{transition:none}
+  }
+</style>
+</head>
+<body>
+  <header>
+    <h1>STAR<span class="sub">Real Time NPT Dashboard</span></h1>
+
+    <div class="topright">
+      <button class="themebtn" id="theme" title="Toggle theme" aria-label="Toggle theme">◐</button>
+
+      <!-- ================= PROFILE = frame de 4 esquinas que crece ================= -->
+      <div class="profile" id="profile" data-open="false">
+        <span class="npt-bracket tl"></span>
+        <span class="npt-bracket tr"></span>
+        <span class="npt-bracket bl"></span>
+        <span class="npt-bracket br"></span>
+
+        <button class="trigger" id="trigger" aria-haspopup="menu" aria-expanded="false">
+          <span><span class="email">varseana@amazon.com</span> <span class="role">(admin)</span></span>
+          <svg class="chev" width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M5 9l7 7 7-7" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+
+        <div class="collapse">
+          <div class="inner">
+            <div class="menuwrap" role="menu" aria-label="Profile">
+              <button class="item" role="menuitem" data-item>
+                <span class="ico">
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="2"/><path d="M12 7v5l3 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </span>
+                <span class="label" data-text="My NPT">My NPT</span>
+              </button>
+
+              <button class="item" role="menuitem" data-item>
+                <span class="ico">
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><path d="M12 8a4 4 0 100 8 4 4 0 000-8zm8.4 4a6.4 6.4 0 00-.08-1l2-1.6-2-3.4-2.4 1a6.5 6.5 0 00-1.7-1L15.6 2h-3.9l-.6 2.6a6.5 6.5 0 00-1.7 1l-2.4-1-2 3.4 2 1.6a6.4 6.4 0 000 2l-2 1.6 2 3.4 2.4-1c.5.4 1.1.7 1.7 1l.6 2.6h3.9l.6-2.6c.6-.3 1.2-.6 1.7-1l2.4 1 2-3.4-2-1.6c.05-.33.08-.66.08-1z"/></svg>
+                </span>
+                <span class="label" data-text="Settings">Settings</span>
+              </button>
+
+              <button class="item" role="menuitem" data-item>
+                <span class="ico">
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-6 8-6s8 2 8 6v1H4v-1z"/></svg>
+                </span>
+                <span class="label" data-text="Preferences">Preferences</span>
+              </button>
+
+              <button class="item danger" role="menuitem" id="logout" data-item>
+                <span class="ico">
+                  <svg width="19" height="19" viewBox="0 0 24 24" fill="none"><path d="M9 4H6a2 2 0 00-2 2v12a2 2 0 002 2h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path d="M15 8l4 4-4 4M19 12H9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                </span>
+                <span class="label" data-text="Log out">Log out</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- ============================================================================= -->
+    </div>
+  </header>
+
+  <p class="hint">
+    En reposo las 4 esquinas enmarcan el chip <strong>varseana@amazon.com (admin)</strong>.
+    Al hacer click, el frame se AGRANDA (las esquinas de abajo bajan suave) y las opciones
+    se decodifican desde glyphs random. El chip es texto plano (no boton); el chevron y el
+    marcado de esquinas en hover avisan que es clickeable. "Log out" es monocromatico y solo
+    se pone rojo en hover; abre el mismo confirm modal del dashboard.
+  </p>
+
+  <!-- confirm modal de logout (misma logica que App.tsx ConfirmModal) -->
+  <div class="overlay" id="overlay">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="lo-title">
+      <h2 id="lo-title">Log out?</h2>
+      <p>Are you sure you want to log out?</p>
+      <div class="row">
+        <button class="btn" id="lo-cancel">Cancel</button>
+        <button class="btn confirm" id="lo-confirm">Log out</button>
+      </div>
+    </div>
+  </div>
+
+<script>
+  // set de glyphs = el mismo del ScrambleText del titulo (scrambleChars="._/:<>*=") + extras
+  const GLYPHS = "._/:<>*=+#%".split("");
+  const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  // decodifica un label: cada char cicla glyphs random y se "asienta" en cascada (izq -> der)
+  function decode(el){
+    const text = el.dataset.text;
+    if (reduce){ el.textContent = text; return; }
+    const chars = [...text];
+    const stagger = 55, hold = 90;   // ms entre chars / ms de scramble antes de asentarse
+    const start = performance.now();
+    function frame(now){
+      const t = now - start;
+      let out = "", done = true;
+      chars.forEach((ch, i) => {
+        if (ch === " "){ out += " "; return; }
+        if (t >= i * stagger + hold){ out += ch; }
+        else { out += GLYPHS[(Math.random() * GLYPHS.length) | 0]; done = false; }
+      });
+      el.textContent = out;
+      if (!done) requestAnimationFrame(frame); else el.textContent = text;
+    }
+    requestAnimationFrame(frame);
+  }
+
+  const profile = document.getElementById("profile");
+  const trigger = document.getElementById("trigger");
+  const labels = [...profile.querySelectorAll(".label")];
+
+  function openMenu(){
+    profile.dataset.open = "true";
+    trigger.setAttribute("aria-expanded", "true");
+    labels.forEach((el, i) => { el.textContent = ""; setTimeout(() => decode(el), 100 + i * 80); });
+  }
+  function closeMenu(){
+    profile.dataset.open = "false";
+    trigger.setAttribute("aria-expanded", "false");
+    labels.forEach((el) => { el.textContent = el.dataset.text; });
+  }
+  function toggleMenu(){ profile.dataset.open === "true" ? closeMenu() : openMenu(); }
+
+  trigger.addEventListener("click", (e) => { e.stopPropagation(); toggleMenu(); });
+  document.addEventListener("click", (e) => { if (!profile.contains(e.target)) closeMenu(); });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeMenu(); });
+
+  // ---- logout confirm modal (misma logica que el dashboard) ----
+  const overlay = document.getElementById("overlay");
+  document.getElementById("logout").addEventListener("click", () => { closeMenu(); overlay.dataset.open = "true"; });
+  document.getElementById("lo-cancel").addEventListener("click", () => { overlay.dataset.open = "false"; });
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) overlay.dataset.open = "false"; });
+  document.getElementById("lo-confirm").addEventListener("click", () => {
+    overlay.dataset.open = "false";
+    alert("supabase.auth.signOut()");   // en el dashboard aca va el signOut real
+  });
+
+  // ---- theme toggle (para revisar en light y dark) ----
+  document.getElementById("theme").addEventListener("click", () => document.documentElement.classList.toggle("dark"));
+</script>
+</body>
+</html>

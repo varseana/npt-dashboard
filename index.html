@@ -243,6 +243,35 @@
       .npt-collapse > .npt-collapse-inner { overflow: hidden; opacity: 0; transition: opacity .32s ease; }
       .npt-collapse[data-open="true"] > .npt-collapse-inner { opacity: 1; }
       @media (prefers-reduced-motion: reduce) { .npt-collapse, .npt-collapse > .npt-collapse-inner { transition: none; } }
+      /* ===== profile dropdown (header) ===== un solo frame de 4 esquinas que CRECE. el holder
+         reserva el tamano del chip en reposo (fantasma) para que abrir NO mueva la pagina; el
+         frame real es absolute y se superpone hacia abajo. */
+      .npt-profile-holder { position: relative; }
+      .npt-profile-ghost { visibility: hidden; pointer-events: none; }               /* reserva w/h del chip */
+      .npt-profile { position: absolute; top: 0; left: 0; padding: 8px 14px; min-width: 100%;
+        background: transparent; transition: background .2s ease; z-index: 40; }
+      .npt-profile[data-open="true"] { background: var(--bg); }                       /* MISMO color del fondo */
+      /* afordancia: en hover del chip, las 4 esquinas se marcan (textDim -> text) sin ser un boton */
+      .npt-profile:has(.npt-profile-trigger:hover) .npt-bracket,
+      .npt-profile[data-open="true"] .npt-bracket { border-color: var(--text); }
+      .npt-profile-trigger { display: flex; align-items: center; gap: 10px; width: 100%;
+        background: transparent; border: none; padding: 0; cursor: pointer; font-family: inherit;
+        color: var(--textDim); font-size: 18px; line-height: 1.2; text-align: left; }
+      .npt-profile-chev { margin-left: auto; color: var(--textDim); flex: 0 0 auto;
+        transition: transform .3s cubic-bezier(.22,1,.36,1), color .15s; }
+      .npt-profile-trigger:hover .npt-profile-chev { color: var(--text); }
+      .npt-profile[data-open="true"] .npt-profile-chev { transform: rotate(180deg); }
+      .npt-profile-menu { padding-top: 10px; margin-top: 10px; border-top: 1px solid var(--border); }
+      .npt-profile-item { display: flex; align-items: center; gap: 12px; width: 100%;
+        background: transparent; border: none; color: var(--text); cursor: pointer;
+        font-family: inherit; font-size: 17px; text-align: left; padding: 9px 8px;
+        transition: background .12s, color .12s; white-space: nowrap; }
+      .npt-profile-item:hover { background: var(--panelAlt); }
+      .npt-profile-item .npt-profile-ico { display: inline-flex; color: var(--textDim); flex: 0 0 auto; }
+      .npt-profile-item:hover .npt-profile-ico { color: var(--text); }
+      /* logout monocromatico; SOLO en hover se pone rojo */
+      .npt-profile-item.danger:hover { background: var(--badBg); color: var(--bad); }
+      .npt-profile-item.danger:hover .npt-profile-ico { color: var(--bad); }
       /* ===== heatmap semanal (estilo GitHub) ===== cuadros casi invisibles, escala de intensidad,
          solo semanas con data clickeables. columnas=meses, filas=semanas del mes. */
       .npt-hm { display: inline-block; }
