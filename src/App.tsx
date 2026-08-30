@@ -26,6 +26,7 @@ import { weekInfo } from "./lib/npt";
 import { IconMoon, IconSun, IconX } from "./components/icons";
 import Mascot from "./components/Mascot";
 import ProfileMenu from "./components/ProfileMenu";
+import PixelText from "./components/PixelText";
 import PullReveal from "./components/PullReveal";
 import ScrambleText from "./components/ScrambleText";
 
@@ -254,7 +255,7 @@ export default function App() {
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
             <h1 style={{ margin: 0, color: palette.text, lineHeight: 1.02 }}>
-              <span style={{ display: "block", fontSize: 60 }}><ScrambleText text="STAR" radius={90} scrambleChars="._/:<>*=" /></span>
+              <span style={{ display: "block" }}><PixelText text="STAR" cols={48} size={297} r={0.41} color={palette.text} /></span>
               <span style={{ display: "block", fontSize: 34 }}><ScrambleText text="Real Time NPT Dashboard" radius={90} scrambleChars="._/:<>*=" /></span>
             </h1>
             <Mascot inline onNavigate={goTo} size={88} />
