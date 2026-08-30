@@ -4,7 +4,6 @@ export const palette = {
   bg: "var(--bg)",
   panel: "var(--panel)",
   panelAlt: "var(--panelAlt)",
-  panelSolid: "var(--panel-solid)",   // opaco de verdad (modales, popovers que deben taparse)
   border: "var(--border)",
   text: "var(--text)",
   textDim: "var(--textDim)",

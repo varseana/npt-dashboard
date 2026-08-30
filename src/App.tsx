@@ -26,7 +26,6 @@ import { weekInfo } from "./lib/npt";
 import { IconMoon, IconSun, IconX } from "./components/icons";
 import Mascot from "./components/Mascot";
 import ProfileMenu from "./components/ProfileMenu";
-import AsciiBg from "./components/AsciiBg";
 import PullReveal from "./components/PullReveal";
 import ScrambleText from "./components/ScrambleText";
 
@@ -245,8 +244,6 @@ export default function App() {
 
   return (
     <>
-    {/* fondo ASCII animado full-page (detras de TODO, incluidas las letras). PRUEBA: gris, 85% transparente. */}
-    <AsciiBg />
     <PullReveal pageRef={pageRef} />
     <div ref={pageRef} style={{ maxWidth: "min(2100px, 97vw)", margin: "0 auto", padding: "24px 32px" }}>
       {showConfirmed && <ConfirmedBanner onClose={() => setShowConfirmed(false)} />}
@@ -372,7 +369,7 @@ function ConfirmModal({ title, body, confirmLabel, onCancel, onConfirm }:
     <div onClick={onCancel}
       style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 50, padding: 24 }}>
       <div onClick={(e) => e.stopPropagation()}
-        style={{ background: palette.panelSolid, border: `1px solid ${palette.border}`, borderRadius: 0, padding: 24, width: 380, maxWidth: "90vw", boxShadow: "0 12px 40px rgba(0,0,0,.18)" }}>
+        style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 0, padding: 24, width: 380, maxWidth: "90vw", boxShadow: "0 12px 40px rgba(0,0,0,.18)" }}>
         <h2 style={{ margin: "0 0 8px", fontSize: 29, color: palette.text }}>{title}</h2>
         <p style={{ margin: "0 0 20px", color: palette.textDim, fontSize: 19 }}>{body}</p>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
@@ -389,7 +386,7 @@ function ConfirmModal({ title, body, confirmLabel, onCancel, onConfirm }:
 function ConfirmedBanner({ onClose }: { onClose: () => void }) {
   return (
     <div style={{ position: "fixed", top: 14, left: "50%", transform: "translateX(-50%)", zIndex: 80,
-      background: palette.panelSolid, border: `2px solid ${palette.text}`, borderRadius: 0, padding: "10px 14px",
+      background: palette.panel, border: `2px solid ${palette.text}`, borderRadius: 0, padding: "10px 14px",
       display: "flex", alignItems: "center", gap: 12, maxWidth: "92vw" }}>
       <span style={{ fontSize: 18, color: palette.text }}>Email confirmed. You are signed in.</span>
       <button className="npt-close" onClick={onClose} aria-label="Dismiss" title="Dismiss"
