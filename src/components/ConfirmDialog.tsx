@@ -8,7 +8,7 @@ export function ConfirmDialog({ title, body, confirmLabel = "Delete", onCancel, 
 }) {
   return (
     <div onClick={onCancel} style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,.35)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 60, padding: 24 }}>
-      <div onClick={(e) => e.stopPropagation()} style={{ background: palette.panel, border: `1px solid ${palette.border}`, borderRadius: 0, padding: 24, width: 420, maxWidth: "90vw" }}>
+      <div onClick={(e) => e.stopPropagation()} style={{ background: palette.panelSolid, border: `1px solid ${palette.border}`, borderRadius: 0, padding: 24, width: 420, maxWidth: "90vw" }}>
         <h2 style={{ margin: "0 0 8px", fontSize: 27, color: palette.text }}>{title}</h2>
         <p style={{ margin: "0 0 20px", color: palette.textDim, fontSize: 18, lineHeight: 1.5 }}>{body}</p>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
