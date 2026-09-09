@@ -297,30 +297,36 @@ export function fairShareSeconds(ctx: PlanContext): number | null {
   return Math.max(0, Math.round((ctx.budgetSeconds - sum) / rest));
 }
 
-// resumen de asignacion del budget para la UI. leftover = lo que sobra tras los customs (lo reparte
-// el fair share). unassigned = la parte SIN dueno: 0 mientras haya alguien en fair share (ellos la
-// absorben), = leftover solo cuando TODOS tienen custom. leftover/unassigned null si no hay budget.
+// resumen de asignacion del budget para la UI.
+// - allAssigned: TODOS tienen custom (nadie en fair share). En ese caso el total del equipo NO es el
+//   threshold: ES la suma de los customs. El threshold pasa a ser irrelevante y NO hay "unassigned".
+// - si hay gente en fair share, teamTotal = threshold y leftover = lo que reparte el fair share.
+// leftover null si no hay budget Y hay gente en fair share (sin budget no se puede repartir).
 export interface PlanSummary {
   fair: number | null;        // fair share por persona sin custom (0 si no hay ninguna)
   allocated: number;          // suma de customs
-  leftover: number | null;    // budget - suma de customs (>= 0)
-  unassigned: number | null;  // budget sin dueno: leftover si nadie va al fair share, si no 0
+  leftover: number | null;    // budget - suma de customs (>= 0); base del fair share
   restCount: number;          // personas sin custom
+  allAssigned: boolean;       // true si todos tienen custom (headcount > 0 y restCount == 0)
+  teamTotal: number | null;   // total del equipo: suma de customs si allAssigned, si no el threshold
 }
 export function planSummary(ctx: PlanContext): PlanSummary {
   let allocated = 0;
   for (const v of ctx.overrides.values()) allocated += v;
   const restCount = ctx.headcount - ctx.overrides.size;
+  const allAssigned = ctx.headcount > 0 && restCount === 0;
   const leftover = ctx.budgetSeconds == null ? null : Math.max(0, ctx.budgetSeconds - allocated);
-  const unassigned = leftover == null ? null : (restCount <= 0 ? leftover : 0);
-  return { fair: fairShareSeconds(ctx), allocated, leftover, unassigned, restCount };
+  const teamTotal = allAssigned ? allocated : ctx.budgetSeconds;
+  return { fair: fairShareSeconds(ctx), allocated, leftover, restCount, allAssigned, teamTotal };
 }
 
-// planned de una persona: su custom si lo tiene, si no el fair share. null si no hay budget.
+// planned de una persona: su custom si lo tiene (vale por si solo, sin threshold), si no el
+// fair share. Solo el fair share necesita budget: null si la persona no tiene custom y no hay budget.
 export function resolvePersonPlan(alias: string, ctx: PlanContext): number | null {
-  if (ctx.budgetSeconds == null) return null;
   const ov = ctx.overrides.get(alias);
-  return ov != null ? ov : fairShareSeconds(ctx);
+  if (ov != null) return ov;
+  if (ctx.budgetSeconds == null) return null;
+  return fairShareSeconds(ctx);
 }
 
 export type NptStatus = "ok" | "warn" | "bad" | "none";

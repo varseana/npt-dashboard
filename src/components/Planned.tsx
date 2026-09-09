@@ -69,7 +69,7 @@ export default function Planned({ team }: { team: Team }) {
   const budgetSeconds = resolveTeamBudget(budgetRows, scopeKey);
   const overrides = useMemo(() => buildPlanOverrides(rows, scopeKey), [rows, scopeKey]);
   const ctx: PlanContext = { budgetSeconds, headcount, overrides };
-  const { fair, allocated, leftover, unassigned, restCount } = planSummary(ctx);
+  const { fair, allocated, leftover, restCount, allAssigned, teamTotal } = planSummary(ctx);
   // el buscador SOLO filtra las filas visibles; headcount/fair share siguen usando el team completo
   const shownAliases = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -129,7 +129,12 @@ export default function Planned({ team }: { team: Team }) {
     const secs = parseDuration(next);
     if (next.trim() !== "" && secs == null) throw new Error("Use hours like 2 or H:MM (e.g. 2:30).");
     const budgetSecs = resolveTeamBudget(budgetRows, scopeKey);
-    if (secs != null && budgetSecs != null) {
+    // El cap threshold solo protege el pool del fair share. Si tras este edit TODOS tienen custom,
+    // nadie esta en fair share: el total del equipo pasa a ser la suma de customs y el threshold deja
+    // de aplicar, asi que no bloqueamos (era justo lo que impedia balancear con todos asignados).
+    const holders = new Set(overrides.keys()); holders.add(alias);
+    const everyoneCustom = holders.size >= headcount;
+    if (secs != null && budgetSecs != null && !everyoneCustom) {
       let sum = secs;
       for (const r of rows) if (r.week_key === scopeKey && r.alias !== alias && r.planned_seconds) sum += r.planned_seconds;
       if (sum > budgetSecs) throw new Error(`Custom targets would total ${fmtHms(sum)}, over the threshold ${fmtHms(budgetSecs)}.`);
@@ -173,56 +178,62 @@ export default function Planned({ team }: { team: Team }) {
           patron que el budget card de Dashboard > Summary). */}
       <div style={{ position: "relative", background: "transparent", padding: "18px 22px" }}>
         <span className="npt-bracket tl" /><span className="npt-bracket tr" /><span className="npt-bracket bl" /><span className="npt-bracket br" />
-        {/* titulo en 2 lineas: "Team weekly" / "Threshold". "Threshold" va mas grande para quedar
-            (aprox) tan ancho como "Team weekly" y verse parejo. El asterisco va al lado, fuera de las
-            lineas, para no afectar el ancho del texto. */}
+        {/* titulo en 2 lineas: "Team weekly" / ("Threshold" | "Total"). La 2da linea va mas grande para
+            quedar (aprox) tan ancha como "Team weekly". El asterisco va al lado, fuera de las lineas. */}
         <div style={{ display: "flex", alignItems: "flex-start", gap: 2, marginBottom: 10 }}>
           <div className="npt-title" style={{ fontWeight: 700, lineHeight: 1.0, paddingLeft: 9 }}>
             <span style={{ display: "block", fontSize: 34 }}>Team weekly</span>
-            <span style={{ display: "block", fontSize: 44 }}>Threshold</span>
+            <span style={{ display: "block", fontSize: 44 }}>{allAssigned ? "Total" : "Threshold"}</span>
           </div>
           <InfoStar pages={[
             <>The <strong style={hi}>total NPT the whole team can spend</strong> in a week (the number ops hands you). Everyone draws from it. Type hours like <strong style={hi}>10</strong> (= 10:00:00) or H:MM. Applies to <strong style={hi}>{scopeLabel}</strong>.</>,
-            <><strong style={hi}>How it splits.</strong> Individual custom targets come <strong style={hi}>first</strong> and can never add up to more than the threshold. Whatever is left over becomes the <strong style={hi}>fair share</strong>, split equally among everyone without a custom. If <strong style={hi}>everyone</strong> has a custom, the remainder stays <strong style={hi}>unassigned</strong> (shown below). Example: threshold <strong style={hi}>10:00</strong>, one person set to <strong style={hi}>4:00</strong> leaves <strong style={hi}>6:00</strong> for the rest of the team.</>,
+            <><strong style={hi}>How it splits.</strong> Individual custom targets come <strong style={hi}>first</strong>. Whatever is left over becomes the <strong style={hi}>fair share</strong>, split equally among everyone without a custom. When <strong style={hi}>everyone</strong> has a custom there is no fair share: the team total is simply the <strong style={hi}>sum of the individual targets</strong>, with no separate threshold to set. Example: threshold <strong style={hi}>10:00</strong>, one person set to <strong style={hi}>4:00</strong> leaves <strong style={hi}>6:00</strong> for the rest of the team.</>,
           ]} />
         </div>
-        <InlineEdit
-          value={(() => { const b = budgetRows.find((r) => r.week_key === scopeKey); return b ? fmtHms(b.planned_seconds) : ""; })()}
-          onSave={onSaveBudget}
-          format={normalize}
-          placeholder="H:MM"
-          emptyHint={<span style={{ color: palette.textDim, fontSize: 26 }}>Set threshold</span>}
-          width={300}
-          align="left"
-          fontSize={48}
-          fontWeight={700}
-          ariaLabel="team weekly threshold"
-          inputMode="numeric"
-          saveFeedback
-        />
-        {budgetSeconds == null && <div style={{ fontSize: 17, color: palette.textDim, marginTop: 8 }}>No threshold set. Click above to give everyone a target.</div>}
-        {/* fair share + unassigned DEBAJO del tiempo */}
-        {budgetSeconds != null && (
-          <div style={{ fontSize: 18, color: palette.textDim, textAlign: "left", whiteSpace: "nowrap", lineHeight: 1.5, marginTop: 12, paddingLeft: 9 }}>
-            <div>
-              Fair share {refreshing
-                ? <Bar w={92} h={22} style={{ display: "inline-block", verticalAlign: "middle" }} />
-                : <strong style={{ color: palette.text }}>{fmtHms(fair ?? 0)}</strong>}
-              <InfoStar spin={false}>{
-                restCount > 0
-                  ? <>What each of the <strong style={hi}>{restCount}</strong> {restCount === 1 ? "person" : "people"} without a custom gets: <strong style={hi}>{fmtHms(leftover ?? 0)}</strong> left over, split evenly.</>
-                  : <>Everyone has a custom target, so <strong style={hi}>no one</strong> is on the fair share right now.</>
-              }</InfoStar>
+        {allAssigned ? (
+          /* TODOS con custom: el total del equipo = suma de customs (derivado). Sin input ni unassigned. */
+          <>
+            <div className="npt-title" style={{ fontSize: 48, fontWeight: 700, paddingLeft: 9, lineHeight: 1.1 }}>
+              {refreshing
+                ? <Bar w={220} h={48} style={{ display: "inline-block", verticalAlign: "middle" }} />
+                : fmtHms(teamTotal ?? 0)}
             </div>
-            <div>
-              Unassigned {refreshing
-                ? <Bar w={92} h={22} style={{ display: "inline-block", verticalAlign: "middle" }} />
-                : <strong style={{ color: palette.text }}>{fmtHms(unassigned ?? 0)}</strong>}
-              <InfoStar spin={false}>{
-                <>Budget with <strong style={hi}>no owner</strong>: the threshold <strong style={hi}>{fmtHms(budgetSeconds)}</strong> minus every custom target{overrides.size ? <> (<strong style={hi}>{fmtHms(allocated)}</strong>)</> : null}. It stays <strong style={hi}>0</strong> while anyone is on the fair share (they absorb the rest), and only grows when <strong style={hi}>everyone</strong> has a custom that totals less than the threshold.</>
-              }</InfoStar>
+            <div style={{ fontSize: 17, color: palette.textDim, marginTop: 10, paddingLeft: 9, lineHeight: 1.5, maxWidth: 380 }}>
+              Everyone has a custom target, so the team total is the <strong style={{ color: palette.text }}>sum of the {overrides.size} individual targets</strong>. Nothing is unassigned. To use a shared budget with a fair share instead, clear a custom below.
             </div>
-          </div>
+          </>
+        ) : (
+          <>
+            <InlineEdit
+              value={(() => { const b = budgetRows.find((r) => r.week_key === scopeKey); return b ? fmtHms(b.planned_seconds) : ""; })()}
+              onSave={onSaveBudget}
+              format={normalize}
+              placeholder="H:MM"
+              emptyHint={<span style={{ color: palette.textDim, fontSize: 26 }}>Set threshold</span>}
+              width={300}
+              align="left"
+              fontSize={48}
+              fontWeight={700}
+              ariaLabel="team weekly threshold"
+              inputMode="numeric"
+              saveFeedback
+            />
+            {budgetSeconds == null ? (
+              <div style={{ fontSize: 17, color: palette.textDim, marginTop: 8 }}>No threshold set. Click above to give everyone a target.</div>
+            ) : (
+              /* fair share DEBAJO del tiempo. (Con gente en fair share, "unassigned" siempre es 0: se elimino.) */
+              <div style={{ fontSize: 18, color: palette.textDim, textAlign: "left", whiteSpace: "nowrap", lineHeight: 1.5, marginTop: 12, paddingLeft: 9 }}>
+                <div>
+                  Fair share {refreshing
+                    ? <Bar w={92} h={22} style={{ display: "inline-block", verticalAlign: "middle" }} />
+                    : <strong style={{ color: palette.text }}>{fmtHms(fair ?? 0)}</strong>}
+                  <InfoStar spin={false}>{
+                    <>What each of the <strong style={hi}>{restCount}</strong> {restCount === 1 ? "person" : "people"} without a custom gets: <strong style={hi}>{fmtHms(leftover ?? 0)}</strong> left over{overrides.size ? <> after the customs (<strong style={hi}>{fmtHms(allocated)}</strong>)</> : null}, split evenly.</>
+                  }</InfoStar>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
         </div>{/* /IZQUIERDA */}
@@ -300,7 +311,7 @@ export default function Planned({ team }: { team: Team }) {
 }
 
 // skeleton 1:1: dropdown "Applies to" -> 2 columnas (IZQ card threshold con brackets: titulo 2 lineas +
-// numero grande + fair share + unassigned; DER buscador + tabla de 3 columnas Employee/Custom/Target)
+// numero grande + fair share (o total derivado); DER buscador + tabla de 3 columnas Employee/Custom/Target)
 function PlannedSkeleton() {
   return (
     <div>
