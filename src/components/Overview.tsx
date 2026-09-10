@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import {
-  computeDay, dedupePersonDay, fmtHms, resolveTeamBudget, buildPlanOverrides, resolvePersonPlan, statusFor,
+  computeDay, dedupePersonDay, fmtHms, resolveTeamBudget, buildPlanOverrides, resolvePersonPlan, planSummary, statusFor,
   weekInfo, weekLabel, weekRangeLabel, recentWeeks, isoDate,
   type NptDailyRow, type NptStatus, type PlannedRow, type TeamBudgetRow, type PlanContext,
 } from "../lib/npt";
@@ -79,6 +79,18 @@ export default function Overview({ team, refreshKey, onNavigate, weekKey: weekKe
     return () => { cancelled = true; };
   }, [team.id, weekKey, refreshKey, sel.start, sel.end]);
 
+  // contexto del plan del team (compartido por las filas y por el threshold agregado). El threshold
+  // que se MUESTRA no es el budget crudo: es planSummary.teamTotal, que cuando TODOS tienen custom
+  // (allAssigned) pasa a ser la suma de los customs (mismo criterio que Planned). Asi, setear custom
+  // amounts para todos se refleja como el threshold propio del equipo en el dashboard.
+  const plan = useMemo(() => {
+    const overrides = buildPlanOverrides(planned, weekKey);
+    const dataAliases = new Set(dedupePersonDay(rows).map((r) => r.alias));
+    const union = new Set<string>([...roster, ...dataAliases, ...overrides.keys()]);
+    const ctx: PlanContext = { budgetSeconds: resolveTeamBudget(budget, weekKey), headcount: union.size, overrides };
+    return { ctx, summary: planSummary(ctx) };
+  }, [rows, planned, budget, roster, weekKey]);
+
   const users = useMemo(() => {
     const byUser = new Map<string, Row>();
     for (const r of dedupePersonDay(rows)) {
@@ -90,9 +102,7 @@ export default function Overview({ team, refreshKey, onNavigate, weekKey: weekKe
     }
     const out = Array.from(byUser.values());
     // modelo budget-first: target de cada persona = su custom, si no el fair share (budget / headcount).
-    const overrides = buildPlanOverrides(planned, weekKey);
-    const union = new Set<string>([...roster, ...byUser.keys(), ...overrides.keys()]);
-    const ctx: PlanContext = { budgetSeconds: resolveTeamBudget(budget, weekKey), headcount: union.size, overrides };
+    const ctx = plan.ctx;
     for (const u of out) {
       u.planned = resolvePersonPlan(u.alias, ctx);
       u.remaining = u.planned != null ? u.planned - u.nptSeconds : null;
@@ -103,7 +113,7 @@ export default function Overview({ team, refreshKey, onNavigate, weekKey: weekKe
       b.nptSeconds - a.nptSeconds ||
       a.alias.localeCompare(b.alias));
     return out;
-  }, [rows, planned, budget, roster, weekKey]);
+  }, [rows, plan]);
 
   const shown = useMemo(() => {
     const q = filter.trim().toLowerCase();
@@ -111,8 +121,9 @@ export default function Overview({ team, refreshKey, onNavigate, weekKey: weekKe
   }, [users, filter]);
 
   const teamNpt = users.reduce((a, u) => a + u.nptSeconds, 0);
-  // presupuesto TOTAL del team para la semana (techo agregado que todos consumen)
-  const teamBudget = resolveTeamBudget(budget, weekKey);
+  // threshold TOTAL del team para la semana (techo agregado que todos consumen). NO es el budget
+  // crudo: es teamTotal (suma de customs cuando TODOS tienen custom, si no el budget). Ver `plan`.
+  const teamBudget = plan.summary.teamTotal;
   const teamRemaining = teamBudget != null ? teamBudget - teamNpt : null;
   const teamStatus = statusFor(teamBudget, teamNpt);
   const overCount = users.filter((u) => u.status === "bad").length;
