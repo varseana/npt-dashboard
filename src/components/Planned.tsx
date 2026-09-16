@@ -13,6 +13,7 @@ import { Dropdown } from "./Dropdown";
 import { SearchInput } from "./Inputs";
 import WeekCountdown from "./WeekCountdown";
 import { Bar, BracketFrame, TableSk } from "./skeleton";
+import PinnedView from "./PinnedView";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 type Scope = "standing" | "week";
@@ -148,8 +149,8 @@ export default function Planned({ team }: { team: Team }) {
   const scopeLabel = scope === "standing" ? "every week" : weekLabel(weekInfo(new Date(weekKey + "T12:00:00")));
 
   return (
-    <div>
-      <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", margin: "0 0 16px" }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
+      <div style={{ flex: "0 0 auto", display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", margin: "0 0 16px" }}>
         <Field label="Applies to">
           <Dropdown value={scope} onChange={(v) => setScope(v as Scope)} minWidth={200} ariaLabel="Applies to"
             options={[{ value: "standing", label: "Every week" }, { value: "week", label: "Just one week" }]} />
@@ -171,7 +172,7 @@ export default function Planned({ team }: { team: Team }) {
 
       {/* Layout 2 columnas: IZQ = threshold card, DER = buscador + tabla. align-items:flex-start
           => la card izquierda NO se estira cuando la tabla crece (si no, los brackets se rompen). */}
-      <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
+      <div style={{ flex: "1 1 auto", minHeight: 0, display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
         {/* IZQUIERDA: threshold card. ancho acotado, no crece con la altura de la tabla */}
         <div style={{ flex: "0 1 420px", minWidth: 300 }}>
       {/* UNICO input principal: el budget total del team. Sin caja: 4 marcos esquineros (mismo
@@ -238,15 +239,21 @@ export default function Planned({ team }: { team: Team }) {
       </div>
         </div>{/* /IZQUIERDA */}
 
-        {/* DERECHA: buscador + tabla de employees. flex:1 => usa el resto del ancho horizontal */}
-        <div style={{ flex: "1 1 520px", minWidth: 300 }}>
+        {/* DERECHA: buscador + tabla de employees. flex:1 => usa el resto del ancho horizontal.
+            alignSelf stretch + minHeight 0 => la columna toma la altura de la fila y PinnedView le da
+            altura acotada para su scroll interno (solo las filas de personas scrollean). */}
+        <div style={{ flex: "1 1 520px", minWidth: 300, alignSelf: "stretch", minHeight: 0 }}>
+      <PinnedView head={<>
       {aliases.length > 0 && (
         <div style={{ marginBottom: 12 }}>
           <SearchInput value={query} onChange={(e) => setQuery(e.target.value)}
             placeholder="username" aria-label="Search employees" />
         </div>
       )}
-
+      <div style={{ marginBottom: 12, fontSize: 16, color: palette.textDim }}>
+        Changes save on their own. Click any threshold or custom value to edit it.
+      </div>
+      </>}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19, tableLayout: "fixed" }}>
         <colgroup>
           <col />
@@ -300,10 +307,7 @@ export default function Planned({ team }: { team: Team }) {
           })}
         </tbody>
       </table>
-
-      <div style={{ marginTop: 14, fontSize: 16, color: palette.textDim }}>
-        Changes save on their own. Click any threshold or custom value to edit it.
-      </div>
+      </PinnedView>
         </div>{/* /DERECHA */}
       </div>{/* /flex 2 columnas */}
     </div>
@@ -346,5 +350,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
   );
 }
 
-const th: React.CSSProperties = { textAlign: "center", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
+// thead congelado dentro del scroll de la tabla de personas: sticky top 0 con fondo opaco.
+const th: React.CSSProperties = { textAlign: "center", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}`, position: "sticky", top: 0, zIndex: 1, background: palette.bg };
 const td: React.CSSProperties = { padding: "8px 10px", borderBottom: `1px solid ${palette.border}` };
