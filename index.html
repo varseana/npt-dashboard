@@ -243,6 +243,14 @@
       .npt-collapse > .npt-collapse-inner { overflow: hidden; opacity: 0; transition: opacity .32s ease; }
       .npt-collapse[data-open="true"] > .npt-collapse-inner { opacity: 1; }
       @media (prefers-reduced-motion: reduce) { .npt-collapse, .npt-collapse > .npt-collapse-inner { transition: none; } }
+      /* scroll interno (solo la region de nombres scrollea; la pagina no). scrollbar fino,
+         monocromatico, radius 0: mismo lenguaje bauhaus del resto. firefox via scrollbar-* ; webkit
+         via ::-webkit-scrollbar. track transparente, thumb = borde. */
+      .npt-scroll { scrollbar-width: thin; scrollbar-color: var(--border) transparent; }
+      .npt-scroll::-webkit-scrollbar { width: 10px; height: 10px; }
+      .npt-scroll::-webkit-scrollbar-track { background: transparent; }
+      .npt-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 0; }
+      .npt-scroll::-webkit-scrollbar-thumb:hover { background: var(--textDim); }
       /* ===== profile dropdown (header) ===== un solo frame de 4 esquinas que CRECE. el holder
          reserva el tamano del chip en reposo (fantasma) para que abrir NO mueva la pagina; el
          frame real es absolute y se superpone hacia abajo. */

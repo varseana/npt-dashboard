@@ -6,6 +6,7 @@ import { InfoStar } from "./InfoStar";
 import { TableSk } from "./skeleton";
 import WeekCountdown from "./WeekCountdown";
 import { Dropdown } from "./Dropdown";
+import PinnedView from "./PinnedView";
 import {
   NPT_AUX, ANCHOR, dedupePersonDay, fmtHms, weekInfo, weekLabel, weekRangeLabel, recentWeeks, isoDate,
 } from "../lib/npt";
@@ -88,7 +89,8 @@ export default function SharedWithMe({ myUserId }: { myUserId: string }) {
   }, [rows, aliases]);
 
   return (
-    <div>
+    <PinnedView head={<>
+      {/* cabeza PINEADA (no scrollea): selector de semana + titulo */}
       <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", marginBottom: 16 }}>
         <div>
           <div style={{ fontSize: 16, color: palette.textDim, marginBottom: 4 }}>
@@ -107,7 +109,8 @@ export default function SharedWithMe({ myUserId }: { myUserId: string }) {
       <div style={{ color: palette.textDim, fontSize: 16, marginBottom: 12 }}>Week {sel.week} :: {weekRangeLabel(sel)}</div>
 
       {msg && <div style={{ marginBottom: 12, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 18 }}>{msg}</div>}
-
+    </>}>
+      {/* cuerpo SCROLL: lo unico que scrollea es la tabla de compartidos */}
       {loading ? (
         <SharedSkeleton />
       ) : aliases.length === 0 ? (
@@ -162,7 +165,7 @@ export default function SharedWithMe({ myUserId }: { myUserId: string }) {
           </table>
         </div>
       )}
-    </div>
+    </PinnedView>
   );
 }
 
@@ -172,5 +175,6 @@ function SharedSkeleton() {
   return <TableSk template="2fr 60px 1fr 1fr 1fr 1fr 1fr 1fr 1fr 1.2fr 44px" rows={4} />;
 }
 
-const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
+// thead CONGELADO dentro del scroll: sticky top 0 con fondo opaco para que las filas no se transparenten
+const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}`, position: "sticky", top: 0, zIndex: 1, background: palette.bg };
 const td: React.CSSProperties = { padding: "8px 10px", borderBottom: `1px solid ${palette.border}` };

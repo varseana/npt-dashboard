@@ -245,12 +245,18 @@ export default function App() {
   return (
     <>
     <PullReveal pageRef={pageRef} />
-    <div ref={pageRef} style={{ maxWidth: "min(2100px, 97vw)", margin: "0 auto", padding: "24px 32px" }}>
+    {/* shell de viewport fijo: la PAGINA (window) no scrollea (height 100dvh + overflow hidden);
+        solo la Region B de abajo (los nombres) tiene scroll propio. 100dvh sigue a la barra de url
+        que colapsa en mobile safari. */}
+    <div ref={pageRef} style={{ height: "100dvh", boxSizing: "border-box", display: "flex", flexDirection: "column",
+      maxWidth: "min(2100px, 97vw)", margin: "0 auto", padding: "24px 32px" }}>
       {showConfirmed && <ConfirmedBanner onClose={() => setShowConfirmed(false)} />}
+      {/* ===== REGION A: pineada (no scrollea) = header + nav + heatmap ===== */}
+      <div style={{ flex: "0 0 auto" }}>
       {/* separador superior = whitespace (SIN linea visible), igual que el de abajo del header.
           da aire arriba del titulo + reloj para enmarcar la cabecera simetrica. */}
       <div style={{ height: 24 }} />
-      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 48 }}>
+      <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 28 }}>
         <div>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
             <h1 style={{ margin: 0, color: palette.text, lineHeight: 1.02 }}>
@@ -280,9 +286,9 @@ export default function App() {
         </div>
       </header>
 
-      {manager.role === "user" && <SelfView email={manager.email} aliasOverride={manager.alias} />}
-
-      {isStaff && (<>
+      {isStaff && (
+      // nav + heatmap: parte pineada (Region A)
+      <>
       {/* nav (izquierda) + heatmap semanal (derecha, SIEMPRE visible para staff, en cualquier pestana);
           separador full-width abajo. columnas con las MISMAS proporciones que la fila de metricas
           (480 / 340) para que el heatmap quede centrado en X sobre el bloque de stats. */}
@@ -328,7 +334,17 @@ export default function App() {
             refreshKey={refreshTick} />
         </div>
       </div>
+      </>
+      )}
+      </div>
+      {/* ===== REGION B: scroll (la PAGINA no scrollea, esto si) = la vista activa / los nombres =====
+          overflow auto cubre las vistas que aun no usan PinnedView (scrollean enteras); las que si lo
+          usan (Overview) llenan al 100% y solo su cuerpo interno scrollea. */}
+      <div className="npt-scroll" style={{ flex: "1 1 auto", minHeight: 0, overflow: "auto", display: "flex", flexDirection: "column" }}>
 
+      {manager.role === "user" && <SelfView email={manager.email} aliasOverride={manager.alias} />}
+
+      {isStaff && (<>
       {section === "dashboard" && team && dashView === "summary" && <Overview team={team} refreshKey={refreshTick} onNavigate={goTo} weekKey={dashWeekKey} onWeekChange={setDashWeekKey} />}
       {section === "dashboard" && team && dashView === "breakdown" && <Distribution team={team} refreshKey={refreshTick} weekKey={dashWeekKey} onWeekChange={setDashWeekKey} />}
       {section === "dashboard" && dashView === "self" && <SelfView email={manager.email} aliasOverride={manager.alias} />}
@@ -347,6 +363,8 @@ export default function App() {
         <Unassigned teams={teams} refreshKey={refreshTick} />}
       {section === "access" && accessTab === "org" && manager.role === "admin" && <Org />}
       </>)}
+      </div>
+      {/* ===== fin Region B ===== */}
 
       {askLogout && (
         <ConfirmModal

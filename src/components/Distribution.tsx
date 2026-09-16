@@ -14,6 +14,7 @@ import WeekCountdown from "./WeekCountdown";
 import { Dropdown } from "./Dropdown";
 import { SearchInput } from "./Inputs";
 import { IconMoveOut } from "./icons";
+import PinnedView from "./PinnedView";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 // highlight monocromatico dentro del texto del popover (bold en color de texto full)
@@ -139,7 +140,8 @@ export default function Distribution({ team, refreshKey, weekKey: weekKeyProp, o
   }
 
   return (
-    <div>
+    <PinnedView head={<>
+      {/* cabeza PINEADA: dropdown de semana + buscador + export CSV */}
       <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", marginBottom: 16 }}>
         <Field label={<span style={{ display: "inline-flex", gap: 6, alignItems: "baseline", flexWrap: "wrap" }}>Week <WeekCountdown start={sel.start} /></span>}>
           <Dropdown value={weekKey} onChange={setWeekKey} minWidth={260} ariaLabel="Select week"
@@ -153,12 +155,16 @@ export default function Distribution({ team, refreshKey, weekKey: weekKeyProp, o
       </div>
 
       {err && <div style={{ color: palette.bad, marginBottom: 12 }}>{err}</div>}
+    </>}>
+      {/* cuerpo SCROLL: solo la tabla de nombres scrollea (el scroll horizontal tambien lo maneja
+          PinnedView, por eso el wrapper YA NO lleva overflowX: si fuera scroll container, el thead
+          sticky se pegaria a el y no al scroll de PinnedView) */}
       {loading ? (
         <BreakdownSkeleton />
       ) : matrix.length === 0 ? (
         <div style={{ color: palette.textDim }}>No reported data for {weekLabel(sel)}.</div>
       ) : (
-        <div style={{ overflowX: "auto", border: `1px solid ${palette.border}`, borderRadius: 0 }}>
+        <div style={{ border: `1px solid ${palette.border}`, borderRadius: 0 }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 18, whiteSpace: "nowrap" }}>
             <thead>
               <tr>
@@ -189,7 +195,7 @@ export default function Distribution({ team, refreshKey, weekKey: weekKeyProp, o
           </table>
         </div>
       )}
-    </div>
+    </PinnedView>
   );
 }
 
@@ -214,6 +220,6 @@ function Field({ label, children }: { label: React.ReactNode; children: React.Re
   );
 }
 
-const th: React.CSSProperties = { textAlign: "center", padding: "9px 12px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}`, position: "sticky", top: 0, background: palette.bg };
+const th: React.CSSProperties = { textAlign: "center", padding: "9px 12px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}`, position: "sticky", top: 0, zIndex: 1, background: palette.bg };
 const td: React.CSSProperties = { textAlign: "center", padding: "8px 12px", borderBottom: `1px solid ${palette.border}` };
 const csvBtn: React.CSSProperties = { marginLeft: "auto", background: "transparent", border: "none", padding: "8px 4px", fontSize: 18, cursor: "pointer", fontWeight: 600, display: "inline-flex", alignItems: "center", gap: 7 };

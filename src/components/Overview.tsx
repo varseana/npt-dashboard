@@ -14,6 +14,7 @@ import WeekCountdown from "./WeekCountdown";
 import { Dropdown } from "./Dropdown";
 import { IconMail, IconAlert, IconSearch, IconFolder, IconCheck } from "./icons";
 import { Bar, BracketFrame, TableSk } from "./skeleton";
+import PinnedView from "./PinnedView";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 interface Folder { id: string; name: string; aliases: string[]; }
@@ -168,25 +169,17 @@ export default function Overview({ team, refreshKey, onNavigate, weekKey: weekKe
   }, [groupBy, folders, shown]);
 
   return (
-    <div>
-      {/* dropdown de semana + timer a la derecha: "[dropdown] :: ends in ...". sin label "Week"
-          (el dropdown ya dice la semana, self-explanatory). */}
+    <PinnedView head={<>
+      {/* cabeza PINEADA (no scrollea): selector de semana + budget + stats + toolbar */}
+      {/* dropdown de semana + timer a la derecha: "[dropdown] :: ends in ...". sin label "Week". */}
       <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap", marginBottom: 16 }}>
         <Dropdown value={weekKey} onChange={setWeekKey} minWidth={260} ariaLabel="Select week"
           options={weeks.map((w) => ({ value: w.key, label: weekLabel(w) }))} />
         <span style={{ fontSize: 17 }}><WeekCountdown start={sel.start} sep=":: " /></span>
       </div>
-
       {err && <div style={{ color: palette.bad, marginBottom: 12 }}>{err}</div>}
-      {loading ? (
-        <SummarySkeleton />
-      ) : users.length === 0 ? (
-        <div style={{ color: palette.textDim }}>No reported data for {weekLabel(sel)}.</div>
-      ) : (
+      {!loading && users.length > 0 && (
         <>
-          {/* 2 separadores invisibles (aire, sin linea) entre el selector de semana y las tablas de info */}
-          <div style={{ height: 24 }} />
-          <div style={{ height: 24 }} />
           {/* dos segmentos lado a lado: budget (angosto) izquierda // stats 2x2 derecha */}
           <div style={{ display: "flex", gap: "18px 0", marginBottom: 18, flexWrap: "wrap", alignItems: "stretch" }}>
             <div style={{ flex: "1 1 480px", minWidth: 320 }}>
@@ -222,11 +215,6 @@ export default function Overview({ team, refreshKey, onNavigate, weekKey: weekKe
             </div>
           </div>
 
-          {/* aire (sin linea) entre las tablas de info y la tabla de nombres: 3 separadores */}
-          <div style={{ height: 24 }} />
-          <div style={{ height: 24 }} />
-          <div style={{ height: 24 }} />
-
           {/* buscador de personas (izq) + Email flagged (der), justo ARRIBA de la tabla */}
           <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 12 }}>
             <div style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>
@@ -243,23 +231,29 @@ export default function Overview({ team, refreshKey, onNavigate, weekKey: weekKe
             </div>
           </div>
 
-          {groups ? (
-            groups.map((g) => (
-              <div key={g.name} style={{ marginBottom: 20 }}>
-                <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, margin: "4px 0 8px" }}>
-                  {g.name} <span style={{ color: palette.textDim, fontWeight: 400, fontSize: 18 }}>
-                    ({g.rows.length}, NPT {fmtHms(g.rows.reduce((a, u) => a + u.nptSeconds, 0))})
-                  </span>
-                </div>
-                {g.rows.length ? <UserTable rows={g.rows} remind={remind} teamBudget={teamBudget} /> : <div style={{ color: palette.textDim, fontSize: 18 }}>No members with data this week.</div>}
-              </div>
-            ))
-          ) : (
-            <UserTable rows={shown} remind={remind} teamBudget={teamBudget} />
-          )}
         </>
       )}
-    </div>
+    </>}>
+      {/* cuerpo SCROLL: lo unico que scrollea son los nombres */}
+      {loading ? (
+        <SummarySkeleton />
+      ) : users.length === 0 ? (
+        <div style={{ color: palette.textDim }}>No reported data for {weekLabel(sel)}.</div>
+      ) : groups ? (
+        groups.map((g) => (
+          <div key={g.name} style={{ marginBottom: 20 }}>
+            <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, margin: "4px 0 8px" }}>
+              {g.name} <span style={{ color: palette.textDim, fontWeight: 400, fontSize: 18 }}>
+                ({g.rows.length}, NPT {fmtHms(g.rows.reduce((a, u) => a + u.nptSeconds, 0))})
+              </span>
+            </div>
+            {g.rows.length ? <UserTable rows={g.rows} remind={remind} teamBudget={teamBudget} /> : <div style={{ color: palette.textDim, fontSize: 18 }}>No members with data this week.</div>}
+          </div>
+        ))
+      ) : (
+        <UserTable rows={shown} remind={remind} teamBudget={teamBudget} />
+      )}
+    </PinnedView>
   );
 }
 
@@ -538,7 +532,9 @@ function SummarySkeleton() {
   );
 }
 
-const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
+// thead CONGELADO dentro del scroll de nombres: sticky top 0 con fondo opaco (= fondo de pagina)
+// para que las filas no se transparenten por debajo al scrollear.
+const th: React.CSSProperties = { textAlign: "left", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}`, position: "sticky", top: 0, zIndex: 1, background: palette.bg };
 const td: React.CSSProperties = { padding: "8px 10px", borderBottom: `1px solid ${palette.border}`, fontVariantNumeric: "tabular-nums" };
 const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 0, padding: "7px 9px", fontSize: 19 };
 // boton sin chrome: transparente, sin borde, solo el icono. hereda color de texto (currentColor).

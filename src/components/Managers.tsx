@@ -7,6 +7,7 @@ import { InfoStar } from "./InfoStar";
 import { IconAlert, IconTrash, IconKey, IconEye, IconEyeOff } from "./icons";
 import { SearchInput } from "./Inputs";
 import { Dropdown } from "./Dropdown";
+import PinnedView from "./PinnedView";
 
 type Role = "standby" | "user" | "manager" | "admin";
 interface MgrRow {
@@ -143,7 +144,8 @@ export default function Managers({ teams, myUserId, refreshKey }:
   });
 
   return (
-    <div>
+    <PinnedView head={<>
+      {/* cabeza PINEADA: buscador + sub-tabs de rol + titulo. la lista de personas es lo unico que scrollea. */}
       {msg && <div style={{ marginBottom: 12, color: palette.bad, fontSize: 18 }}>{msg}</div>}
 
       <div style={{ display: "flex", gap: 10, alignItems: "center", marginBottom: 14, flexWrap: "wrap" }}>
@@ -179,7 +181,8 @@ export default function Managers({ teams, myUserId, refreshKey }:
         <span className="npt-title" style={{ fontWeight: 700, fontSize: 26, textTransform: "uppercase", letterSpacing: "0.06em" }}>{ROLE_TITLE[roleTab]}</span>
         <InfoStar spin={false}>{ROLE_HINT[roleTab]}</InfoStar>
       </div>
-
+    </>}>
+      {/* cuerpo SCROLL: solo la lista de personas */}
       <div style={{ border: `1px solid ${roleTab === "standby" && warnStandby ? "color-mix(in srgb, var(--warn) 40%, transparent)" : palette.border}`, borderRadius: 0, overflow: "hidden", background: roleTab === "standby" && warnStandby ? palette.warnBg : palette.panel }}>
         {list.length === 0
           ? <Empty>{searching ? "No matches." : `No ${ROLE_TAB_LABEL[roleTab].toLowerCase()} yet.`}</Empty>
@@ -205,7 +208,7 @@ export default function Managers({ teams, myUserId, refreshKey }:
           onCancel={() => setResetTarget(null)}
           onConfirm={async (pw) => { const ok = await resetPassword(resetTarget, pw); if (ok) setResetTarget(null); }} />
       )}
-    </div>
+    </PinnedView>
   );
 }
 

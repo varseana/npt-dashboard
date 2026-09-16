@@ -5,6 +5,7 @@ import { palette } from "../theme";
 import { computeDay, dedupePersonDay, fmtHms, type NptDailyRow } from "../lib/npt";
 import { Bar } from "./skeleton";
 import { Dropdown } from "./Dropdown";
+import PinnedView from "./PinnedView";
 
 // UUID fijo del team Unassigned (igual que en el trigger set_team_from_code)
 const UNASSIGNED_ID = "00000000-0000-0000-0000-000000000001";
@@ -50,10 +51,9 @@ export default function Unassigned({ teams, refreshKey }: { teams: Team[]; refre
     setRows((rs) => rs.filter((r) => r.alias !== alias));   // ya salio de Unassigned
   }
 
-  if (loading) return <UnassignedSkeleton />;
-
   return (
-    <div>
+    <PinnedView head={<>
+      {/* cabeza PINEADA (no scrollea): titulo + descripcion + mensaje */}
       <div className="npt-title" style={{ fontWeight: 700, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 4 }}>
         "Unassigned" // no manager ({rows.length})
       </div>
@@ -62,7 +62,9 @@ export default function Unassigned({ teams, refreshKey }: { teams: Team[]; refre
         a team to move their NPT (including history) under that team and its threshold.
       </div>
       {msg && <div style={{ marginBottom: 12, color: msg.startsWith("Error") ? palette.bad : palette.warn, fontSize: 18 }}>{msg}</div>}
-
+    </>}>
+      {/* cuerpo SCROLL: solo la lista de personas scrollea */}
+      {loading ? <UnassignedSkeleton /> : (
       <div style={{ border: `1px solid ${palette.border}`, borderRadius: 0, overflow: "hidden" }}>
         {rows.length === 0 ? (
           <div style={{ padding: "12px 14px", color: palette.textDim, fontSize: 18 }}>Nobody is unassigned. </div>
@@ -77,17 +79,15 @@ export default function Unassigned({ teams, refreshKey }: { teams: Team[]; refre
           </div>
         ))}
       </div>
-    </div>
+      )}
+    </PinnedView>
   );
 }
 
-// skeleton 1:1: titulo + descripcion -> caja bordeada de filas (alias, stats, dropdown "move to team", boton assign)
+// skeleton del cuerpo (titulo/descripcion ya viven pineados en el head): solo la caja bordeada
+// de filas (alias, stats, dropdown "move to team", boton assign)
 function UnassignedSkeleton() {
   return (
-    <div>
-      <Bar w={320} h={28} style={{ marginBottom: 10 }} />
-      <Bar w="90%" h={16} style={{ marginBottom: 6 }} />
-      <Bar w="70%" h={16} style={{ marginBottom: 16 }} />
       <div style={{ border: `1px solid ${palette.border}`, borderRadius: 0, overflow: "hidden" }}>
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} style={{ display: "grid", gridTemplateColumns: "1.2fr auto 1fr auto", gap: 12, alignItems: "center", padding: "12px 14px", borderBottom: i < 3 ? `1px solid ${palette.border}` : "none" }}>
@@ -95,7 +95,6 @@ function UnassignedSkeleton() {
           </div>
         ))}
       </div>
-    </div>
   );
 }
 

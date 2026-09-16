@@ -13,6 +13,7 @@ import { AddButtonInput, splitAliases } from "./Inputs";
 import { IconUser, IconTrash } from "./icons";
 import { ConfirmDialog } from "./ConfirmDialog";
 import { Dropdown } from "./Dropdown";
+import PinnedView from "./PinnedView";
 
 interface ManagerRow { user_id: string; email: string; role: string; team_id: string | null; }
 interface MemberLink { manager_owner: string; alias: string; team_id: string | null; }
@@ -89,8 +90,6 @@ export default function Org() {
     else await load();
   }
 
-  if (loading) return <OrgSkeleton />;
-
   // managers reales + admins que TAMBIEN actuan como manager (tienen team asignado o miembros
   // vinculados). asi un admin como alexcamo sigue apareciendo con su team; un admin "puro" sin
   // team ni grants no ensucia la lista.
@@ -100,19 +99,22 @@ export default function Org() {
   );
 
   return (
-    <div>
+    <PinnedView head={<>
+      {/* cabeza pineada (no scrollea): selector de semana + conteo + msg */}
       <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", marginBottom: 16 }}>
         <div>
           <div style={{ fontSize: 16, color: palette.textDim, marginBottom: 4 }}>Week</div>
           <Dropdown value={weekKey} onChange={setWeekKey} minWidth={260} ariaLabel="Select week"
             options={weeks.map((w) => ({ value: w.key, label: weekLabel(w) }))} />
         </div>
-        <div style={{ color: palette.textDim, fontSize: 18 }}>{realManagers.length} managers</div>
+        {!loading && <div style={{ color: palette.textDim, fontSize: 18 }}>{realManagers.length} managers</div>}
       </div>
-
       {msg && <div style={{ color: msg.startsWith("Error") ? palette.bad : palette.ok, marginBottom: 12, fontSize: 18 }}>{msg}</div>}
-
-      {realManagers.length === 0 ? (
+    </>}>
+      {/* cuerpo scroll: la piramide managers -> miembros */}
+      {loading ? (
+        <OrgSkeleton />
+      ) : realManagers.length === 0 ? (
         <div style={{ color: palette.textDim }}>No managers yet. Create them in Supabase (managers table).</div>
       ) : realManagers.map((mgr) => {
         const mine = members.filter((m) => m.manager_owner === mgr.user_id);
@@ -179,7 +181,7 @@ export default function Org() {
           onCancel={() => setConfirmRemove(null)}
           onConfirm={() => { const c = confirmRemove; setConfirmRemove(null); removeMember(c.owner, c.alias); }} />
       )}
-    </div>
+    </PinnedView>
   );
 }
 
@@ -187,10 +189,6 @@ export default function Org() {
 function OrgSkeleton() {
   return (
     <div>
-      <div style={{ display: "flex", alignItems: "flex-end", gap: 12, marginBottom: 16 }}>
-        <div><Bar w={40} h={14} style={{ marginBottom: 6 }} /><Bar w={260} h={42} /></div>
-        <Bar w={110} h={16} />
-      </div>
       {Array.from({ length: 2 }).map((_, i) => (
         <div key={i} style={{ border: `1px solid ${palette.border}`, borderRadius: 0, padding: "12px 14px", marginBottom: 14 }}>
           <Bar w={260} h={18} style={{ marginBottom: 12 }} />
@@ -206,5 +204,7 @@ function remainColor(s: NptStatus): string {
   return s === "bad" ? palette.bad : s === "warn" ? palette.warn : s === "ok" ? palette.ok : palette.textDim;
 }
 
-const th: React.CSSProperties = { textAlign: "center", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
+// thead congelado dentro del scroll: sticky top 0 con fondo opaco para que las filas no se
+// transparenten por debajo al scrollear (una tabla por manager: cada thead se pinea en su turno).
+const th: React.CSSProperties = { textAlign: "center", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}`, position: "sticky", top: 0, zIndex: 1, background: palette.bg };
 const td: React.CSSProperties = { textAlign: "center", padding: "8px 10px", borderBottom: `1px solid ${palette.border}`, fontVariantNumeric: "tabular-nums" };

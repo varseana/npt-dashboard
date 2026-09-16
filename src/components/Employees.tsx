@@ -7,6 +7,7 @@ import { TableSk } from "./skeleton";
 import { AddButtonInput, SearchInput } from "./Inputs";
 import { IconCheck, IconX, IconMoveOut, IconUser } from "./icons";
 import { ConfirmDialog } from "./ConfirmDialog";
+import PinnedView from "./PinnedView";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
 // highlight monocromatico dentro del texto del popover (bold en color de texto full)
@@ -146,11 +147,13 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
   }
 
   return (
-    <div>
+    // shell de altura completa: la pagina no scrollea, solo el cuerpo de la tabla (via PinnedView).
+    <div style={{ height: "100%", minHeight: 0, display: "flex", flexDirection: "column" }}>
       {/* Layout 2 columnas: IZQ = add employees (card sin caja, 4 marcos esquineros - patron del
           proyecto, igual que Planned), DER = tabla. align-items:flex-start => la card izquierda NO
-          crece con la altura de la tabla. */}
-      <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
+          crece con la altura de la tabla. la fila ocupa el alto disponible (flex 1) para que la
+          columna derecha le pueda dar scroll interno a la tabla. */}
+      <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap", flex: "1 1 auto", minHeight: 0 }}>
         {/* IZQUIERDA: add employees (ancho acotado, no crece) */}
         <div style={{ flex: "0 1 400px", minWidth: 300 }}>
       <div style={{ position: "relative", background: "transparent", padding: "18px 22px" }}>
@@ -189,15 +192,18 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
       </div>
         </div>{/* /IZQUIERDA (add employees) */}
 
-        {/* DERECHA: tabla de usuarios. usa el resto del ancho horizontal */}
-        <div style={{ flex: "1 1 560px", minWidth: 320 }}>
-      {err && <div style={{ color: palette.bad, marginBottom: 12 }}>{err}</div>}
-      {people.length > 0 && (
-        <div style={{ marginBottom: 12 }}>
-          <SearchInput value={query} onChange={(e) => setQuery(e.target.value)}
-            placeholder="username" aria-label="Search employees" />
-        </div>
-      )}
+        {/* DERECHA: tabla de usuarios. usa el resto del ancho horizontal. alignSelf stretch => ocupa
+            el alto de la fila para que PinnedView scrollee solo las filas (el buscador queda fijo). */}
+        <div style={{ flex: "1 1 560px", minWidth: 320, alignSelf: "stretch", minHeight: 0 }}>
+        <PinnedView head={<>
+          {err && <div style={{ color: palette.bad, marginBottom: 12 }}>{err}</div>}
+          {people.length > 0 && (
+            <div style={{ marginBottom: 12 }}>
+              <SearchInput value={query} onChange={(e) => setQuery(e.target.value)}
+                placeholder="username" aria-label="Search employees" />
+            </div>
+          )}
+        </>}>
       {loading ? (
         <TableSk template="40px 2fr 90px 90px 110px 90px" rows={6} boxed />
       ) : people.length === 0 ? (
@@ -205,7 +211,7 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
       ) : shown.length === 0 ? (
         <div style={{ color: palette.textDim }}>No employees match "{query.trim()}".</div>
       ) : (
-        <div style={{ border: `1px solid ${palette.border}`, borderRadius: 0, overflow: "hidden" }}>
+        <div style={{ border: `1px solid ${palette.border}`, borderRadius: 0 }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 19 }}>
             <thead>
               <tr>
@@ -245,6 +251,7 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
           </table>
         </div>
       )}
+        </PinnedView>
         </div>{/* /DERECHA (tabla) */}
       </div>{/* /flex 2 columnas */}
 
@@ -277,7 +284,8 @@ function ConnChip({ status }: { status: ConnStatus }) {
   return <span style={{ fontSize: 17, fontWeight: 700, color: s.fg }}>{s.label}</span>;
 }
 
-const th: React.CSSProperties = { textAlign: "left", padding: "9px 12px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}` };
+// thead congelado dentro del scroll de filas: sticky top 0 con fondo opaco (= fondo de pagina).
+const th: React.CSSProperties = { textAlign: "left", padding: "9px 12px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}`, position: "sticky", top: 0, zIndex: 1, background: palette.bg };
 const td: React.CSSProperties = { textAlign: "left", padding: "9px 12px", borderBottom: `1px solid ${palette.border}` };
 const input: React.CSSProperties = { background: palette.panel, color: palette.text, border: `1px solid ${palette.border}`, borderRadius: 0, padding: "8px 10px", fontSize: 19 };
 const btn: React.CSSProperties = { background: palette.accent, color: palette.accentText, border: "none", borderRadius: 0, padding: "8px 14px", fontSize: 18, cursor: "pointer", fontWeight: 600 };
