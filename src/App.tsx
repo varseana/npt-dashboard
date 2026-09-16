@@ -248,7 +248,7 @@ export default function App() {
     {/* shell de viewport fijo: la PAGINA (window) no scrollea (height 100dvh + overflow hidden);
         solo la Region B de abajo (los nombres) tiene scroll propio. 100dvh sigue a la barra de url
         que colapsa en mobile safari. */}
-    <div ref={pageRef} style={{ height: "100dvh", boxSizing: "border-box", display: "flex", flexDirection: "column",
+    <div ref={pageRef} style={{ height: "100dvh", overflow: "hidden", boxSizing: "border-box", display: "flex", flexDirection: "column",
       maxWidth: "min(2100px, 97vw)", margin: "0 auto", padding: "24px 32px" }}>
       {showConfirmed && <ConfirmedBanner onClose={() => setShowConfirmed(false)} />}
       {/* ===== REGION A: pineada (no scrollea) = header + nav + heatmap ===== */}

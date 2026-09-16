@@ -78,6 +78,15 @@ export default function Distribution({ team, refreshKey, weekKey: weekKeyProp, o
     return () => { cancelled = true; };
   }, [team.id, weekKey, refreshKey, sel.start, sel.end]);
 
+  // contexto del plan (compartido por la matriz y por los no-reporters). headcount = union de
+  // roster + quienes reportaron + quienes tienen custom (modelo budget-first / fair share).
+  const ctx: PlanContext = useMemo(() => {
+    const overrides = buildPlanOverrides(planned, weekKey);
+    const dataAliases = new Set(dedupePersonDay(rows).map((r) => r.alias));
+    const union = new Set<string>([...roster, ...dataAliases, ...overrides.keys()]);
+    return { budgetSeconds: resolveTeamBudget(budget, weekKey), headcount: union.size, overrides };
+  }, [rows, planned, budget, roster, weekKey]);
+
   const matrix: Row[] = useMemo(() => {
     const byUser = new Map<string, Row>();
     for (const r of dedupePersonDay(rows)) {
@@ -95,10 +104,6 @@ export default function Distribution({ team, refreshKey, weekKey: weekKeyProp, o
       }
     }
     const out = Array.from(byUser.values());
-    // modelo budget-first: target de cada persona = custom o fair share (budget / headcount)
-    const overrides = buildPlanOverrides(planned, weekKey);
-    const union = new Set<string>([...roster, ...byUser.keys(), ...overrides.keys()]);
-    const ctx: PlanContext = { budgetSeconds: resolveTeamBudget(budget, weekKey), headcount: union.size, overrides };
     for (const u of out) {
       u.planned = resolvePersonPlan(u.alias, ctx);
       u.remaining = u.planned != null ? u.planned - u.nptSeconds : null;
@@ -109,12 +114,25 @@ export default function Distribution({ team, refreshKey, weekKey: weekKeyProp, o
       b.nptSeconds - a.nptSeconds ||
       a.alias.localeCompare(b.alias));
     return out;
-  }, [rows, planned, budget, roster, weekKey]);
+  }, [rows, ctx]);
 
   const shown = useMemo(() => {
     const q = filter.trim().toLowerCase();
     return q ? matrix.filter((u) => u.alias.toLowerCase().includes(q)) : matrix;
   }, [matrix, filter]);
+
+  // no-reporters: gente EN el roster del team pero SIN data esta semana. NO entran a la matriz ni a
+  // ningun numero (total, remaining, status counts); solo se listan aparte para verlos de un vistazo.
+  const nonReporters = useMemo(() => {
+    const reporting = new Set(matrix.map((u) => u.alias));
+    return roster.filter((a) => !reporting.has(a)).sort()
+      .map((a) => ({ alias: a, planned: resolvePersonPlan(a, ctx) }));
+  }, [roster, matrix, ctx]);
+
+  const shownNonReporters = useMemo(() => {
+    const q = filter.trim().toLowerCase();
+    return q ? nonReporters.filter((u) => u.alias.toLowerCase().includes(q)) : nonReporters;
+  }, [nonReporters, filter]);
 
   function exportCsv() {
     const head = ["Employee", ...NPT_AUX, "Planned", "Total NPT", "Remaining", "Status"];
@@ -128,6 +146,11 @@ export default function Distribution({ team, refreshKey, weekKey: weekKeyProp, o
         u.remaining != null ? fmtHms(u.remaining) : "",
         u.status,
       ];
+      lines.push(cells.map((x) => csv(String(x))).join(","));
+    }
+    // no-reporters al final: alias + celdas vacias + "no report" (sin numeros, no corrompe totales)
+    for (const u of shownNonReporters) {
+      const cells = [u.alias, ...NPT_AUX.map(() => ""), u.planned != null ? fmtHms(u.planned) : "", "", "", "no report"];
       lines.push(cells.map((x) => csv(String(x))).join(","));
     }
     const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
@@ -161,8 +184,10 @@ export default function Distribution({ team, refreshKey, weekKey: weekKeyProp, o
           sticky se pegaria a el y no al scroll de PinnedView) */}
       {loading ? (
         <BreakdownSkeleton />
-      ) : matrix.length === 0 ? (
+      ) : matrix.length === 0 && nonReporters.length === 0 ? (
         <div style={{ color: palette.textDim }}>No reported data for {weekLabel(sel)}.</div>
+      ) : shown.length === 0 && shownNonReporters.length === 0 ? (
+        <div style={{ color: palette.textDim }}>No employees match "{filter.trim()}".</div>
       ) : (
         <div style={{ border: `1px solid ${palette.border}`, borderRadius: 0 }}>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 18, whiteSpace: "nowrap" }}>
@@ -191,6 +216,28 @@ export default function Distribution({ team, refreshKey, weekKey: weekKeyProp, o
                   <td style={td}><StatusChip status={u.status} /></td>
                 </tr>
               ))}
+              {/* seccion muted: en el roster pero sin dias reportados esta semana. celdas en "-" y
+                  status en texto plano (sin StatusChip) para que NUNCA lea como ok/over. */}
+              {shownNonReporters.length > 0 && (<>
+                <tr>
+                  <td colSpan={NPT_AUX.length + 5} style={{ ...td, textAlign: "left", background: palette.bg, borderTop: `2px solid ${palette.border}`, color: palette.textDim, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                    Not reporting ({shownNonReporters.length})
+                    <InfoStar spin={false}>{
+                      <>On the team roster but <strong style={hi}>no upload this week</strong>: not enrolled, not signed in to STAR Tracker, or idle. Late Saturday activity can land in the next week (times are UTC). Manage the roster in Team / Employees.</>
+                    }</InfoStar>
+                  </td>
+                </tr>
+                {shownNonReporters.map((u) => (
+                  <tr key={"nr-" + u.alias} style={{ background: palette.panel }}>
+                    <td style={{ ...td, textAlign: "left", fontWeight: 600, color: palette.textDim }}>{u.alias}</td>
+                    {NPT_AUX.map((c) => (<td key={c} style={{ ...td, color: palette.textDim }}>-</td>))}
+                    <td style={{ ...td, color: palette.textDim }}>{u.planned != null ? fmtHms(u.planned) : "-"}</td>
+                    <td style={{ ...td, color: palette.textDim }}>-</td>
+                    <td style={{ ...td, color: palette.textDim }}>-</td>
+                    <td style={{ ...td, color: palette.textDim, fontWeight: 600 }}>No report</td>
+                  </tr>
+                ))}
+              </>)}
             </tbody>
           </table>
         </div>

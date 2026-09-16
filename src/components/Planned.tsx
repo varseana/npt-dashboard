@@ -172,7 +172,10 @@ export default function Planned({ team }: { team: Team }) {
 
       {/* Layout 2 columnas: IZQ = threshold card, DER = buscador + tabla. align-items:flex-start
           => la card izquierda NO se estira cuando la tabla crece (si no, los brackets se rompen). */}
-      <div style={{ flex: "1 1 auto", minHeight: 0, display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
+      {/* nowrap a proposito: con wrap el alto de la fila lo fija el CONTENIDO (la tabla entera) y la
+          columna derecha nunca se acota => scrollea todo. sin wrap, la columna derecha se estira al
+          alto disponible (definido) y solo su tabla scrollea. */}
+      <div style={{ flex: "1 1 auto", minHeight: 0, display: "flex", gap: 24, alignItems: "flex-start" }}>
         {/* IZQUIERDA: threshold card. ancho acotado, no crece con la altura de la tabla */}
         <div style={{ flex: "0 1 420px", minWidth: 300 }}>
       {/* UNICO input principal: el budget total del team. Sin caja: 4 marcos esquineros (mismo
@@ -242,7 +245,7 @@ export default function Planned({ team }: { team: Team }) {
         {/* DERECHA: buscador + tabla de employees. flex:1 => usa el resto del ancho horizontal.
             alignSelf stretch + minHeight 0 => la columna toma la altura de la fila y PinnedView le da
             altura acotada para su scroll interno (solo las filas de personas scrollean). */}
-        <div style={{ flex: "1 1 520px", minWidth: 300, alignSelf: "stretch", minHeight: 0 }}>
+        <div style={{ flex: "1 1 520px", minWidth: 300, alignSelf: "stretch", minHeight: 0, display: "flex", flexDirection: "column" }}>
       <PinnedView head={<>
       {aliases.length > 0 && (
         <div style={{ marginBottom: 12 }}>

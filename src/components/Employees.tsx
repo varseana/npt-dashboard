@@ -153,7 +153,9 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
           proyecto, igual que Planned), DER = tabla. align-items:flex-start => la card izquierda NO
           crece con la altura de la tabla. la fila ocupa el alto disponible (flex 1) para que la
           columna derecha le pueda dar scroll interno a la tabla. */}
-      <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap", flex: "1 1 auto", minHeight: 0 }}>
+      {/* nowrap a proposito: con wrap el alto de la fila lo fija el contenido y la columna derecha no
+          se acota => scrollea todo. sin wrap se estira al alto disponible y solo la tabla scrollea. */}
+      <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flex: "1 1 auto", minHeight: 0 }}>
         {/* IZQUIERDA: add employees (ancho acotado, no crece) */}
         <div style={{ flex: "0 1 400px", minWidth: 300 }}>
       <div style={{ position: "relative", background: "transparent", padding: "18px 22px" }}>
@@ -194,7 +196,7 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
 
         {/* DERECHA: tabla de usuarios. usa el resto del ancho horizontal. alignSelf stretch => ocupa
             el alto de la fila para que PinnedView scrollee solo las filas (el buscador queda fijo). */}
-        <div style={{ flex: "1 1 560px", minWidth: 320, alignSelf: "stretch", minHeight: 0 }}>
+        <div style={{ flex: "1 1 560px", minWidth: 320, alignSelf: "stretch", minHeight: 0, display: "flex", flexDirection: "column" }}>
         <PinnedView head={<>
           {err && <div style={{ color: palette.bad, marginBottom: 12 }}>{err}</div>}
           {people.length > 0 && (
