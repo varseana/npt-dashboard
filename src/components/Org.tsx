@@ -393,10 +393,13 @@ function TeamCard({ view, open, onToggle, busy, addable, teamName, onMove, onAdd
     <div style={card}>
       {/* header: chevron + nombre colapsa/expande; conteos al lado; used/status a la derecha */}
       <div style={cardHead}>
-        <ToggleTitle open={open} onToggle={onToggle} label={team.name} />
+        <ToggleTitle open={open} onToggle={onToggle} label={isUnassigned ? "UNASSIGNED" : team.name}
+          color={isUnassigned ? palette.bad : undefined} />
+        {isUnassigned ? (
+          <span style={{ fontSize: 17, color: palette.textDim }}>{members.length} {members.length === 1 ? "person" : "people"}</span>
+        ) : (<>
         <span style={{ fontSize: 17, color: palette.textDim }}>
-          {isUnassigned ? "no manager by design"
-            : managers.length === 0 ? <span style={{ color: palette.warn, fontWeight: 700 }}>no manager</span>
+          {managers.length === 0 ? <span style={{ color: palette.warn, fontWeight: 700 }}>no manager</span>
             : managers.map((m, i) => (
               <span key={m.user_id} title={m.email}>
                 {i > 0 && ", "}<strong style={{ color: palette.text, fontWeight: 600 }}>{aliasOfEmail(m.email)}</strong>
@@ -412,6 +415,7 @@ function TeamCard({ view, open, onToggle, busy, addable, teamName, onMove, onAdd
           </span>
           {threshold != null && <StatusChip status={status} />}
         </span>
+        </>)}
       </div>
 
       {/* render condicional (NO .npt-collapse): su overflow:hidden romperia el thead sticky */}
@@ -491,7 +495,7 @@ function TeamCard({ view, open, onToggle, busy, addable, teamName, onMove, onAdd
 }
 
 // chevron + nombre: el unico boton del header (asi los controles de adentro no quedan dentro de un <button>)
-function ToggleTitle({ open, onToggle, label }: { open: boolean; onToggle: () => void; label: string }) {
+function ToggleTitle({ open, onToggle, label, color }: { open: boolean; onToggle: () => void; label: string; color?: string }) {
   return (
     <button type="button" onClick={onToggle} aria-expanded={open} title={open ? "Collapse" : "Expand"}
       style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "transparent", border: "none", padding: 0, cursor: "pointer", color: palette.text, textAlign: "left" }}>
@@ -499,7 +503,7 @@ function ToggleTitle({ open, onToggle, label }: { open: boolean; onToggle: () =>
         style={{ flex: "0 0 auto", transform: open ? "none" : "rotate(-90deg)", transition: "transform .2s ease", color: palette.textDim }} aria-hidden="true">
         <path d="M5 9l7 7 7-7" />
       </svg>
-      <span style={{ fontWeight: 600, fontSize: 19 }}>{label}</span>
+      <span style={{ fontWeight: color ? 700 : 600, fontSize: 19, color: color ?? palette.text, letterSpacing: color ? "0.04em" : undefined }}>{label}</span>
     </button>
   );
 }
@@ -517,7 +521,7 @@ function SharingCard({ grants, staff, aliasTeam, busy, owner, onOwner, input, on
   return (
     <div style={card}>
       <div style={cardHead}>
-        <ToggleTitle open={open} onToggle={() => setOpen((o) => !o)} label="Sharing" />
+        <ToggleTitle open={open} onToggle={() => setOpen((o) => !o)} label="Sharing" color={palette.blue} />
         <InfoStar spin={false}>{
           <>Extra <strong style={hi}>read-only access</strong> to someone from <strong style={hi}>another team</strong>. It shows up in that manager's <strong style={hi}>Shared with me</strong> and never counts in their own team's numbers. This is <strong style={hi}>not</strong> team membership: to change a team, move the person in its card above.</>
         }</InfoStar>
@@ -527,23 +531,28 @@ function SharingCard({ grants, staff, aliasTeam, busy, owner, onOwner, input, on
         <div style={cardBody}>
           <div style={subLabel}>Access outside their team</div>
           {byOwner.length === 0 && <div style={{ fontSize: 18, color: palette.textDim, marginBottom: 8 }}>Nobody has access outside their team.</div>}
-          {byOwner.map(({ m, aliases }) => (
-            <div key={m.user_id} style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", marginBottom: 8 }}>
-              <span style={{ fontSize: 18, fontWeight: 700, minWidth: 160 }} title={m.email}>{aliasOfEmail(m.email)} <span style={{ color: palette.textDim, fontWeight: 400 }}>sees</span></span>
-              <span style={{ display: "inline-flex", gap: 14, flexWrap: "wrap" }}>
+          {/* un BLOQUE por manager (azul Bauhaus, borde + fondo parejos) para escanear rapido quien ve a quien */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 10, marginBottom: 6 }}>
+            {byOwner.map(({ m, aliases }) => (
+              <div key={m.user_id} style={{ border: `1px solid color-mix(in srgb, var(--blue) 45%, transparent)`, background: palette.blueBg, borderRadius: 0, padding: "10px 12px" }}>
+                <div style={{ display: "flex", alignItems: "baseline", gap: 6, marginBottom: 8 }} title={m.email}>
+                  <span style={{ fontSize: 18, fontWeight: 700, color: palette.blue }}>{aliasOfEmail(m.email)}</span>
+                  <span style={{ fontSize: 15, color: palette.textDim }}>sees {aliases.length}</span>
+                </div>
                 {aliases.map((a) => (
-                  <span key={a} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 18 }}>
+                  <div key={a} style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 17, padding: "3px 0" }}>
                     <strong style={{ fontWeight: 600 }}>{a}</strong>
-                    <span style={{ color: palette.textDim, fontSize: 16 }}>{aliasTeam.has(a) ? `:: ${aliasTeam.get(a)}` : ""}</span>
+                    <span style={{ color: palette.textDim, fontSize: 15 }}>{aliasTeam.has(a) ? `:: ${aliasTeam.get(a)}` : ""}</span>
                     <button onClick={() => onRemove(m, a)} disabled={busy} className="npt-ico-act npt-ico-danger"
+                      style={{ marginLeft: "auto" }}
                       title={`Revoke ${aliasOfEmail(m.email)}'s access to ${a}`} aria-label={`Revoke access to ${a}`}>
-                      <IconX size={15} />
+                      <IconX size={14} />
                     </button>
-                  </span>
+                  </div>
                 ))}
-              </span>
-            </div>
-          ))}
+              </div>
+            ))}
+          </div>
           <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginTop: 8 }}>
             <Dropdown value={owner} onChange={onOwner} minWidth={220} ariaLabel="Manager who gets access"
               options={[{ value: "", label: "Pick a manager" }, ...staff.map((m) => ({ value: m.user_id, label: aliasOfEmail(m.email) + (m.role === "admin" ? " (admin)" : "") }))]} />
