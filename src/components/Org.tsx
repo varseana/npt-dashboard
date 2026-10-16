@@ -51,7 +51,7 @@ const STATUS_RANK: Record<NptStatus, number> = { bad: 0, warn: 1, ok: 2, none: 3
 // accion pendiente de confirmacion (todas pasan por ConfirmDialog)
 type Pending =
   | { kind: "move"; alias: string; from: Team; to: string }
-  | { kind: "addMgr"; team: Team; mgr: Mgr }
+  | { kind: "addMgr"; team: Team; mgr: Mgr; replaces: Mgr[] }
   | { kind: "rmMgr"; team: Team; mgr: Mgr }
   | { kind: "rmGrant"; owner: Mgr; alias: string };
 
@@ -92,7 +92,7 @@ export default function Org({ refreshKey }: { refreshKey?: number }) {
   const [grantOwner, setGrantOwner] = useState("");
   const [grantInput, setGrantInput] = useState("");
   const [query, setQuery] = useState("");
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());   // default: todas colapsadas
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
   const [pending, setPending] = useState<Pending | null>(null);
@@ -157,7 +157,14 @@ export default function Org({ refreshKey }: { refreshKey?: number }) {
       } else if (p.kind === "addMgr") {
         const { error } = await supabase.from("managers").update({ team_id: p.team.id }).eq("user_id", p.mgr.user_id);
         if (error) throw error;
-        setMsg(`${aliasOfEmail(p.mgr.email)} now manages ${p.team.name}.`);
+        // reemplazo: los managers que tenia el team salen (quedan sin team hasta que se les asigne otro)
+        for (const old of p.replaces) {
+          const { error: e2 } = await supabase.from("managers").update({ team_id: null }).eq("user_id", old.user_id);
+          if (e2) throw e2;
+        }
+        setMsg(p.replaces.length
+          ? `${aliasOfEmail(p.mgr.email)} replaced ${p.replaces.map((m) => aliasOfEmail(m.email)).join(", ")} on ${p.team.name}.`
+          : `${aliasOfEmail(p.mgr.email)} now manages ${p.team.name}.`);
       } else if (p.kind === "rmMgr") {
         const { error } = await supabase.from("managers").update({ team_id: null }).eq("user_id", p.mgr.user_id);
         if (error) throw error;
@@ -258,7 +265,7 @@ export default function Org({ refreshKey }: { refreshKey?: number }) {
   }, [views, q]);
 
   function toggle(id: string) {
-    setCollapsed((prev) => {
+    setExpanded((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id); else next.add(id);
       return next;
@@ -304,12 +311,12 @@ export default function Org({ refreshKey }: { refreshKey?: number }) {
       ) : shown.length === 0 ? (
         <div style={{ color: palette.textDim }}>Nothing matches "{query.trim()}".</div>
       ) : shown.map((v) => (
-        <TeamCard key={v.team.id} view={v} open={!!q || !collapsed.has(v.team.id)} onToggle={() => toggle(v.team.id)}
+        <TeamCard key={v.team.id} view={v} open={!!q || expanded.has(v.team.id)} onToggle={() => toggle(v.team.id)}
           busy={busy}
           addable={staff.filter((m) => m.team_id !== v.team.id)}
           teamName={teamName}
           onMove={(alias) => setPending({ kind: "move", alias, from: v.team, to: "" })}
-          onAddMgr={(mgr) => setPending({ kind: "addMgr", team: v.team, mgr })}
+          onAddMgr={(mgr) => setPending({ kind: "addMgr", team: v.team, mgr, replaces: v.managers })}
           onRmMgr={(mgr) => setPending({ kind: "rmMgr", team: v.team, mgr })} />
       ))}
 
@@ -347,9 +354,11 @@ export default function Org({ refreshKey }: { refreshKey?: number }) {
           onConfirm={() => run(pending)} />
       )}
       {pending?.kind === "addMgr" && (
-        <ConfirmDialog title="Assign manager?" confirmLabel={busy ? "Saving..." : "Assign"} confirmDisabled={busy}
+        <ConfirmDialog title={pending.replaces.length ? "Replace manager?" : "Assign manager?"}
+          confirmLabel={busy ? "Saving..." : pending.replaces.length ? "Replace" : "Assign"} confirmDisabled={busy}
           body={<>
             <strong style={hi}>{pending.mgr.email}</strong> will manage <strong style={hi}>{pending.team.name}</strong> and see its data.
+            {pending.replaces.length > 0 && <> <strong style={hi}>{pending.replaces.map((m) => aliasOfEmail(m.email)).join(", ")}</strong> stops managing it and is left with no team until you assign one.</>}
             {pending.mgr.team_id && <> A manager has one team, so they <strong style={hi}>leave {teamName(pending.mgr.team_id)}</strong>.</>}
           </>}
           onCancel={() => { if (!busy) setPending(null); }}
@@ -388,7 +397,12 @@ function TeamCard({ view, open, onToggle, busy, addable, teamName, onMove, onAdd
         <span style={{ fontSize: 17, color: palette.textDim }}>
           {isUnassigned ? "no manager by design"
             : managers.length === 0 ? <span style={{ color: palette.warn, fontWeight: 700 }}>no manager</span>
-            : `${managers.length} manager${managers.length === 1 ? "" : "s"}`}
+            : managers.map((m, i) => (
+              <span key={m.user_id} title={m.email}>
+                {i > 0 && ", "}<strong style={{ color: palette.text, fontWeight: 600 }}>{aliasOfEmail(m.email)}</strong>
+                {m.role === "admin" && <span style={{ color: palette.blue }}> (admin)</span>}
+              </span>
+            ))}
           {" // "}{reporting} reporting{members.length > reporting ? ` + ${members.length - reporting} not reporting` : ""}
         </span>
         <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 14, fontSize: 17, fontVariantNumeric: "tabular-nums" }}>
@@ -420,7 +434,7 @@ function TeamCard({ view, open, onToggle, busy, addable, teamName, onMove, onAdd
               <div style={{ marginTop: 8 }}>
                 <Dropdown value="" minWidth={260} ariaLabel={`Add a manager to ${team.name}`}
                   onChange={(uid) => { const m = addable.find((x) => x.user_id === uid); if (m) onAddMgr(m); }}
-                  options={[{ value: "", label: "Add manager" },
+                  options={[{ value: "", label: managers.length ? "Replace manager with..." : "Assign a manager..." },
                     ...addable.map((m) => ({ value: m.user_id, label: `${aliasOfEmail(m.email)}${m.role === "admin" ? " (admin)" : ""} :: ${teamName(m.team_id) ?? "no team"}` }))]} />
               </div>
             )}
