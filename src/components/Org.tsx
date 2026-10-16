@@ -1,200 +1,566 @@
 import * as React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import {
-  computeDay, dedupePersonDay, fmtHms, resolvePlanned, statusFor,
+  computeDay, dedupePersonDay, fmtHms, resolveTeamBudget, buildPlanOverrides, resolvePersonPlan, planSummary, statusFor,
   weekInfo, weekLabel, recentWeeks, isoDate,
-  type NptDailyRow, type NptStatus, type PlannedRow,
+  type NptDailyRow, type NptStatus, type PlannedRow, type TeamBudgetRow, type PlanContext,
 } from "../lib/npt";
 import { StatusChip } from "./status";
-import { Bar, TableSk } from "./skeleton";
-import { AddButtonInput, splitAliases } from "./Inputs";
-import { IconUser, IconTrash } from "./icons";
-import { ConfirmDialog } from "./ConfirmDialog";
+import { Bar, BracketFrame, TableSk } from "./skeleton";
+import { SearchInput, AddButtonInput, splitAliases } from "./Inputs";
+import { InfoStar } from "./InfoStar";
 import { Dropdown } from "./Dropdown";
+import WeekCountdown from "./WeekCountdown";
 import PinnedView from "./PinnedView";
+import { ConfirmDialog } from "./ConfirmDialog";
+import { IconMoveOut, IconX, IconUser } from "./icons";
 
-interface ManagerRow { user_id: string; email: string; role: string; team_id: string | null; }
-interface MemberLink { manager_owner: string; alias: string; team_id: string | null; }
-interface PlannedRowT extends PlannedRow { team_id: string | null; }
+// UUID fijo del team Unassigned (igual que el trigger set_team_from_code)
+const UNASSIGNED_ID = "00000000-0000-0000-0000-000000000001";
+// highlight monocromatico dentro del texto del popover (bold en color de texto full)
+const hi = { color: palette.text, fontWeight: 700 } as React.CSSProperties;
 
-// vista admin: piramide de managers -> sus miembros con NPT de la semana. Admin asigna/quita.
-export default function Org() {
+interface Team { id: string; name: string; }
+interface Mgr { user_id: string; email: string; role: string; team_id: string | null; approved: boolean; }
+interface DailyT extends NptDailyRow { team_id: string | null; }
+interface PlannedT extends PlannedRow { team_id: string; }
+interface BudgetT extends TeamBudgetRow { team_id: string; }
+
+interface Member {
+  alias: string;
+  days: number;
+  npt: number;
+  planned: number | null;
+  remaining: number | null;
+  status: NptStatus;
+  reporting: boolean;   // false = esta en el roster pero no subio data esta semana
+}
+interface TeamView {
+  team: Team;
+  managers: Mgr[];
+  members: Member[];
+  threshold: number | null;   // teamTotal (suma de customs si todos tienen custom, si no el budget)
+  used: number;
+  status: NptStatus;
+}
+
+const STATUS_RANK: Record<NptStatus, number> = { bad: 0, warn: 1, ok: 2, none: 3 };
+
+// accion pendiente de confirmacion (todas pasan por ConfirmDialog)
+type Pending =
+  | { kind: "move"; alias: string; from: Team; to: string }
+  | { kind: "addMgr"; team: Team; mgr: Mgr }
+  | { kind: "rmMgr"; team: Team; mgr: Mgr }
+  | { kind: "rmGrant"; owner: Mgr; alias: string };
+
+const aliasOfEmail = (email: string) => email.split("@")[0];
+
+// supabase corta cada respuesta en ~1000 filas: paginamos con range hasta que venga una pagina corta.
+async function fetchAllDaily(from: string, to: string): Promise<DailyT[]> {
+  const PAGE = 1000;
+  const out: DailyT[] = [];
+  for (let i = 0; ; i += PAGE) {
+    const { data, error } = await supabase.from("npt_daily")
+      .select("alias,tenant,work_date,profile,aux_seconds,team_id")
+      .gte("work_date", from).lte("work_date", to)
+      .order("alias").order("work_date").order("profile")
+      .range(i, i + PAGE - 1);
+    if (error) throw error;
+    const rows = (data as DailyT[]) ?? [];
+    out.push(...rows);
+    if (rows.length < PAGE) break;
+  }
+  return out;
+}
+
+// vista admin: la ORG por TEAMS (el team es el eje, no el manager). cada team = sus managers, su
+// threshold/used de la semana (mismo calculo que Summary) y sus miembros REALES (npt_daily.team_id +
+// roster). Unassigned va al final.
+export default function Org({ refreshKey }: { refreshKey?: number }) {
   const weeks = useMemo(() => recentWeeks(new Date(), 16), []);
   const [weekKey, setWeekKey] = useState(() => weekInfo(new Date()).key);
-  const [managers, setManagers] = useState<ManagerRow[]>([]);
-  const [members, setMembers] = useState<MemberLink[]>([]);
-  const [daily, setDaily] = useState<NptDailyRow[]>([]);
-  const [planned, setPlanned] = useState<PlannedRowT[]>([]);
-  const [addInputs, setAddInputs] = useState<Record<string, string>>({});
+  const [teams, setTeams] = useState<Team[]>([]);
+  const [managers, setManagers] = useState<Mgr[]>([]);
+  const [daily, setDaily] = useState<DailyT[]>([]);
+  const [planned, setPlanned] = useState<PlannedT[]>([]);
+  const [budget, setBudget] = useState<BudgetT[]>([]);
+  const [roster, setRoster] = useState<{ alias: string; team_id: string }[]>([]);
+  // grants de sharing (manager_members): quien ve a quien FUERA de su team. no es pertenencia.
+  const [grants, setGrants] = useState<{ manager_owner: string; alias: string }[]>([]);
+  const [grantOwner, setGrantOwner] = useState("");
+  const [grantInput, setGrantInput] = useState("");
+  const [query, setQuery] = useState("");
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [msg, setMsg] = useState("");
-  // miembro pendiente de quitar (modal de confirmacion)
-  const [confirmRemove, setConfirmRemove] = useState<{ owner: string; alias: string } | null>(null);
+  const [pending, setPending] = useState<Pending | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [tick, setTick] = useState(0);   // bump tras una accion => refresh silencioso
+  const first = useRef(true);   // solo la 1a carga muestra el skeleton; los refresh son silenciosos
 
   const sel = useMemo(() => weekInfo(new Date(weekKey + "T12:00:00")), [weekKey]);
 
-  async function load() {
-    setLoading(true);
-    const [{ data: mg }, { data: mm }, { data: d }, { data: p }] = await Promise.all([
-      supabase.from("managers").select("user_id,email,role,team_id"),
-      supabase.from("manager_members").select("manager_owner,alias,team_id"),
-      supabase.from("npt_daily").select("alias,tenant,work_date,profile,aux_seconds,team_id")
-        .gte("work_date", isoDate(sel.start)).lte("work_date", isoDate(sel.end)),
-      supabase.from("npt_planned").select("team_id,alias,week_key,planned_seconds"),
-    ]);
-    setManagers((mg as ManagerRow[]) ?? []);
-    setMembers((mm as MemberLink[]) ?? []);
-    setDaily((d as (NptDailyRow & { team_id: string })[]) ?? []);
-    setPlanned((p as PlannedRowT[]) ?? []);
-    setLoading(false);
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      if (first.current) setLoading(true);
+      setMsg("");
+      try {
+        const [d, { data: t, error: e1 }, { data: mg, error: e2 }, { data: p, error: e3 }, { data: b, error: e4 }, { data: r, error: e5 }, { data: g, error: e6 }] = await Promise.all([
+          fetchAllDaily(isoDate(sel.start), isoDate(sel.end)),
+          supabase.from("teams").select("id,name").order("name"),
+          supabase.from("managers").select("user_id,email,role,team_id,approved"),
+          supabase.from("npt_planned").select("team_id,alias,week_key,planned_seconds"),
+          supabase.from("npt_team_budget").select("team_id,week_key,planned_seconds"),
+          supabase.from("roster").select("alias,team_id"),
+          supabase.from("manager_members").select("manager_owner,alias"),
+        ]);
+        if (!alive) return;
+        const err = e1 || e2 || e3 || e4 || e5 || e6;
+        if (err) setMsg("Error: " + err.message);
+        setDaily(d);
+        setTeams((t as Team[]) ?? []);
+        setManagers((mg as Mgr[]) ?? []);
+        setPlanned((p as PlannedT[]) ?? []);
+        setBudget((b as BudgetT[]) ?? []);
+        setRoster((r as { alias: string; team_id: string }[]) ?? []);
+        setGrants((g as { manager_owner: string; alias: string }[]) ?? []);
+      } catch (e: any) {
+        if (alive) setMsg("Error: " + (e?.message || String(e)));
+      }
+      if (!alive) return;
+      first.current = false;
+      setLoading(false);
+    })();
+    return () => { alive = false; };
+  }, [weekKey, refreshKey, tick, sel.start, sel.end]);
+
+  // ejecuta la accion confirmada. mensajes en el head; luego refresh silencioso.
+  async function run(p: Pending) {
+    setBusy(true); setMsg("");
+    try {
+      if (p.kind === "move") {
+        // override + mueve TODO su npt_daily (historia incluida) al team destino
+        const { error } = await supabase.rpc("admin_assign_alias", { p_alias: p.alias, p_team: p.to });
+        if (error) throw error;
+        // el roster sigue a la persona: sale del viejo, entra al nuevo (Unassigned no lleva roster)
+        const { error: e1 } = await supabase.from("roster").delete().match({ alias: p.alias, team_id: p.from.id });
+        if (e1) throw e1;
+        if (p.to !== UNASSIGNED_ID) {
+          const { error: e2 } = await supabase.from("roster")
+            .upsert({ alias: p.alias, team_id: p.to }, { onConflict: "alias,team_id", ignoreDuplicates: true });
+          if (e2) throw e2;
+        }
+        setMsg(`${p.alias} moved to ${teams.find((t) => t.id === p.to)?.name ?? "the new team"}.`);
+      } else if (p.kind === "addMgr") {
+        const { error } = await supabase.from("managers").update({ team_id: p.team.id }).eq("user_id", p.mgr.user_id);
+        if (error) throw error;
+        setMsg(`${aliasOfEmail(p.mgr.email)} now manages ${p.team.name}.`);
+      } else if (p.kind === "rmMgr") {
+        const { error } = await supabase.from("managers").update({ team_id: null }).eq("user_id", p.mgr.user_id);
+        if (error) throw error;
+        setMsg(`${aliasOfEmail(p.mgr.email)} no longer manages ${p.team.name}.`);
+      } else {
+        const { error } = await supabase.from("manager_members").delete().match({ manager_owner: p.owner.user_id, alias: p.alias });
+        if (error) throw error;
+        setMsg(`${aliasOfEmail(p.owner.email)} no longer sees ${p.alias}.`);
+      }
+    } catch (e: any) {
+      setMsg("Error: " + (e?.message || String(e)));
+    }
+    setBusy(false);
+    setPending(null);
+    setTick((t) => t + 1);
   }
 
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [weekKey]);
+  // alta de grants (no destructivo => sin confirm). upsert ignoreDuplicates: un alias repetido ya no
+  // rompe el lote. team_id va null a proposito: shared_members_metrics resuelve el team ACTUAL
+  // (team_of_alias), asi el grant no queda apuntando a un team viejo si la persona se mueve.
+  async function addGrants() {
+    const aliases = splitAliases(grantInput);
+    if (!grantOwner || !aliases.length) return;
+    setBusy(true); setMsg("");
+    const rows = aliases.map((alias) => ({ manager_owner: grantOwner, alias, team_id: null }));
+    const { error } = await supabase.from("manager_members")
+      .upsert(rows, { onConflict: "manager_owner,alias", ignoreDuplicates: true });
+    if (error) setMsg("Error: " + error.message);
+    else {
+      const owner = managers.find((m) => m.user_id === grantOwner);
+      setMsg(`${aliasOfEmail(owner?.email ?? "")} can now see ${aliases.join(", ")}.`);
+      setGrantInput("");
+    }
+    setBusy(false);
+    setTick((t) => t + 1);
+  }
 
-  // NPT actual por alias en la semana
-  const nptByAlias = useMemo(() => {
-    const m = new Map<string, number>();
-    for (const r of dedupePersonDay(daily)) m.set(r.alias, (m.get(r.alias) || 0) + computeDay(r.aux_seconds).nptSeconds);
+  // managers/admins aprobados que se pueden sumar a un team (los que ya estan en el, no)
+  const staff = useMemo(() => managers
+    .filter((m) => m.approved && (m.role === "manager" || m.role === "admin"))
+    .sort((a, b) => a.email.localeCompare(b.email)), [managers]);
+  const teamName = (id: string | null) => (id ? teams.find((t) => t.id === id)?.name ?? "unknown team" : null);
+
+  // arma cada team con la MISMA logica que Overview (budget-first + fair share, dedupePersonDay)
+  const views = useMemo<TeamView[]>(() => {
+    const out: TeamView[] = [];
+    for (const team of teams) {
+      const rows = dedupePersonDay(daily.filter((r) => r.team_id === team.id));
+      const teamRoster = roster.filter((x) => x.team_id === team.id).map((x) => x.alias);
+      const overrides = buildPlanOverrides(planned.filter((x) => x.team_id === team.id), weekKey);
+      const byAlias = new Map<string, { days: number; npt: number }>();
+      for (const r of rows) {
+        const a = byAlias.get(r.alias) ?? { days: 0, npt: 0 };
+        a.days += 1;
+        a.npt += computeDay(r.aux_seconds).nptSeconds;
+        byAlias.set(r.alias, a);
+      }
+      const union = new Set<string>([...teamRoster, ...byAlias.keys(), ...overrides.keys()]);
+      const ctx: PlanContext = {
+        budgetSeconds: resolveTeamBudget(budget.filter((x) => x.team_id === team.id), weekKey),
+        headcount: union.size,
+        overrides,
+      };
+      const threshold = planSummary(ctx).teamTotal;
+
+      const members: Member[] = [];
+      for (const [alias, a] of byAlias) {
+        const pl = resolvePersonPlan(alias, ctx);
+        members.push({ alias, days: a.days, npt: a.npt, planned: pl, remaining: pl != null ? pl - a.npt : null, status: statusFor(pl, a.npt), reporting: true });
+      }
+      members.sort((x, y) => STATUS_RANK[x.status] - STATUS_RANK[y.status] || y.npt - x.npt || x.alias.localeCompare(y.alias));
+      // roster sin data esta semana: al final, muted (no entran a ningun numero)
+      for (const alias of [...new Set(teamRoster)].filter((a) => !byAlias.has(a)).sort()) {
+        members.push({ alias, days: 0, npt: 0, planned: resolvePersonPlan(alias, ctx), remaining: null, status: "none", reporting: false });
+      }
+
+      const used = [...byAlias.values()].reduce((s, a) => s + a.npt, 0);
+      const mgrs = managers
+        .filter((m) => m.team_id === team.id && m.approved && (m.role === "manager" || m.role === "admin"))
+        .sort((x, y) => x.email.localeCompare(y.email));
+      out.push({ team, managers: mgrs, members, threshold, used, status: statusFor(threshold, used) });
+    }
+    // Unassigned siempre al final; el resto por nombre (ya vienen ordenados)
+    return out.sort((x, y) => Number(x.team.id === UNASSIGNED_ID) - Number(y.team.id === UNASSIGNED_ID));
+  }, [teams, daily, planned, budget, roster, managers, weekKey]);
+
+  // el buscador filtra miembros (y managers) en todos los teams; teams sin coincidencias se ocultan
+  const q = query.trim().toLowerCase();
+  const shown = useMemo(() => {
+    if (!q) return views;
+    return views
+      .map((v) => {
+        const mgrHit = v.managers.some((m) => m.email.toLowerCase().includes(q));
+        const nameHit = v.team.name.toLowerCase().includes(q);
+        return { ...v, members: mgrHit || nameHit ? v.members : v.members.filter((m) => m.alias.includes(q)) };
+      })
+      .filter((v) => v.members.length > 0 || v.team.name.toLowerCase().includes(q) || v.managers.some((m) => m.email.toLowerCase().includes(q)));
+  }, [views, q]);
+
+  function toggle(id: string) {
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  }
+
+  const people = views.reduce((s, v) => s + v.members.length, 0);
+  // alias -> nombre de su team (reporta esta semana > roster), para etiquetar los grants
+  const aliasTeam = useMemo(() => {
+    const m = new Map<string, string>();
+    for (const v of views) for (const x of v.members) if (x.reporting) m.set(x.alias, v.team.name);
+    for (const v of views) for (const x of v.members) if (!m.has(x.alias)) m.set(x.alias, v.team.name);
     return m;
-  }, [daily]);
-
-  const knownAliases = useMemo(() => {
-    const s = new Set<string>();
-    daily.forEach((r) => s.add(r.alias));
-    members.forEach((m) => s.add(m.alias));
-    return Array.from(s).sort();
-  }, [daily, members]);
-
-  function plannedFor(alias: string, teamId: string | null): number | null {
-    const rows = planned.filter((p) => p.team_id === teamId);
-    return resolvePlanned(rows, alias, weekKey);
-  }
-
-  async function addMember(mgr: ManagerRow) {
-    // acepta uno o varios usernames (coma / espacio separados)
-    const aliases = splitAliases(addInputs[mgr.user_id] || "");
-    if (!aliases.length) return;
-    setMsg("");
-    const rows = aliases.map((alias) => ({ manager_owner: mgr.user_id, alias, team_id: mgr.team_id }));
-    const { error } = await supabase.from("manager_members").insert(rows);
-    if (error) setMsg("Error: " + error.message);
-    else { setAddInputs((p) => ({ ...p, [mgr.user_id]: "" })); await load(); }
-  }
-
-  async function removeMember(managerOwner: string, alias: string) {
-    setMsg("");
-    const { error } = await supabase.from("manager_members").delete().match({ manager_owner: managerOwner, alias });
-    if (error) setMsg("Error: " + error.message);
-    else await load();
-  }
-
-  // managers reales + admins que TAMBIEN actuan como manager (tienen team asignado o miembros
-  // vinculados). asi un admin como alexcamo sigue apareciendo con su team; un admin "puro" sin
-  // team ni grants no ensucia la lista.
-  const realManagers = managers.filter((m) =>
-    m.role === "manager" ||
-    (m.role === "admin" && (!!m.team_id || members.some((x) => x.manager_owner === m.user_id))),
-  );
+  }, [views]);
 
   return (
     <PinnedView head={<>
-      {/* cabeza pineada (no scrollea): selector de semana + conteo + msg */}
-      <div style={{ display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", marginBottom: 16 }}>
-        <div>
-          <div style={{ fontSize: 16, color: palette.textDim, marginBottom: 4 }}>Week</div>
-          <Dropdown value={weekKey} onChange={setWeekKey} minWidth={260} ariaLabel="Select week"
-            options={weeks.map((w) => ({ value: w.key, label: weekLabel(w) }))} />
-        </div>
-        {!loading && <div style={{ color: palette.textDim, fontSize: 18 }}>{realManagers.length} managers</div>}
+      {/* cabeza PINEADA: semana + buscador + conteo. solo las cards de teams scrollean. */}
+      <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
+        <Dropdown value={weekKey} onChange={setWeekKey} minWidth={260} ariaLabel="Select week"
+          options={weeks.map((w) => ({ value: w.key, label: weekLabel(w) }))} />
+        <span style={{ fontSize: 17 }}><WeekCountdown start={sel.start} sep=":: " /></span>
+        <SearchInput value={query} onChange={(e) => setQuery(e.target.value)}
+          placeholder="team, manager or username" aria-label="Search the org"
+          containerStyle={{ marginLeft: "auto", minWidth: 280 }} style={{ width: "100%" }} />
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+        <span className="npt-title" style={{ fontWeight: 700, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+          "Org" // by team
+        </span>
+        <InfoStar spin={false} pages={[
+          <>Every <strong style={hi}>team</strong> with its <strong style={hi}>managers</strong>, its weekly <strong style={hi}>threshold</strong> and the people who <strong style={hi}>really belong</strong> to it: whoever reports NPT under that team (by enrollment code or an admin move) plus its expected roster.</>,
+          <>Numbers match each team's Summary: same threshold, fair share and status. Roster people with no upload this week show <strong style={hi}>muted</strong> at the bottom and do not count. <strong style={hi}>Unassigned</strong> is always last.</>,
+        ]} />
+        {!loading && <span style={{ color: palette.textDim, fontSize: 17, marginLeft: 8 }}>{views.length} teams :: {people} people</span>}
       </div>
       {msg && <div style={{ color: msg.startsWith("Error") ? palette.bad : palette.ok, marginBottom: 12, fontSize: 18 }}>{msg}</div>}
     </>}>
-      {/* cuerpo scroll: la piramide managers -> miembros */}
       {loading ? (
         <OrgSkeleton />
-      ) : realManagers.length === 0 ? (
-        <div style={{ color: palette.textDim }}>No managers yet. Create them in Supabase (managers table).</div>
-      ) : realManagers.map((mgr) => {
-        const mine = members.filter((m) => m.manager_owner === mgr.user_id);
-        const teamNpt = mine.reduce((a, m) => a + (nptByAlias.get(m.alias) || 0), 0);
-        return (
-          <div key={mgr.user_id} style={{ border: `1px solid ${palette.border}`, borderRadius: 0, padding: "12px 14px", marginBottom: 14 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 8 }}>
-              <div style={{ fontWeight: 700 }}>{mgr.email} <span style={{ color: palette.textDim, fontWeight: 400, fontSize: 18 }}>({mine.length} members, NPT {fmtHms(teamNpt)})</span></div>
-            </div>
-            {mine.length === 0 ? (
-              <div style={{ color: palette.textDim, fontSize: 18, marginBottom: 8 }}>No members assigned.</div>
-            ) : (
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 18, marginBottom: 8 }}>
-                <thead>
-                  <tr>
-                    <th style={{ ...th, textAlign: "left" }}>Member</th>
-                    <th style={th}>Actual NPT</th>
-                    <th style={th}>Planned</th>
-                    <th style={th}>Remaining</th>
-                    <th style={th}>Status</th>
-                    <th style={{ ...th, textAlign: "center" }}></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {mine.map((m) => {
-                    const actual = nptByAlias.get(m.alias) || 0;
-                    const pl = plannedFor(m.alias, m.team_id);
-                    const remaining = pl != null ? pl - actual : null;
-                    const status: NptStatus = statusFor(pl, actual);
-                    return (
-                      <tr key={m.alias}>
-                        <td style={{ ...td, textAlign: "left", fontWeight: 600 }}>{m.alias}</td>
-                        <td style={td}>{fmtHms(actual)}</td>
-                        <td style={{ ...td, color: palette.textDim }}>{pl != null ? fmtHms(pl) : "-"}</td>
-                        <td style={{ ...td, color: remainColor(status) }}>{remaining != null ? fmtHms(remaining) : "-"}</td>
-                        <td style={td}><StatusChip status={status} /></td>
-                        <td style={{ ...td, textAlign: "center" }}>
-                          <button onClick={() => setConfirmRemove({ owner: mgr.user_id, alias: m.alias })}
-                            className="npt-ico-act npt-ico-danger" title="Remove member" aria-label="Remove member"><IconTrash size={17} /></button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            )}
-            <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-              <AddButtonInput list="npt-known-aliases" value={addInputs[mgr.user_id] || ""} icon={<IconUser size={18} />}
-                onChange={(e) => setAddInputs((p) => ({ ...p, [mgr.user_id]: e.target.value }))}
-                onSubmit={() => addMember(mgr)} buttonDisabled={!(addInputs[mgr.user_id] || "").trim()}
-                placeholder="username" title="Assign one or more usernames, comma or space separated"
-                aria-label="Assign username" containerStyle={{ width: 260 }} />
-            </div>
-          </div>
-        );
-      })}
-      <datalist id="npt-known-aliases">
-        {knownAliases.map((a) => (<option key={a} value={a} />))}
-      </datalist>
+      ) : views.length === 0 ? (
+        <div style={{ color: palette.textDim }}>No teams yet. Create them in Access / Teams.</div>
+      ) : shown.length === 0 ? (
+        <div style={{ color: palette.textDim }}>Nothing matches "{query.trim()}".</div>
+      ) : shown.map((v) => (
+        <TeamCard key={v.team.id} view={v} open={!!q || !collapsed.has(v.team.id)} onToggle={() => toggle(v.team.id)}
+          busy={busy}
+          addable={staff.filter((m) => m.team_id !== v.team.id)}
+          teamName={teamName}
+          onMove={(alias) => setPending({ kind: "move", alias, from: v.team, to: "" })}
+          onAddMgr={(mgr) => setPending({ kind: "addMgr", team: v.team, mgr })}
+          onRmMgr={(mgr) => setPending({ kind: "rmMgr", team: v.team, mgr })} />
+      ))}
 
-      {confirmRemove && (
-        <ConfirmDialog title="Remove member?" confirmLabel="Remove"
-          body={<>Remove <strong style={{ color: palette.text, fontWeight: 700 }}>{confirmRemove.alias}</strong> from this manager? This unlinks the grant; it does not delete their NPT data.</>}
-          onCancel={() => setConfirmRemove(null)}
-          onConfirm={() => { const c = confirmRemove; setConfirmRemove(null); removeMember(c.owner, c.alias); }} />
+      {/* sharing al FINAL, aparte de los teams: es visibilidad (Shared with me), no pertenencia */}
+      {!loading && views.length > 0 && !q && (
+        <SharingCard grants={grants} staff={staff} aliasTeam={aliasTeam} busy={busy}
+          owner={grantOwner} onOwner={setGrantOwner} input={grantInput} onInput={setGrantInput}
+          onAdd={addGrants} onRemove={(owner, alias) => setPending({ kind: "rmGrant", owner, alias })} />
+      )}
+
+      {pending?.kind === "rmGrant" && (
+        <ConfirmDialog title="Revoke access?" confirmLabel={busy ? "Revoking..." : "Revoke"} confirmDisabled={busy}
+          body={<>
+            <strong style={hi}>{pending.owner.email}</strong> stops seeing <strong style={hi}>{pending.alias}</strong> in Shared with me.
+            It does not touch their NPT or their team.
+          </>}
+          onCancel={() => { if (!busy) setPending(null); }}
+          onConfirm={() => run(pending)} />
+      )}
+      {pending?.kind === "move" && (
+        <ConfirmDialog title="Move to another team?" confirmLabel={busy ? "Moving..." : "Move"}
+          confirmDisabled={!pending.to || busy}
+          body={<>
+            <strong style={hi}>{pending.alias}</strong> and their <strong style={hi}>whole NPT history</strong> move out of{" "}
+            <strong style={hi}>{pending.from.name}</strong>. Their roster spot moves too, and future uploads land in the new team
+            even with an old enrollment code.
+            <div style={{ marginTop: 14 }}>
+              <Dropdown fill value={pending.to} ariaLabel="Destination team"
+                onChange={(to) => setPending({ ...pending, to })}
+                options={[{ value: "", label: "Pick a team..." },
+                  ...teams.filter((t) => t.id !== pending.from.id).map((t) => ({ value: t.id, label: t.name }))]} />
+            </div>
+          </>}
+          onCancel={() => { if (!busy) setPending(null); }}
+          onConfirm={() => run(pending)} />
+      )}
+      {pending?.kind === "addMgr" && (
+        <ConfirmDialog title="Assign manager?" confirmLabel={busy ? "Saving..." : "Assign"} confirmDisabled={busy}
+          body={<>
+            <strong style={hi}>{pending.mgr.email}</strong> will manage <strong style={hi}>{pending.team.name}</strong> and see its data.
+            {pending.mgr.team_id && <> A manager has one team, so they <strong style={hi}>leave {teamName(pending.mgr.team_id)}</strong>.</>}
+          </>}
+          onCancel={() => { if (!busy) setPending(null); }}
+          onConfirm={() => run(pending)} />
+      )}
+      {pending?.kind === "rmMgr" && (
+        <ConfirmDialog title="Remove manager?" confirmLabel={busy ? "Saving..." : "Remove"} confirmDisabled={busy}
+          body={<>
+            <strong style={hi}>{pending.mgr.email}</strong> stops managing <strong style={hi}>{pending.team.name}</strong>.
+            {pending.mgr.role === "admin"
+              ? <> As an admin they still see every team; this only clears their home team.</>
+              : <> Their account stays, but they will not see any team until you assign one.</>}
+          </>}
+          onCancel={() => { if (!busy) setPending(null); }}
+          onConfirm={() => run(pending)} />
       )}
     </PinnedView>
   );
 }
 
-// skeleton 1:1: dropdown de semana + "N managers" -> cards por manager (header + tabla 6 cols + add input)
+function TeamCard({ view, open, onToggle, busy, addable, teamName, onMove, onAddMgr, onRmMgr }: {
+  view: TeamView; open: boolean; onToggle: () => void; busy: boolean;
+  addable: Mgr[]; teamName: (id: string | null) => string | null;
+  onMove: (alias: string) => void; onAddMgr: (m: Mgr) => void; onRmMgr: (m: Mgr) => void;
+}) {
+  const { team, managers, members, threshold, used, status } = view;
+  const isUnassigned = team.id === UNASSIGNED_ID;
+  const reporting = members.filter((m) => m.reporting).length;
+  return (
+    <div style={{ position: "relative", padding: "16px 22px", marginBottom: 18 }}>
+      <span className="npt-bracket tl" /><span className="npt-bracket tr" /><span className="npt-bracket bl" /><span className="npt-bracket br" />
+      {/* header: el boton (chevron + nombre) colapsa/expande; managers (con sus acciones) al lado; used/status a la derecha */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <button type="button" onClick={onToggle} aria-expanded={open} title={open ? "Collapse" : "Expand"}
+          style={{ display: "inline-flex", alignItems: "center", gap: 12, background: "transparent", border: "none", padding: 0, cursor: "pointer", color: palette.text, textAlign: "left" }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.4} strokeLinecap="round" strokeLinejoin="round"
+            style={{ flex: "0 0 auto", transform: open ? "none" : "rotate(-90deg)", transition: "transform .2s ease", color: palette.textDim }} aria-hidden="true">
+            <path d="M5 9l7 7 7-7" />
+          </svg>
+          <span className="npt-title" style={{ fontWeight: 700, fontSize: 24, textTransform: "uppercase", letterSpacing: "0.06em" }}>"{team.name}"</span>
+        </button>
+        <span style={{ fontSize: 17, color: palette.textDim, display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+          {"//"}
+          {isUnassigned
+            ? <span>no manager by design</span>
+            : managers.length === 0
+              ? <span style={{ color: palette.warn, fontWeight: 700 }}>no manager</span>
+              : managers.map((m) => (
+                <span key={m.user_id} title={m.email} style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
+                  <strong style={{ color: palette.text, fontWeight: 600 }}>{aliasOfEmail(m.email)}</strong>
+                  {m.role === "admin" && <span style={{ color: palette.blue }}>(admin)</span>}
+                  <button onClick={() => onRmMgr(m)} disabled={busy} className="npt-ico-act npt-ico-danger"
+                    title={`Remove ${aliasOfEmail(m.email)} as manager`} aria-label={`Remove ${aliasOfEmail(m.email)} as manager`}>
+                    <IconX size={13} />
+                  </button>
+                </span>
+              ))}
+          {!isUnassigned && addable.length > 0 && (
+            <Dropdown value="" minWidth={190} ariaLabel={`Add a manager to ${team.name}`}
+              onChange={(uid) => { const m = addable.find((x) => x.user_id === uid); if (m) onAddMgr(m); }}
+              options={[{ value: "", label: "Add manager" },
+                ...addable.map((m) => ({ value: m.user_id, label: `${aliasOfEmail(m.email)}${m.role === "admin" ? " (admin)" : ""} :: ${teamName(m.team_id) ?? "no team"}` }))]} />
+          )}
+          <span>{"// "}{reporting} reporting{members.length > reporting ? ` + ${members.length - reporting} not reporting` : ""}</span>
+        </span>
+        <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 14, fontSize: 17, fontVariantNumeric: "tabular-nums" }}>
+          <span style={{ color: palette.textDim }}>
+            Used <strong style={{ color: status === "bad" ? palette.bad : palette.text }}>{fmtHms(used)}</strong>
+            {" / "}{threshold != null ? fmtHms(threshold) : "no threshold"}
+          </span>
+          {threshold != null && <StatusChip status={status} />}
+        </span>
+      </div>
+
+      {/* render condicional (NO .npt-collapse): su overflow:hidden romperia el thead sticky dentro
+          del scroll de PinnedView. */}
+      {open && (
+          <div style={{ paddingTop: 12 }}>
+            {members.length === 0 ? (
+              <div style={{ color: palette.textDim, fontSize: 18 }}>Nobody reports under this team yet and its roster is empty.</div>
+            ) : (
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 18 }}>
+                <thead>
+                  <tr>
+                    <th style={{ ...th, textAlign: "left" }}>Employee</th>
+                    <th style={th}>Days</th>
+                    <th style={th}>Planned</th>
+                    <th style={th}>Actual NPT</th>
+                    <th style={th}>Remaining</th>
+                    <th style={th}>Status</th>
+                    <th style={th}>Actions<InfoStar spin={false}>{
+                      <><strong style={hi}>Move to another team</strong>: moves the person, their whole NPT history and their roster spot. Future uploads land in the new team even with an old enrollment code.</>
+                    }</InfoStar></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {members.map((m) => m.reporting ? (
+                    <tr key={m.alias}>
+                      <td style={{ ...td, textAlign: "left", fontWeight: 600 }}>{m.alias}</td>
+                      <td style={td}>{m.days}</td>
+                      <td style={{ ...td, color: palette.textDim }}>{m.planned != null ? fmtHms(m.planned) : "-"}</td>
+                      <td style={{ ...td, fontWeight: 600 }}>{fmtHms(m.npt)}</td>
+                      <td style={{ ...td, color: remainColor(m.status) }}>{m.remaining != null ? fmtHms(m.remaining) : "-"}</td>
+                      <td style={td}><StatusChip status={m.status} /></td>
+                      <td style={td}><MoveBtn alias={m.alias} busy={busy} onMove={onMove} /></td>
+                    </tr>
+                  ) : (
+                    // roster sin upload esta semana: muted, status en texto plano (nunca lee como ok/over)
+                    <tr key={"nr-" + m.alias}>
+                      <td style={{ ...td, textAlign: "left", fontWeight: 600, color: palette.textDim }}>{m.alias}</td>
+                      <td style={{ ...td, color: palette.textDim }}>-</td>
+                      <td style={{ ...td, color: palette.textDim }}>{m.planned != null ? fmtHms(m.planned) : "-"}</td>
+                      <td style={{ ...td, color: palette.textDim }}>-</td>
+                      <td style={{ ...td, color: palette.textDim }}>-</td>
+                      <td style={{ ...td, color: palette.textDim, fontWeight: 600 }}>No report</td>
+                      <td style={td}><MoveBtn alias={m.alias} busy={busy} onMove={onMove} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+      )}
+    </div>
+  );
+}
+
+// sharing: grants de manager_members agrupados por quien VE. chips con X para revocar + alta bulk.
+function SharingCard({ grants, staff, aliasTeam, busy, owner, onOwner, input, onInput, onAdd, onRemove }: {
+  grants: { manager_owner: string; alias: string }[]; staff: Mgr[]; aliasTeam: Map<string, string>; busy: boolean;
+  owner: string; onOwner: (v: string) => void; input: string; onInput: (v: string) => void;
+  onAdd: () => void; onRemove: (owner: Mgr, alias: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const byOwner = staff
+    .map((m) => ({ m, aliases: grants.filter((g) => g.manager_owner === m.user_id).map((g) => g.alias).sort() }))
+    .filter((x) => x.aliases.length > 0);
+  return (
+    <div style={{ position: "relative", padding: "16px 22px", marginBottom: 18 }}>
+      <span className="npt-bracket tl" /><span className="npt-bracket tr" /><span className="npt-bracket bl" /><span className="npt-bracket br" />
+      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+        <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} title={open ? "Collapse" : "Expand"}
+          style={{ display: "inline-flex", alignItems: "center", gap: 12, background: "transparent", border: "none", padding: 0, cursor: "pointer", color: palette.text }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.4} strokeLinecap="round" strokeLinejoin="round"
+            style={{ transform: open ? "none" : "rotate(-90deg)", transition: "transform .2s ease", color: palette.textDim }} aria-hidden="true">
+            <path d="M5 9l7 7 7-7" />
+          </svg>
+          <span className="npt-title" style={{ fontWeight: 700, fontSize: 24, textTransform: "uppercase", letterSpacing: "0.06em" }}>"Sharing" // outside their team</span>
+        </button>
+        <InfoStar spin={false}>{
+          <>Extra <strong style={hi}>read-only access</strong> to someone from <strong style={hi}>another team</strong>. It shows up in that manager's <strong style={hi}>Shared with me</strong> and never counts in their own team's numbers. This is <strong style={hi}>not</strong> team membership: to change a team, move the person in its card above.</>
+        }</InfoStar>
+        <span style={{ fontSize: 17, color: palette.textDim }}>{"// "}{grants.length} grant{grants.length === 1 ? "" : "s"}</span>
+      </div>
+      {open && (
+        <div style={{ paddingTop: 14 }}>
+          {byOwner.length === 0 ? (
+            <div style={{ color: palette.textDim, fontSize: 18, marginBottom: 12 }}>Nobody has access outside their team.</div>
+          ) : byOwner.map(({ m, aliases }) => (
+            <div key={m.user_id} style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", padding: "8px 0", borderBottom: `1px solid ${palette.border}` }}>
+              <span style={{ fontWeight: 600, minWidth: 160 }} title={m.email}>{aliasOfEmail(m.email)} <span style={{ color: palette.textDim, fontWeight: 400 }}>sees</span></span>
+              <span style={{ display: "inline-flex", gap: 14, flexWrap: "wrap" }}>
+                {aliases.map((a) => (
+                  <span key={a} style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 17 }}>
+                    <strong style={{ fontWeight: 600 }}>{a}</strong>
+                    <span style={{ color: palette.textDim }}>{aliasTeam.has(a) ? `:: ${aliasTeam.get(a)}` : ""}</span>
+                    <button onClick={() => onRemove(m, a)} disabled={busy} className="npt-ico-act npt-ico-danger"
+                      title={`Revoke ${aliasOfEmail(m.email)}'s access to ${a}`} aria-label={`Revoke access to ${a}`}>
+                      <IconX size={13} />
+                    </button>
+                  </span>
+                ))}
+              </span>
+            </div>
+          ))}
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginTop: 14 }}>
+            <Dropdown value={owner} onChange={onOwner} minWidth={220} ariaLabel="Manager who gets access"
+              options={[{ value: "", label: "Pick a manager" }, ...staff.map((m) => ({ value: m.user_id, label: aliasOfEmail(m.email) + (m.role === "admin" ? " (admin)" : "") }))]} />
+            <AddButtonInput value={input} onChange={(e) => onInput(e.target.value)} icon={<IconUser size={18} />}
+              onSubmit={onAdd} buttonDisabled={busy || !owner || !input.trim()}
+              placeholder="username(s)" title="One or more usernames, comma or space separated"
+              aria-label="Usernames to share" containerStyle={{ width: 300 }} />
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// icono borderless "mover a otro team" (abre el ConfirmDialog con el selector de destino)
+function MoveBtn({ alias, busy, onMove }: { alias: string; busy: boolean; onMove: (alias: string) => void }) {
+  return (
+    <button onClick={() => onMove(alias)} disabled={busy} className="npt-ico-act"
+      title="Move to another team" aria-label={`Move ${alias} to another team`}>
+      <IconMoveOut size={18} />
+    </button>
+  );
+}
+
+// skeleton 1:1: cards de team con brackets (header nombre + managers + used/status, tabla de 6 columnas)
 function OrgSkeleton() {
   return (
     <div>
-      {Array.from({ length: 2 }).map((_, i) => (
-        <div key={i} style={{ border: `1px solid ${palette.border}`, borderRadius: 0, padding: "12px 14px", marginBottom: 14 }}>
-          <Bar w={260} h={18} style={{ marginBottom: 12 }} />
-          <TableSk template="2fr 1.2fr 1fr 1fr 90px 44px" rows={3} />
-          <div style={{ marginTop: 12 }}><Bar w={260} h={40} /></div>
-        </div>
+      {Array.from({ length: 3 }).map((_, i) => (
+        <BracketFrame key={i} style={{ padding: "16px 22px", marginBottom: 18 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+            <Bar w={16} h={16} /><Bar w={220} h={24} /><Bar w={260} h={16} />
+            <div style={{ marginLeft: "auto", display: "flex", gap: 12 }}><Bar w={170} h={18} /><Bar w={80} h={18} /></div>
+          </div>
+          <TableSk template="2fr 70px 1fr 1fr 1fr 100px 70px" rows={3} />
+        </BracketFrame>
       ))}
     </div>
   );
@@ -204,7 +570,6 @@ function remainColor(s: NptStatus): string {
   return s === "bad" ? palette.bad : s === "warn" ? palette.warn : s === "ok" ? palette.ok : palette.textDim;
 }
 
-// thead congelado dentro del scroll: sticky top 0 con fondo opaco para que las filas no se
-// transparenten por debajo al scrollear (una tabla por manager: cada thead se pinea en su turno).
+// thead congelado dentro del scroll: sticky top 0 con fondo opaco (cada tabla se pinea en su turno)
 const th: React.CSSProperties = { textAlign: "center", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}`, position: "sticky", top: 0, zIndex: 1, background: palette.bg };
 const td: React.CSSProperties = { textAlign: "center", padding: "8px 10px", borderBottom: `1px solid ${palette.border}`, fontVariantNumeric: "tabular-nums" };

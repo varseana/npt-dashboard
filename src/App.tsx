@@ -361,7 +361,7 @@ export default function App() {
         <Teams refreshKey={refreshTick} />}
       {section === "access" && accessTab === "unassigned" && manager.role === "admin" &&
         <Unassigned teams={teams} refreshKey={refreshTick} />}
-      {section === "access" && accessTab === "org" && manager.role === "admin" && <Org />}
+      {section === "access" && accessTab === "org" && manager.role === "admin" && <Org refreshKey={refreshTick} />}
       </>)}
       </div>
       {/* ===== fin Region B ===== */}
