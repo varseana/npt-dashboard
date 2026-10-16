@@ -8,7 +8,7 @@ import {
   type NptDailyRow, type NptStatus, type PlannedRow, type TeamBudgetRow, type PlanContext,
 } from "../lib/npt";
 import { StatusChip } from "./status";
-import { Bar, BracketFrame, TableSk } from "./skeleton";
+import { Bar, TableSk } from "./skeleton";
 import { SearchInput, AddButtonInput, splitAliases } from "./Inputs";
 import { InfoStar } from "./InfoStar";
 import { Dropdown } from "./Dropdown";
@@ -276,24 +276,24 @@ export default function Org({ refreshKey }: { refreshKey?: number }) {
 
   return (
     <PinnedView head={<>
-      {/* cabeza PINEADA: semana + buscador + conteo. solo las cards de teams scrollean. */}
-      <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap", marginBottom: 16 }}>
-        <Dropdown value={weekKey} onChange={setWeekKey} minWidth={260} ariaLabel="Select week"
-          options={weeks.map((w) => ({ value: w.key, label: weekLabel(w) }))} />
-        <span style={{ fontSize: 17 }}><WeekCountdown start={sel.start} sep=":: " /></span>
-        <SearchInput value={query} onChange={(e) => setQuery(e.target.value)}
-          placeholder="team, manager or username" aria-label="Search the org"
-          containerStyle={{ marginLeft: "auto", minWidth: 280 }} style={{ width: "100%" }} />
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
-        <span className="npt-title" style={{ fontWeight: 700, fontSize: 28, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-          "Org" // by team
-        </span>
-        <InfoStar spin={false} pages={[
-          <>Every <strong style={hi}>team</strong> with its <strong style={hi}>managers</strong>, its weekly <strong style={hi}>threshold</strong> and the people who <strong style={hi}>really belong</strong> to it: whoever reports NPT under that team (by enrollment code or an admin move) plus its expected roster.</>,
-          <>Numbers match each team's Summary: same threshold, fair share and status. Roster people with no upload this week show <strong style={hi}>muted</strong> at the bottom and do not count. <strong style={hi}>Unassigned</strong> is always last.</>,
-        ]} />
-        {!loading && <span style={{ color: palette.textDim, fontSize: 17, marginLeft: 8 }}>{views.length} teams :: {people} people</span>}
+      {/* cabeza PINEADA, mismo panel que el "New team" de Access > Teams: titulo + semana + buscador */}
+      <div style={{ background: palette.panelAlt, border: `1px solid ${palette.border}`, borderRadius: 0, padding: "14px 16px", marginBottom: 20 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+          <span className="npt-title" style={{ fontWeight: 700, fontSize: 28 }}>Org</span>
+          <InfoStar spin={false} pages={[
+            <>Every <strong style={hi}>team</strong> with its <strong style={hi}>managers</strong>, its weekly <strong style={hi}>threshold</strong> and the people who <strong style={hi}>really belong</strong> to it: whoever reports NPT under that team (by enrollment code or an admin move) plus its expected roster.</>,
+            <>Numbers match each team's Summary: same threshold, fair share and status. Roster people with no upload this week show <strong style={hi}>muted</strong> at the bottom and do not count. <strong style={hi}>Unassigned</strong> is always last.</>,
+          ]} />
+          {!loading && <span style={{ color: palette.textDim, fontSize: 17, marginLeft: 8 }}>{views.length} teams :: {people} people</span>}
+        </div>
+        <div style={{ display: "flex", gap: 12, alignItems: "center", flexWrap: "wrap" }}>
+          <Dropdown value={weekKey} onChange={setWeekKey} minWidth={260} ariaLabel="Select week"
+            options={weeks.map((w) => ({ value: w.key, label: weekLabel(w) }))} />
+          <span style={{ fontSize: 17 }}><WeekCountdown start={sel.start} sep=":: " /></span>
+          <SearchInput value={query} onChange={(e) => setQuery(e.target.value)}
+            placeholder="team, manager or username" aria-label="Search the org"
+            containerStyle={{ marginLeft: "auto", minWidth: 280 }} style={{ width: "100%" }} />
+        </div>
       </div>
       {msg && <div style={{ color: msg.startsWith("Error") ? palette.bad : palette.ok, marginBottom: 12, fontSize: 18 }}>{msg}</div>}
     </>}>
@@ -379,41 +379,17 @@ function TeamCard({ view, open, onToggle, busy, addable, teamName, onMove, onAdd
   const isUnassigned = team.id === UNASSIGNED_ID;
   const reporting = members.filter((m) => m.reporting).length;
   return (
-    <div style={{ position: "relative", padding: "16px 22px", marginBottom: 18 }}>
-      <span className="npt-bracket tl" /><span className="npt-bracket tr" /><span className="npt-bracket bl" /><span className="npt-bracket br" />
-      {/* header: el boton (chevron + nombre) colapsa/expande; managers (con sus acciones) al lado; used/status a la derecha */}
-      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <button type="button" onClick={onToggle} aria-expanded={open} title={open ? "Collapse" : "Expand"}
-          style={{ display: "inline-flex", alignItems: "center", gap: 12, background: "transparent", border: "none", padding: 0, cursor: "pointer", color: palette.text, textAlign: "left" }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.4} strokeLinecap="round" strokeLinejoin="round"
-            style={{ flex: "0 0 auto", transform: open ? "none" : "rotate(-90deg)", transition: "transform .2s ease", color: palette.textDim }} aria-hidden="true">
-            <path d="M5 9l7 7 7-7" />
-          </svg>
-          <span className="npt-title" style={{ fontWeight: 700, fontSize: 24, textTransform: "uppercase", letterSpacing: "0.06em" }}>"{team.name}"</span>
-        </button>
-        <span style={{ fontSize: 17, color: palette.textDim, display: "inline-flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
-          {"//"}
-          {isUnassigned
-            ? <span>no manager by design</span>
-            : managers.length === 0
-              ? <span style={{ color: palette.warn, fontWeight: 700 }}>no manager</span>
-              : managers.map((m) => (
-                <span key={m.user_id} title={m.email} style={{ display: "inline-flex", alignItems: "center", gap: 3 }}>
-                  <strong style={{ color: palette.text, fontWeight: 600 }}>{aliasOfEmail(m.email)}</strong>
-                  {m.role === "admin" && <span style={{ color: palette.blue }}>(admin)</span>}
-                  <button onClick={() => onRmMgr(m)} disabled={busy} className="npt-ico-act npt-ico-danger"
-                    title={`Remove ${aliasOfEmail(m.email)} as manager`} aria-label={`Remove ${aliasOfEmail(m.email)} as manager`}>
-                    <IconX size={13} />
-                  </button>
-                </span>
-              ))}
-          {!isUnassigned && addable.length > 0 && (
-            <Dropdown value="" minWidth={190} ariaLabel={`Add a manager to ${team.name}`}
-              onChange={(uid) => { const m = addable.find((x) => x.user_id === uid); if (m) onAddMgr(m); }}
-              options={[{ value: "", label: "Add manager" },
-                ...addable.map((m) => ({ value: m.user_id, label: `${aliasOfEmail(m.email)}${m.role === "admin" ? " (admin)" : ""} :: ${teamName(m.team_id) ?? "no team"}` }))]} />
-          )}
-          <span>{"// "}{reporting} reporting{members.length > reporting ? ` + ${members.length - reporting} not reporting` : ""}</span>
+    // misma estructura que las cards de Access > Teams: borde 1px, header en panel, cuerpo en bg con
+    // subtitulos chicos. SIN overflow:hidden (romperia el thead sticky del scroll de PinnedView).
+    <div style={card}>
+      {/* header: chevron + nombre colapsa/expande; conteos al lado; used/status a la derecha */}
+      <div style={cardHead}>
+        <ToggleTitle open={open} onToggle={onToggle} label={team.name} />
+        <span style={{ fontSize: 17, color: palette.textDim }}>
+          {isUnassigned ? "no manager by design"
+            : managers.length === 0 ? <span style={{ color: palette.warn, fontWeight: 700 }}>no manager</span>
+            : `${managers.length} manager${managers.length === 1 ? "" : "s"}`}
+          {" // "}{reporting} reporting{members.length > reporting ? ` + ${members.length - reporting} not reporting` : ""}
         </span>
         <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 14, fontSize: 17, fontVariantNumeric: "tabular-nums" }}>
           <span style={{ color: palette.textDim }}>
@@ -424,60 +400,97 @@ function TeamCard({ view, open, onToggle, busy, addable, teamName, onMove, onAdd
         </span>
       </div>
 
-      {/* render condicional (NO .npt-collapse): su overflow:hidden romperia el thead sticky dentro
-          del scroll de PinnedView. */}
+      {/* render condicional (NO .npt-collapse): su overflow:hidden romperia el thead sticky */}
       {open && (
-          <div style={{ paddingTop: 12 }}>
-            {members.length === 0 ? (
-              <div style={{ color: palette.textDim, fontSize: 18 }}>Nobody reports under this team yet and its roster is empty.</div>
-            ) : (
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 18 }}>
-                <thead>
-                  <tr>
-                    <th style={{ ...th, textAlign: "left" }}>Employee</th>
-                    <th style={th}>Days</th>
-                    <th style={th}>Planned</th>
-                    <th style={th}>Actual NPT</th>
-                    <th style={th}>Remaining</th>
-                    <th style={th}>Status</th>
-                    <th style={th}>Actions<InfoStar spin={false}>{
-                      <><strong style={hi}>Move to another team</strong>: moves the person, their whole NPT history and their roster spot. Future uploads land in the new team even with an old enrollment code.</>
-                    }</InfoStar></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {members.map((m) => m.reporting ? (
-                    <tr key={m.alias}>
-                      <td style={{ ...td, textAlign: "left", fontWeight: 600 }}>{m.alias}</td>
-                      <td style={td}>{m.days}</td>
-                      <td style={{ ...td, color: palette.textDim }}>{m.planned != null ? fmtHms(m.planned) : "-"}</td>
-                      <td style={{ ...td, fontWeight: 600 }}>{fmtHms(m.npt)}</td>
-                      <td style={{ ...td, color: remainColor(m.status) }}>{m.remaining != null ? fmtHms(m.remaining) : "-"}</td>
-                      <td style={td}><StatusChip status={m.status} /></td>
-                      <td style={td}><MoveBtn alias={m.alias} busy={busy} onMove={onMove} /></td>
-                    </tr>
-                  ) : (
-                    // roster sin upload esta semana: muted, status en texto plano (nunca lee como ok/over)
-                    <tr key={"nr-" + m.alias}>
-                      <td style={{ ...td, textAlign: "left", fontWeight: 600, color: palette.textDim }}>{m.alias}</td>
-                      <td style={{ ...td, color: palette.textDim }}>-</td>
-                      <td style={{ ...td, color: palette.textDim }}>{m.planned != null ? fmtHms(m.planned) : "-"}</td>
-                      <td style={{ ...td, color: palette.textDim }}>-</td>
-                      <td style={{ ...td, color: palette.textDim }}>-</td>
-                      <td style={{ ...td, color: palette.textDim, fontWeight: 600 }}>No report</td>
-                      <td style={td}><MoveBtn alias={m.alias} busy={busy} onMove={onMove} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div style={cardBody}>
+          {!isUnassigned && (<>
+            <div style={subLabel}>Managers</div>
+            {managers.length === 0 && <div style={{ fontSize: 18, color: palette.textDim, marginBottom: 8 }}>No managers yet.</div>}
+            {managers.map((m) => (
+              <div key={m.user_id} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 6 }} title={m.email}>
+                <span style={{ fontSize: 18, fontWeight: 700 }}>{aliasOfEmail(m.email)}</span>
+                {m.role === "admin" && <span style={{ fontSize: 16, color: palette.blue, fontWeight: 600 }}>(admin)</span>}
+                <button onClick={() => onRmMgr(m)} disabled={busy} className="npt-ico-act npt-ico-danger"
+                  title={`Remove ${aliasOfEmail(m.email)} as manager`} aria-label={`Remove ${aliasOfEmail(m.email)} as manager`}>
+                  <IconX size={15} />
+                </button>
+              </div>
+            ))}
+            {addable.length > 0 && (
+              <div style={{ marginTop: 8 }}>
+                <Dropdown value="" minWidth={260} ariaLabel={`Add a manager to ${team.name}`}
+                  onChange={(uid) => { const m = addable.find((x) => x.user_id === uid); if (m) onAddMgr(m); }}
+                  options={[{ value: "", label: "Add manager" },
+                    ...addable.map((m) => ({ value: m.user_id, label: `${aliasOfEmail(m.email)}${m.role === "admin" ? " (admin)" : ""} :: ${teamName(m.team_id) ?? "no team"}` }))]} />
+              </div>
             )}
-          </div>
+          </>)}
+
+          <div style={{ ...subLabel, marginTop: isUnassigned ? 0 : 16 }}>Members</div>
+          {members.length === 0 ? (
+            <div style={{ color: palette.textDim, fontSize: 18 }}>Nobody reports under this team yet and its roster is empty.</div>
+          ) : (
+            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 18 }}>
+              <thead>
+                <tr>
+                  <th style={{ ...th, textAlign: "left" }}>Employee</th>
+                  <th style={th}>Days</th>
+                  <th style={th}>Planned</th>
+                  <th style={th}>Actual NPT</th>
+                  <th style={th}>Remaining</th>
+                  <th style={th}>Status</th>
+                  <th style={th}>Actions<InfoStar spin={false}>{
+                    <><strong style={hi}>Move to another team</strong>: moves the person, their whole NPT history and their roster spot. Future uploads land in the new team even with an old enrollment code.</>
+                  }</InfoStar></th>
+                </tr>
+              </thead>
+              <tbody>
+                {members.map((m) => m.reporting ? (
+                  <tr key={m.alias}>
+                    <td style={{ ...td, textAlign: "left", fontWeight: 600 }}>{m.alias}</td>
+                    <td style={td}>{m.days}</td>
+                    <td style={{ ...td, color: palette.textDim }}>{m.planned != null ? fmtHms(m.planned) : "-"}</td>
+                    <td style={{ ...td, fontWeight: 600 }}>{fmtHms(m.npt)}</td>
+                    <td style={{ ...td, color: remainColor(m.status) }}>{m.remaining != null ? fmtHms(m.remaining) : "-"}</td>
+                    <td style={td}><StatusChip status={m.status} /></td>
+                    <td style={td}><MoveBtn alias={m.alias} busy={busy} onMove={onMove} /></td>
+                  </tr>
+                ) : (
+                  // roster sin upload esta semana: muted, status en texto plano (nunca lee como ok/over)
+                  <tr key={"nr-" + m.alias}>
+                    <td style={{ ...td, textAlign: "left", fontWeight: 600, color: palette.textDim }}>{m.alias}</td>
+                    <td style={{ ...td, color: palette.textDim }}>-</td>
+                    <td style={{ ...td, color: palette.textDim }}>{m.planned != null ? fmtHms(m.planned) : "-"}</td>
+                    <td style={{ ...td, color: palette.textDim }}>-</td>
+                    <td style={{ ...td, color: palette.textDim }}>-</td>
+                    <td style={{ ...td, color: palette.textDim, fontWeight: 600 }}>No report</td>
+                    <td style={td}><MoveBtn alias={m.alias} busy={busy} onMove={onMove} /></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       )}
     </div>
   );
 }
 
-// sharing: grants de manager_members agrupados por quien VE. chips con X para revocar + alta bulk.
+// chevron + nombre: el unico boton del header (asi los controles de adentro no quedan dentro de un <button>)
+function ToggleTitle({ open, onToggle, label }: { open: boolean; onToggle: () => void; label: string }) {
+  return (
+    <button type="button" onClick={onToggle} aria-expanded={open} title={open ? "Collapse" : "Expand"}
+      style={{ display: "inline-flex", alignItems: "center", gap: 10, background: "transparent", border: "none", padding: 0, cursor: "pointer", color: palette.text, textAlign: "left" }}>
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.4} strokeLinecap="round" strokeLinejoin="round"
+        style={{ flex: "0 0 auto", transform: open ? "none" : "rotate(-90deg)", transition: "transform .2s ease", color: palette.textDim }} aria-hidden="true">
+        <path d="M5 9l7 7 7-7" />
+      </svg>
+      <span style={{ fontWeight: 600, fontSize: 19 }}>{label}</span>
+    </button>
+  );
+}
+
+// sharing: grants de manager_members agrupados por quien VE. misma card que los teams.
 function SharingCard({ grants, staff, aliasTeam, busy, owner, onOwner, input, onInput, onAdd, onRemove }: {
   grants: { manager_owner: string; alias: string }[]; staff: Mgr[]; aliasTeam: Map<string, string>; busy: boolean;
   owner: string; onOwner: (v: string) => void; input: string; onInput: (v: string) => void;
@@ -488,44 +501,36 @@ function SharingCard({ grants, staff, aliasTeam, busy, owner, onOwner, input, on
     .map((m) => ({ m, aliases: grants.filter((g) => g.manager_owner === m.user_id).map((g) => g.alias).sort() }))
     .filter((x) => x.aliases.length > 0);
   return (
-    <div style={{ position: "relative", padding: "16px 22px", marginBottom: 18 }}>
-      <span className="npt-bracket tl" /><span className="npt-bracket tr" /><span className="npt-bracket bl" /><span className="npt-bracket br" />
-      <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
-        <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} title={open ? "Collapse" : "Expand"}
-          style={{ display: "inline-flex", alignItems: "center", gap: 12, background: "transparent", border: "none", padding: 0, cursor: "pointer", color: palette.text }}>
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={3.4} strokeLinecap="round" strokeLinejoin="round"
-            style={{ transform: open ? "none" : "rotate(-90deg)", transition: "transform .2s ease", color: palette.textDim }} aria-hidden="true">
-            <path d="M5 9l7 7 7-7" />
-          </svg>
-          <span className="npt-title" style={{ fontWeight: 700, fontSize: 24, textTransform: "uppercase", letterSpacing: "0.06em" }}>"Sharing" // outside their team</span>
-        </button>
+    <div style={card}>
+      <div style={cardHead}>
+        <ToggleTitle open={open} onToggle={() => setOpen((o) => !o)} label="Sharing" />
         <InfoStar spin={false}>{
           <>Extra <strong style={hi}>read-only access</strong> to someone from <strong style={hi}>another team</strong>. It shows up in that manager's <strong style={hi}>Shared with me</strong> and never counts in their own team's numbers. This is <strong style={hi}>not</strong> team membership: to change a team, move the person in its card above.</>
         }</InfoStar>
-        <span style={{ fontSize: 17, color: palette.textDim }}>{"// "}{grants.length} grant{grants.length === 1 ? "" : "s"}</span>
+        <span style={{ fontSize: 17, color: palette.textDim }}>{grants.length} grant{grants.length === 1 ? "" : "s"} outside their team</span>
       </div>
       {open && (
-        <div style={{ paddingTop: 14 }}>
-          {byOwner.length === 0 ? (
-            <div style={{ color: palette.textDim, fontSize: 18, marginBottom: 12 }}>Nobody has access outside their team.</div>
-          ) : byOwner.map(({ m, aliases }) => (
-            <div key={m.user_id} style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", padding: "8px 0", borderBottom: `1px solid ${palette.border}` }}>
-              <span style={{ fontWeight: 600, minWidth: 160 }} title={m.email}>{aliasOfEmail(m.email)} <span style={{ color: palette.textDim, fontWeight: 400 }}>sees</span></span>
+        <div style={cardBody}>
+          <div style={subLabel}>Access outside their team</div>
+          {byOwner.length === 0 && <div style={{ fontSize: 18, color: palette.textDim, marginBottom: 8 }}>Nobody has access outside their team.</div>}
+          {byOwner.map(({ m, aliases }) => (
+            <div key={m.user_id} style={{ display: "flex", gap: 12, alignItems: "baseline", flexWrap: "wrap", marginBottom: 8 }}>
+              <span style={{ fontSize: 18, fontWeight: 700, minWidth: 160 }} title={m.email}>{aliasOfEmail(m.email)} <span style={{ color: palette.textDim, fontWeight: 400 }}>sees</span></span>
               <span style={{ display: "inline-flex", gap: 14, flexWrap: "wrap" }}>
                 {aliases.map((a) => (
-                  <span key={a} style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 17 }}>
+                  <span key={a} style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 18 }}>
                     <strong style={{ fontWeight: 600 }}>{a}</strong>
-                    <span style={{ color: palette.textDim }}>{aliasTeam.has(a) ? `:: ${aliasTeam.get(a)}` : ""}</span>
+                    <span style={{ color: palette.textDim, fontSize: 16 }}>{aliasTeam.has(a) ? `:: ${aliasTeam.get(a)}` : ""}</span>
                     <button onClick={() => onRemove(m, a)} disabled={busy} className="npt-ico-act npt-ico-danger"
                       title={`Revoke ${aliasOfEmail(m.email)}'s access to ${a}`} aria-label={`Revoke access to ${a}`}>
-                      <IconX size={13} />
+                      <IconX size={15} />
                     </button>
                   </span>
                 ))}
               </span>
             </div>
           ))}
-          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginTop: 14 }}>
+          <div style={{ display: "flex", gap: 10, alignItems: "center", flexWrap: "wrap", marginTop: 8 }}>
             <Dropdown value={owner} onChange={onOwner} minWidth={220} ariaLabel="Manager who gets access"
               options={[{ value: "", label: "Pick a manager" }, ...staff.map((m) => ({ value: m.user_id, label: aliasOfEmail(m.email) + (m.role === "admin" ? " (admin)" : "") }))]} />
             <AddButtonInput value={input} onChange={(e) => onInput(e.target.value)} icon={<IconUser size={18} />}
@@ -549,18 +554,23 @@ function MoveBtn({ alias, busy, onMove }: { alias: string; busy: boolean; onMove
   );
 }
 
-// skeleton 1:1: cards de team con brackets (header nombre + managers + used/status, tabla de 6 columnas)
+// skeleton 1:1 (mismo patron que TeamsSkeleton): cards con header en panel + cuerpo con subtitulo y tabla
 function OrgSkeleton() {
   return (
     <div>
       {Array.from({ length: 3 }).map((_, i) => (
-        <BracketFrame key={i} style={{ padding: "16px 22px", marginBottom: 18 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-            <Bar w={16} h={16} /><Bar w={220} h={24} /><Bar w={260} h={16} />
+        <div key={i} style={card}>
+          <div style={{ ...cardHead, gap: 12 }}>
+            <Bar w={15} h={15} /><Bar w={220} h={22} /><Bar w={200} h={16} />
             <div style={{ marginLeft: "auto", display: "flex", gap: 12 }}><Bar w={170} h={18} /><Bar w={80} h={18} /></div>
           </div>
-          <TableSk template="2fr 70px 1fr 1fr 1fr 100px 70px" rows={3} />
-        </BracketFrame>
+          <div style={cardBody}>
+            <Bar w={90} h={14} style={{ marginBottom: 10 }} />
+            <div style={{ display: "flex", gap: 8, alignItems: "center", marginBottom: 14 }}><Bar w={120} h={20} /><Bar w={18} h={18} /></div>
+            <Bar w={90} h={14} style={{ marginBottom: 10 }} />
+            <TableSk template="2fr 70px 1fr 1fr 1fr 100px 70px" rows={3} />
+          </div>
+        </div>
       ))}
     </div>
   );
@@ -573,3 +583,8 @@ function remainColor(s: NptStatus): string {
 // thead congelado dentro del scroll: sticky top 0 con fondo opaco (cada tabla se pinea en su turno)
 const th: React.CSSProperties = { textAlign: "center", padding: "8px 10px", color: palette.textDim, fontWeight: 600, borderBottom: `1px solid ${palette.border}`, position: "sticky", top: 0, zIndex: 1, background: palette.bg };
 const td: React.CSSProperties = { textAlign: "center", padding: "8px 10px", borderBottom: `1px solid ${palette.border}`, fontVariantNumeric: "tabular-nums" };
+// card estilo Access > Teams (sin overflow:hidden para no romper el sticky)
+const card: React.CSSProperties = { border: `1px solid ${palette.border}`, borderRadius: 0, marginBottom: 14 };
+const cardHead: React.CSSProperties = { display: "flex", gap: 10, alignItems: "center", padding: "12px 14px", background: palette.panel, flexWrap: "wrap" };
+const cardBody: React.CSSProperties = { padding: "10px 14px 14px", borderTop: `1px solid ${palette.border}`, background: palette.bg };
+const subLabel: React.CSSProperties = { fontSize: 17, color: palette.textDim, marginBottom: 8, fontWeight: 600 };
