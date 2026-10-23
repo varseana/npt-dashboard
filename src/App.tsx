@@ -27,6 +27,7 @@ import { IconMoon, IconSun, IconX } from "./components/icons";
 import Mascot from "./components/Mascot";
 import ProfileMenu from "./components/ProfileMenu";
 import PullReveal from "./components/PullReveal";
+import { DotmCircular4 } from "./components/dotmatrix/dotm-circular-4";
 import ScrambleText from "./components/ScrambleText";
 
 interface ManagerRow {
@@ -207,7 +208,9 @@ export default function App() {
   // fallback: refrescar el conteo pendiente en cada tick (por si el realtime no esta ON)
   useEffect(() => { if (session) loadPending(); /* eslint-disable-next-line */ }, [refreshTick]);
 
-  if (loading) return <Centered>Loading...</Centered>;
+  // chequeo de sesion: el arbol cambia a Login o al dashboard, asi que no hay nada que decodificar;
+  // loader dot-matrix (mismo registry que los status) en vez del texto "Loading...".
+  if (loading) return <Centered><DotmCircular4 size={44} color={palette.textDim} ariaLabel="Loading" /></Centered>;
   if (!session) return <Login dark={dark} onToggleTheme={() => setDark((d) => !d)} />;
   // cuenta creada por el admin (o con password reseteada): obligar a poner su propia
   // contrasena antes de entrar. El flag lo limpia SetPassword (RPC clear_must_set_password).

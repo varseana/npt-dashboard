@@ -6,6 +6,8 @@ import { InfoStar } from "./InfoStar";
 import { AddButtonInput, splitAliases } from "./Inputs";
 import { IconUser } from "./icons";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { Bar } from "./skeleton";
+import Decode from "./Decode";
 
 // highlight monocromatico dentro del texto del popover (bold en color de texto full)
 const hi = { color: palette.text, fontWeight: 700 } as React.CSSProperties;
@@ -174,7 +176,8 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
         <div style={{ paddingTop: 13 }}>
           <div className="npt-title" style={{ fontWeight: 700, fontSize: 22, marginBottom: 10 }}>My requests</div>
           <div style={{ border: `1px solid ${palette.border}`, borderRadius: 0, overflow: "hidden" }}>
-            {loading ? <Dim>Loading...</Dim> : mine.length === 0 ? <Dim>No requests yet.</Dim> : mine.map((r) => (
+            <Decode loading={loading}>
+            {loading ? <RowsSk /> : mine.length === 0 ? <Dim>No requests yet.</Dim> : mine.map((r) => (
               <Row key={r.id}>
                 <span><strong>{r.alias}</strong></span>
                 <span style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -183,13 +186,15 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
                 </span>
               </Row>
             ))}
+            </Decode>
           </div>
         </div>
       </div>
 
       {(role === "manager" || (isAdmin && toMe.length > 0)) && (
         <Section title={`Requests to me (${toMe.length})`}>
-          {loading ? <Dim>Loading...</Dim> : toMe.length === 0 ? <Dim>No incoming requests. When another manager asks to see one of your team members, it shows up here.</Dim> : toMe.map((r) => (
+          <Decode loading={loading}>
+          {loading ? <RowsSk /> : toMe.length === 0 ? <Dim>No incoming requests. When another manager asks to see one of your team members, it shows up here.</Dim> : toMe.map((r) => (
             <Row key={r.id}>
               <span><strong>{r.requester_email}</strong> wants access to <strong>{r.req_alias}</strong> (on your team)</span>
               <span style={{ display: "flex", gap: 8 }}>
@@ -198,6 +203,7 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
               </span>
             </Row>
           ))}
+          </Decode>
         </Section>
       )}
 
@@ -217,7 +223,8 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
 
       {isAdmin && (
         <Section title={`Pending requests (${pending.length})`}>
-          {loading ? <Dim>Loading...</Dim> : pending.length === 0 ? <Dim>Nothing pending.</Dim> : pending.map((r) => (
+          <Decode loading={loading}>
+          {loading ? <RowsSk /> : pending.length === 0 ? <Dim>Nothing pending.</Dim> : pending.map((r) => (
             <Row key={r.id}>
               <span><strong>{managerEmails[r.requester] ?? r.requester.slice(0, 8)}</strong> wants <strong>{r.alias}</strong></span>
               <span style={{ display: "flex", gap: 8 }}>
@@ -226,6 +233,7 @@ export default function Requests({ role, myUserId }: { role: string; myUserId: s
               </span>
             </Row>
           ))}
+          </Decode>
         </Section>
       )}
     </div>
@@ -251,6 +259,10 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 function Row({ children }: { children: React.ReactNode }) {
   return <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "10px 12px", borderBottom: `1px solid ${palette.border}` }}>{children}</div>;
+}
+// skeleton 1:1 de Row (alias a la izquierda, pill/acciones a la derecha), reemplaza el "Loading..."
+function RowsSk({ rows = 2 }: { rows?: number }) {
+  return <>{Array.from({ length: rows }).map((_, i) => <Row key={i}><Bar w={160 + i * 40} h={18} /><Bar w={90} h={26} /></Row>)}</>;
 }
 function Dim({ children }: { children: React.ReactNode }) {
   return <div style={{ padding: "10px 12px", color: palette.textDim, fontSize: 18 }}>{children}</div>;
