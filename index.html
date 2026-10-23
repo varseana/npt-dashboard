@@ -31,7 +31,14 @@
         --blue: #0d5c9d; --blueBg: #e3ecf4;
         --clock: #111111;
         --skel1: #e9e8e5; --skel2: #f4f3f1;
+        /* ascii-reveal: glyphs en el color de texto dim, monospace del sistema (nada de Geist) */
+        --ascii-skeleton: var(--textDim); --ascii-glyph: var(--textDim); --ascii-accent: var(--text);
+        --ascii-font: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
       }
+      /* dither de ascii-reveal: en light el textDim sobre off-white queda casi invisible con la opacidad
+         default (.22), se sube; dark queda con la default. */
+      html .ars-dither { --ars-base: .4; --ars-wave: .9; }
+      html.dark .ars-dither { --ars-base: .22; --ars-wave: .75; }
       /* DARK: espejo -> fondo casi-negro + highlights totalmente blancos (botones blancos, texto negro) */
       html.dark {
         --bg: #000000; --panel: #171717; --panelAlt: #202020; --border: #2b2b2b;
