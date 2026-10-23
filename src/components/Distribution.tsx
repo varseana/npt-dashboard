@@ -10,6 +10,7 @@ import {
 import { StatusChip } from "./status";
 import { InfoStar } from "./InfoStar";
 import { TableSk } from "./skeleton";
+import Decode from "./Decode";
 import WeekCountdown from "./WeekCountdown";
 import { Dropdown } from "./Dropdown";
 import { SearchInput } from "./Inputs";
@@ -182,6 +183,7 @@ export default function Distribution({ team, refreshKey, weekKey: weekKeyProp, o
       {/* cuerpo SCROLL: solo la tabla de nombres scrollea (el scroll horizontal tambien lo maneja
           PinnedView, por eso el wrapper YA NO lleva overflowX: si fuera scroll container, el thead
           sticky se pegaria a el y no al scroll de PinnedView) */}
+      <Decode loading={loading}>
       {loading ? (
         <BreakdownSkeleton />
       ) : matrix.length === 0 && nonReporters.length === 0 ? (
@@ -242,6 +244,7 @@ export default function Distribution({ team, refreshKey, weekKey: weekKeyProp, o
           </table>
         </div>
       )}
+      </Decode>
     </PinnedView>
   );
 }

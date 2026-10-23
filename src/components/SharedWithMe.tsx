@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { InfoStar } from "./InfoStar";
 import { TableSk } from "./skeleton";
+import Decode from "./Decode";
 import WeekCountdown from "./WeekCountdown";
 import { Dropdown } from "./Dropdown";
 import PinnedView from "./PinnedView";
@@ -111,6 +112,7 @@ export default function SharedWithMe({ myUserId }: { myUserId: string }) {
       {msg && <div style={{ marginBottom: 12, color: msg.startsWith("Error") ? palette.bad : palette.ok, fontSize: 18 }}>{msg}</div>}
     </>}>
       {/* cuerpo SCROLL: lo unico que scrollea es la tabla de compartidos */}
+      <Decode loading={loading}>
       {loading ? (
         <SharedSkeleton />
       ) : aliases.length === 0 ? (
@@ -165,6 +167,7 @@ export default function SharedWithMe({ myUserId }: { myUserId: string }) {
           </table>
         </div>
       )}
+      </Decode>
     </PinnedView>
   );
 }

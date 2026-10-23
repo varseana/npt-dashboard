@@ -13,6 +13,7 @@ import { Dropdown } from "./Dropdown";
 import { SearchInput } from "./Inputs";
 import WeekCountdown from "./WeekCountdown";
 import { Bar, BracketFrame, TableSk } from "./skeleton";
+import Decode from "./Decode";
 import PinnedView from "./PinnedView";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
@@ -144,11 +145,11 @@ export default function Planned({ team }: { team: Team }) {
     await load(true);
   }
 
-  if (loading) return <PlannedSkeleton />;
+  if (loading) return <Decode loading fill><PlannedSkeleton /></Decode>;
 
   const scopeLabel = scope === "standing" ? "every week" : weekLabel(weekInfo(new Date(weekKey + "T12:00:00")));
 
-  return (
+  return (<Decode loading={false} fill>
     <div style={{ display: "flex", flexDirection: "column", height: "100%", minHeight: 0 }}>
       <div style={{ flex: "0 0 auto", display: "flex", gap: 12, alignItems: "flex-end", flexWrap: "wrap", margin: "0 0 16px" }}>
         <Field label="Applies to">
@@ -314,7 +315,7 @@ export default function Planned({ team }: { team: Team }) {
         </div>{/* /DERECHA */}
       </div>{/* /flex 2 columnas */}
     </div>
-  );
+  </Decode>);
 }
 
 // skeleton 1:1: dropdown "Applies to" -> 2 columnas (IZQ card threshold con brackets: titulo 2 lineas +

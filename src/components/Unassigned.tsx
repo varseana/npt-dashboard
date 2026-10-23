@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { computeDay, dedupePersonDay, fmtHms, type NptDailyRow } from "../lib/npt";
 import { Bar } from "./skeleton";
+import Decode from "./Decode";
 import { Dropdown } from "./Dropdown";
 import PinnedView from "./PinnedView";
 
@@ -64,6 +65,7 @@ export default function Unassigned({ teams, refreshKey }: { teams: Team[]; refre
       {msg && <div style={{ marginBottom: 12, color: msg.startsWith("Error") ? palette.bad : palette.warn, fontSize: 18 }}>{msg}</div>}
     </>}>
       {/* cuerpo SCROLL: solo la lista de personas scrollea */}
+      <Decode loading={loading}>
       {loading ? <UnassignedSkeleton /> : (
       <div style={{ border: `1px solid ${palette.border}`, borderRadius: 0, overflow: "hidden" }}>
         {rows.length === 0 ? (
@@ -80,6 +82,7 @@ export default function Unassigned({ teams, refreshKey }: { teams: Team[]; refre
         ))}
       </div>
       )}
+      </Decode>
     </PinnedView>
   );
 }

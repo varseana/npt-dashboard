@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { InfoStar } from "./InfoStar";
 import { TableSk } from "./skeleton";
+import Decode from "./Decode";
 import { AddButtonInput, SearchInput } from "./Inputs";
 import { IconCheck, IconX, IconMoveOut, IconUser } from "./icons";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -206,6 +207,7 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
             </div>
           )}
         </>}>
+      <Decode loading={loading}>
       {loading ? (
         <TableSk template="40px 2fr 90px 90px 110px 90px" rows={6} boxed />
       ) : people.length === 0 ? (
@@ -253,6 +255,7 @@ export default function Employees({ team, refreshKey }: { team: Team; refreshKey
           </table>
         </div>
       )}
+      </Decode>
         </PinnedView>
         </div>{/* /DERECHA (tabla) */}
       </div>{/* /flex 2 columnas */}

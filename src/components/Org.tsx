@@ -9,6 +9,7 @@ import {
 } from "../lib/npt";
 import { StatusChip } from "./status";
 import { Bar, TableSk } from "./skeleton";
+import Decode from "./Decode";
 import { SearchInput, AddButtonInput, splitAliases } from "./Inputs";
 import { InfoStar } from "./InfoStar";
 import { Dropdown } from "./Dropdown";
@@ -304,6 +305,7 @@ export default function Org({ refreshKey }: { refreshKey?: number }) {
       </div>
       {msg && <div style={{ color: msg.startsWith("Error") ? palette.bad : palette.ok, marginBottom: 12, fontSize: 18 }}>{msg}</div>}
     </>}>
+      <Decode loading={loading}>
       {loading ? (
         <OrgSkeleton />
       ) : views.length === 0 ? (
@@ -326,6 +328,7 @@ export default function Org({ refreshKey }: { refreshKey?: number }) {
           owner={grantOwner} onOwner={setGrantOwner} input={grantInput} onInput={setGrantInput}
           onAdd={addGrants} onRemove={(owner, alias) => setPending({ kind: "rmGrant", owner, alias })} />
       )}
+      </Decode>
 
       {pending?.kind === "rmGrant" && (
         <ConfirmDialog title="Revoke access?" confirmLabel={busy ? "Revoking..." : "Revoke"} confirmDisabled={busy}

@@ -11,6 +11,7 @@ import { StatusChip } from "./status";
 import { InfoStar } from "./InfoStar";
 import { Dropdown } from "./Dropdown";
 import { Bar, BracketFrame } from "./skeleton";
+import Decode from "./Decode";
 
 // highlight monocromatico dentro del texto del popover (bold en color de texto full)
 const hi = { color: palette.text, fontWeight: 700 } as React.CSSProperties;
@@ -70,11 +71,11 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
   const remaining = plannedSec == null ? null : plannedSec - totalNpt;
   const status = statusFor(plannedSec, totalNpt);
 
-  if (loading) return <SelfViewSkeleton />;
+  if (loading) return <Decode loading><SelfViewSkeleton /></Decode>;
 
   // sin data historica => probablemente no enrolado o typo en el email
   if (everReported === false) {
-    return (
+    return (<Decode loading={false}>
       <div style={card}>
         <h2 style={{ margin: "0 0 8px", fontSize: 29 }}>No NPT data for "{alias}"</h2>
         <p style={{ color: palette.textDim, fontSize: 19, margin: 0, lineHeight: 1.5 }}>
@@ -84,10 +85,10 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
           ask the administrator to set it for you.
         </p>
       </div>
-    );
+    </Decode>);
   }
 
-  return (
+  return (<Decode loading={false}>
     <div>
       <div style={{ display: "flex", gap: 12, alignItems: "center", marginBottom: 16, flexWrap: "wrap" }}>
         <Dropdown value={weekKey} onChange={setWeekKey} minWidth={260} ariaLabel="Select week"
@@ -137,7 +138,7 @@ export default function SelfView({ email, aliasOverride }: { email: string; alia
         )}
       </div>
     </div>
-  );
+  </Decode>);
 }
 
 // skeleton 1:1 de SelfView: dropdown + "signed in as" -> 3 stat cards (Used/Planned/Remaining) ->

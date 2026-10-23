@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { Bar } from "./skeleton";
+import Decode from "./Decode";
 import { InfoStar } from "./InfoStar";
 import { IconAlert, IconTrash, IconKey, IconEye, IconEyeOff } from "./icons";
 import { SearchInput } from "./Inputs";
@@ -129,7 +130,7 @@ export default function Managers({ teams, myUserId, refreshKey }:
     };
   }, [query]);
 
-  if (loading) return <ManagersSkeleton />;
+  if (loading) return <Decode loading fill><ManagersSkeleton /></Decode>;
 
   const list = arrange(byRole[roleTab]);
   const searching = query.trim().length > 0;
@@ -143,7 +144,7 @@ export default function Managers({ teams, myUserId, refreshKey }:
     onReset: () => setResetTarget(r),
   });
 
-  return (
+  return (<Decode loading={false} fill>
     <PinnedView head={<>
       {/* cabeza PINEADA: buscador + sub-tabs de rol + titulo. la lista de personas es lo unico que scrollea. */}
       {msg && <div style={{ marginBottom: 12, color: palette.bad, fontSize: 18 }}>{msg}</div>}
@@ -209,7 +210,7 @@ export default function Managers({ teams, myUserId, refreshKey }:
           onConfirm={async (pw) => { const ok = await resetPassword(resetTarget, pw); if (ok) setResetTarget(null); }} />
       )}
     </PinnedView>
-  );
+  </Decode>);
 }
 
 // dialogo de reset de contrasena: el admin teclea una contrasena temporal para entregarle

@@ -4,6 +4,7 @@ import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { InfoStar } from "./InfoStar";
 import { Bar } from "./skeleton";
+import Decode from "./Decode";
 import { IconX, IconFolder, IconTrash } from "./icons";
 import { AddInput, AddButtonInput, splitAliases } from "./Inputs";
 import { ConfirmDialog } from "./ConfirmDialog";
@@ -123,13 +124,13 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
     });
   }
 
-  if (loading) return <FoldersSkeleton />;
+  if (loading) return <Decode loading><FoldersSkeleton /></Decode>;
 
   const otherManagers = managers
     .filter((m) => m.user_id !== myUserId && m.approved && (m.role === "manager" || m.role === "admin"))
     .sort((a, b) => a.email.localeCompare(b.email));
 
-  return (
+  return (<Decode loading={false}>
     <div>
       <div style={{ display: "flex", gap: 8, alignItems: "center", margin: "0 0 16px", flexWrap: "wrap" }}>
         <AddButtonInput value={newName} onChange={(e) => setNewName(e.target.value)} icon={<IconFolder size={18} />}
@@ -201,7 +202,7 @@ export default function Folders({ team, isAdmin, myUserId }: { team: Team; isAdm
           onConfirm={() => { const id = confirmFolder.id; setConfirmFolder(null); remove(id); }} />
       )}
     </div>
-  );
+  </Decode>);
 }
 
 // skeleton 1:1: input de crear folder -> grilla 3 columnas de cards (nombre + chips + add member)

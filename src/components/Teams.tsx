@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { palette } from "../theme";
 import { Bar } from "./skeleton";
+import Decode from "./Decode";
 import { InfoStar } from "./InfoStar";
 import { AddInput, AddButtonInput } from "./Inputs";
 import { IconPower, IconTrash, IconTag } from "./icons";
@@ -120,9 +121,9 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
     await load(false);
   }
 
-  if (loading) return <TeamsSkeleton />;
+  if (loading) return <Decode loading><TeamsSkeleton /></Decode>;
 
-  return (
+  return (<Decode loading={false}>
     <div>
       {msg && <div style={{ marginBottom: 12, color: msg.startsWith("Error") ? palette.bad : palette.warn, fontSize: 18 }}>{msg}</div>}
 
@@ -194,7 +195,7 @@ export default function Teams({ refreshKey }: { refreshKey: number }) {
           onCancel={() => setConfirmTeam(null)} onConfirm={() => deleteTeam(confirmTeam)} />
       )}
     </div>
-  );
+  </Decode>);
 }
 
 // skeleton 1:1: panel "New team" (inputs) -> cards por team (header con nombre+trash, body con codigos)

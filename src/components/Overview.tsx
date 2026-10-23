@@ -14,6 +14,7 @@ import WeekCountdown from "./WeekCountdown";
 import { Dropdown } from "./Dropdown";
 import { IconMail, IconAlert, IconSearch, IconFolder, IconCheck } from "./icons";
 import { Bar, BracketFrame, TableSk } from "./skeleton";
+import Decode from "./Decode";
 import PinnedView from "./PinnedView";
 
 interface Team { id: string; name: string; npt_target_pct: number; }
@@ -178,6 +179,7 @@ export default function Overview({ team, refreshKey, onNavigate, weekKey: weekKe
         <span style={{ fontSize: 17 }}><WeekCountdown start={sel.start} sep=":: " /></span>
       </div>
       {err && <div style={{ color: palette.bad, marginBottom: 12 }}>{err}</div>}
+      <Decode loading={loading}>
       {!loading && users.length > 0 && (
         <>
           {/* dos segmentos lado a lado: budget (angosto) izquierda // stats 2x2 derecha */}
@@ -233,8 +235,10 @@ export default function Overview({ team, refreshKey, onNavigate, weekKey: weekKe
 
         </>
       )}
+      </Decode>
     </>}>
       {/* cuerpo SCROLL: lo unico que scrollea son los nombres */}
+      <Decode loading={loading}>
       {loading ? (
         <SummarySkeleton />
       ) : users.length === 0 ? (
@@ -253,6 +257,7 @@ export default function Overview({ team, refreshKey, onNavigate, weekKey: weekKe
       ) : (
         <UserTable rows={shown} remind={remind} teamBudget={teamBudget} />
       )}
+      </Decode>
     </PinnedView>
   );
 }
